@@ -43,7 +43,18 @@ class TeamController {
   async createTeam(req, res) {
     try {
       const { name, description, lateness_limit } = req.body;
-
+     if (!name || name.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: 'Name is required',
+        });
+      } 
+      if (lateness_limit == null || lateness_limit < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'lateness_limit must not be null or negative',
+      });
+      }
       const { data, error } = await supabase
         .from('team')
         .insert([
@@ -68,7 +79,7 @@ class TeamController {
       res.status(201).json({
         success: true,
         message: 'Team created successfully',
-        data: data
+        data
       });
 
     } catch (err) {
@@ -135,10 +146,17 @@ class TeamController {
       const { name, description, lateness_limit } = req.body;
 
       const updatedFields = {};
-      if (name) updatedFields.name = name;
+      if (name) updatedFields.name = name.trim();
       if (description) updatedFields.description = description;
-      if (lateness_limit !== undefined) updatedFields.lateness_limit = lateness_limit;
-
+      if (lateness_limit !== undefined) {
+      if (lateness_limit == null || lateness_limit < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'lateness_limit must not be null or negative',
+        });
+      }
+      updatedFields.lateness_limit = lateness_limit;
+     }
       if (Object.keys(updatedFields).length === 0) {
         return res.status(400).json({
           success: false,
