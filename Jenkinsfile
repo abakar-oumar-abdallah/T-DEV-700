@@ -15,11 +15,9 @@ pipeline {
         stage('Installer les dépendances') {
             steps {
                 dir('backend') {
-                    sh '''
-                        node --version
-                        npm --version
-                        npm ci --cache .npm --prefer-offline'
-                    '''
+                    sh 'node --version'
+                    sh 'npm --version'
+                    sh 'npm ci --cache .npm --prefer-offline'
                 }
             }
         }
@@ -51,7 +49,7 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline terminé pour la branche develop"
+            echo "Pipeline terminé"
         }
         success {
             echo "Pipeline a été exécutée avec succès"
