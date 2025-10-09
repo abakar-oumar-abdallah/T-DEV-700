@@ -5,7 +5,7 @@ pipeline {
         nodejs 'node20-11'
     }
 
-    environement {
+    environment  {
         BASE_URL = 'http://backend:3001' // URL du backend dans le réseau docker
     }
 
