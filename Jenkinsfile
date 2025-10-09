@@ -16,7 +16,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
-                        node --node
+                        node --version
                         npm --version
                         npm ci --cache .npm --prefer-offline'
                     '''
