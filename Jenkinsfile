@@ -22,10 +22,11 @@ pipeline {
             }
         }
 
-        stage('Lancer le backend avec Docker') {
+        stage('Démarrer le backend') {
             steps {
                 dir('backend') {
-                    sh 'docker compose up -d backend'
+                    sh 'nohub npm start > backend.log 2>&1 &'
+                    sh 'echo $! > .pidfile'
                     sh 'sleep 10'
                 }
             }
@@ -60,6 +61,10 @@ pipeline {
     post {
         always {
             echo "Pipeline terminé"
+            dir('backend') {
+                sh 'kill $(cat .pidfile) || true'
+                sh 'rm -f .pidfile backend.log'
+            }
         }
         success {
             echo "Pipeline a été exécutée avec succès"
