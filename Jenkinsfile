@@ -18,8 +18,10 @@ pipeline {
         }
 
         stage('Déploiement en Production') {
-            echo 'Etape de déploiement en cours ...'
+            steps {
+                echo 'Etape de déploiement en cours ...'
             // Ici nous allons ajouter des commandes pour le déploiement de l'application 
+            }
         }
 
     }
