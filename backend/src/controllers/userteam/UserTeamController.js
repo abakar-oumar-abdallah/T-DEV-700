@@ -175,6 +175,151 @@ class UserTeamController {
     }
   }
 
+   /**
+   * Add a user to a team with their email (Create a user-team association)
+   */
+  async createUserTeamWithEmail(req, res) {
+    try {
+      const { email, teamId, role } = req.body;
+
+      // Validate input
+      if (!email || !teamId || !role) {
+        return res.status(400).json({
+          success: false,
+          message: 'email, teamId and role are required'
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email format'
+        });
+      }
+
+      // Validate role
+      const validRoles = ["employee", "manager"];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+        });
+      }
+
+      // Find user by email
+      const { data: user, error: userError } = await supabase
+        .from('user')
+        .select('id, email, first_name, last_name')
+        .eq('email', email.toLowerCase().trim())
+        .single();
+
+      if (userError) {
+        if (userError.code === 'PGRST116') {
+          return res.status(404).json({
+            success: false,
+            message: 'User not found with this email'
+          });
+        }
+        console.error('Error finding user by email:', userError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to find user',
+          error: userError.message
+        });
+      }
+
+      const userId = user.id;
+
+      // Check if team exists
+      const { data: existingTeam, error: teamError } = await supabase
+        .from('team')
+        .select('id')
+        .eq('id', teamId)
+        .single();
+
+      if (teamError) {
+        if (teamError.code === 'PGRST116') {
+          return res.status(404).json({
+            success: false,
+            message: 'Team not found'
+          });
+        }
+        console.error('Error checking team:', teamError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to check team existence',
+          error: teamError.message
+        });
+      }
+
+      // Check if association already exists
+      const { data: existingAssociation, error: checkError } = await supabase
+        .from('user_team')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('team_id', teamId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing association:', checkError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to check existing association',
+          error: checkError.message
+        });
+      }
+
+      if (existingAssociation) {
+        return res.status(409).json({
+          success: false,
+          message: 'User is already associated with this team'
+        });
+      }
+
+      // Create the association
+      const { data, error } = await supabase
+        .from('user_team')
+        .insert([
+          {
+            user_id: userId,
+            team_id: teamId,
+            role: role
+          }
+        ])
+        .select(`
+          *,
+          user:user_id (id, email, first_name, last_name),
+          team:team_id (id, name, description)
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error creating user-team association:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to create user-team association',
+          error: error.message
+        });
+      }
+
+      res.status(201).json({
+        success: true,
+        message: 'User-team association created successfully using email',
+        data: data
+      });
+
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: err.message
+      });
+    }
+  }
+
   /**
    * Get user-team association by user_id and team_id
    */

@@ -66,6 +66,49 @@ router.get('/userteams', UserTeamController.getAllUserTeams);
  */
 router.post('/userteams', UserTeamController.createUserTeam);
 
+// Create a new user-team association using email
+/**
+ * @swagger
+ * /userteams/email:
+ *   post:
+ *     summary: Create a new user-team association using email
+ *     tags: [UserTeams]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - teamId
+ *               - role
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
+ *               teamId:
+ *                 type: integer
+ *                 example: 1
+ *               role:
+ *                 type: string
+ *                 enum: [employee, manager]
+ *                 example: employee
+ *     responses:
+ *       201:
+ *         description: User-team association created successfully
+ *       400:
+ *         description: Validation error (missing fields or invalid email/role)
+ *       404:
+ *         description: User or team not found
+ *       409:
+ *         description: Association already exists
+ *       500:
+ *         description: Server error
+ */
+router.post('/userteams/email', UserTeamController.createUserTeamWithEmail);
+
 // Get user-team association by userId and teamId
 /**
  * @swagger
