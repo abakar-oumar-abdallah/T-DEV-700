@@ -1,6 +1,6 @@
 const request = require('supertest');
 
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 let testClockId = null;
 let testUserId = null;
