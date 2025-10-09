@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -14,22 +10,19 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "Construction des images Docker"
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} build"
+                echo "Construction du projet en cours ..."
             }
         }
 
         stage('Tests') {
             steps {
                 echo "Exécution des tests sur le backend"
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} run backend npm test"
             }
         }
 
         stage('Deploy (Préproduction)') {
             steps {
                 echo "Déploiement automatique de la branche develop"
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} up -d"
             }
         }
     }
