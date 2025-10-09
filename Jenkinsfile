@@ -25,6 +25,7 @@ pipeline {
         stage('Exécution des tests sur le backend') {
             steps {
                 dir('backend') {
+                    sh 'npm install'
                     sh 'npm run test'
                 }
             }
