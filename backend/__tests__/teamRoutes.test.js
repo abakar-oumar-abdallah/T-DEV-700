@@ -1,5 +1,5 @@
 const request = require('supertest');
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 let teamId = null;      
 
@@ -30,6 +30,7 @@ describe('Team CRUD Routes (Integration)', () => {
         console.error('Error deleting test user:', error);
     }
   });
+
   describe('GET /teams - Get all teams', () => {
     it('should return all teams successfully', async () => {
       const res = await request(BASE_URL).get('/teams');
@@ -40,6 +41,7 @@ describe('Team CRUD Routes (Integration)', () => {
       expect(res.body.data.length).toBeGreaterThan(0);
     });
   });
+
   describe('POST /teams - Create new team', () => {
     it('should create team successfully', async () => {
       const newTeam = {
@@ -64,7 +66,6 @@ describe('Team CRUD Routes (Integration)', () => {
 
       expect([400, 500]).toContain(res.status);
       expect(res.body.success).toBe(false);
-
     });
   });
    
@@ -83,6 +84,7 @@ describe('Team CRUD Routes (Integration)', () => {
       expect(res.body.success).toBe(false);
     });
   });
+
   describe('PATCH /teams/:id - Update team', () => {
     it('should update team successfully', async () => {
       const update = {
@@ -134,5 +136,4 @@ describe('Team CRUD Routes (Integration)', () => {
       expect(res.body.success).toBe(false);
     });
   });
-
 });
