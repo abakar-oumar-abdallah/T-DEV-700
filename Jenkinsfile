@@ -25,9 +25,22 @@ pipeline {
         stage('Démarrer le backend') {
             steps {
                 dir('backend') {
-                    sh 'nohub npm start > backend.log 2>&1 &'
-                    sh 'echo $! > .pidfile'
-                    sh 'sleep 10'
+                    sh '''
+                        # Démarrer le serveur en arrière-plan
+                        nohup npm start > backend.log 2>&1 &
+                        echo $! > .pidfile
+                        
+                        # Attendre que le serveur soit prêt
+                        echo "Attente du démarrage du backend..."
+                        for i in {1..30}; do
+                            if curl -s http://localhost:3001 > /dev/null 2>&1; then
+                                echo "Backend est prêt!"
+                                break
+                            fi
+                            echo "Tentative $i/30..."
+                            sleep 2
+                        done
+                    '''
                 }
             }
         }
@@ -37,6 +50,19 @@ pipeline {
                 dir('backend') {
                     sh 'npm install'
                     sh 'npm run test'
+                }
+            }
+        }
+
+        stage('Arrêter le backend') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        if [ -f .pidfile ]; then
+                            kill $(cat .pidfile) || true
+                            rm .pidfile
+                        fi
+                    '''
                 }
             }
         }
