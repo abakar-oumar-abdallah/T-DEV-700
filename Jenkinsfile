@@ -22,6 +22,15 @@ pipeline {
             }
         }
 
+        stage('Lancer le backend avec Docker') {
+            steps {
+                dir('backend') {
+                    sh 'docker compose up -d backend'
+                    sh 'sleep 10'
+                }
+            }
+        }
+
         stage('Exécution des tests sur le backend') {
             steps {
                 dir('backend') {
