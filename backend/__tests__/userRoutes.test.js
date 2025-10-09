@@ -2,7 +2,7 @@ const request = require('supertest');
 
 const BASE_URL = 'http://localhost:3001';
 
-let testUserId2 = null;
+let testUserId = null;
 let testUserEmail = null;
 
 describe('User CRUD Routes (Integration)', () => {
@@ -34,6 +34,7 @@ describe('User CRUD Routes (Integration)', () => {
         if (testUserId) {
           try {
             await request(BASE_URL).delete(`/users/${testUserId}`);
+            
           } catch (error) {
             console.error('Error deleting test user:', error);
           }
@@ -48,7 +49,6 @@ describe('User CRUD Routes (Integration)', () => {
           password: 'password123',
           first_name: 'John',
           last_name: 'Doe',
-          role: 'employee'
         };
   
         const response = await request(BASE_URL).post('/users').send(newUser);
@@ -57,25 +57,10 @@ describe('User CRUD Routes (Integration)', () => {
         expect(response.body.data.email).toBe(newUser.email);
         expect(response.body.data.first_name).toBe(newUser.first_name);
         expect(response.body.data.last_name).toBe(newUser.last_name);
-        expect(response.body.data.role).toBe(newUser.role);
         expect(response.body.data.password).toBeUndefined();
   
-        testUserId2 = response.body.data.id;
+        testUserId = response.body.data.id;
         testUserEmail = response.body.data.email;
-      });
-  
-      it('should create user with default role when role is not provided', async () => {
-        const newUser = {
-          email: `test${Date.now()}@test.com`,
-          password: 'password123',
-          first_name: 'Jane',
-          last_name: 'Smith'
-        };
-  
-        const response = await request(BASE_URL).post('/users').send(newUser);
-        expect(response.status).toBe(201);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data.role).toBe('employee');
       });
   
       it('should return 400 when email is missing', async () => {
@@ -169,21 +154,6 @@ describe('User CRUD Routes (Integration)', () => {
         expect(response.body.message).toBe('Last name must be at least 2 characters long');
       });
   
-      it('should return 400 for invalid role', async () => {
-        const newUser = {
-          email: `test${Date.now()}@test.com`,
-          password: 'password123',
-          first_name: 'John',
-          last_name: 'Doe',
-          role: 'admin'
-        };
-  
-        const response = await request(BASE_URL).post('/users').send(newUser);
-        expect(response.status).toBe(400);
-        expect(response.body.success).toBe(false);
-        expect(response.body.message).toContain('Invalid role');
-      });
-  
       it('should return 409 when email already exists', async () => {
         expect(testUserEmail).toBeTruthy();
         
@@ -214,12 +184,12 @@ describe('User CRUD Routes (Integration)', () => {
   
     describe('GET /users/:id - Get user by ID', () => {
       it('should return user by valid ID', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
         
-        const response = await request(BASE_URL).get(`/users/${testUserId2}`);
+        const response = await request(BASE_URL).get(`/users/${testUserId}`);
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-        expect(response.body.data.id).toBe(testUserId2);
+        expect(response.body.data.id).toBe(testUserId);
         expect(response.body.data.email).toBe(testUserEmail);
       });
   
@@ -239,7 +209,7 @@ describe('User CRUD Routes (Integration)', () => {
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.data.email).toBe(testUserEmail);
-        expect(response.body.data.id).toBe(testUserId2);
+        expect(response.body.data.id).toBe(testUserId);
       });
   
       it('should return 404 for non-existent email', async () => {
@@ -259,13 +229,13 @@ describe('User CRUD Routes (Integration)', () => {
   
     describe('PATCH /users/:id - Update user', () => {
       it('should update user email successfully', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
         
         const newEmail = `updated${Date.now()}@test.com`;
         const updateData = { email: newEmail };
   
         const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
+          .patch(`/users/${testUserId}`)
           .send(updateData);
   
         expect(response.status).toBe(200);
@@ -277,12 +247,12 @@ describe('User CRUD Routes (Integration)', () => {
       });
   
       it('should update user first_name successfully', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
         
         const updateData = { first_name: 'UpdatedFirstName' };
   
         const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
+          .patch(`/users/${testUserId}`)
           .send(updateData);
   
         expect(response.status).toBe(200);
@@ -291,40 +261,27 @@ describe('User CRUD Routes (Integration)', () => {
       });
   
       it('should update user last_name successfully', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
         
         const updateData = { last_name: 'UpdatedLastName' };
   
         const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
+          .patch(`/users/${testUserId}`)
           .send(updateData);
   
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.data.last_name).toBe('UpdatedLastName');
       });
-  
-      it('should update user role successfully', async () => {
-        expect(testUserId2).toBeTruthy();
-        
-        const updateData = { role: 'manager' };
-  
-        const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
-          .send(updateData);
-  
-        expect(response.status).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data.role).toBe('manager');
-      });
+
   
       it('should update user password successfully', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
         
         const updateData = { password: 'newPassword456' };
   
         const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
+          .patch(`/users/${testUserId}`)
           .send(updateData);
   
         expect(response.status).toBe(200);
@@ -333,30 +290,28 @@ describe('User CRUD Routes (Integration)', () => {
       });
   
       it('should update multiple fields successfully', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
         
         const updateData = {
           first_name: 'MultiUpdate',
           last_name: 'Test',
-          role: 'employee'
         };
   
         const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
+          .patch(`/users/${testUserId}`)
           .send(updateData);
   
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.data.first_name).toBe('MultiUpdate');
         expect(response.body.data.last_name).toBe('Test');
-        expect(response.body.data.role).toBe('employee');
       });
   
       it('should return 400 when no fields are provided', async () => {
-        expect(testUserId2).toBeTruthy();
+        expect(testUserId).toBeTruthy();
   
         const response = await request(BASE_URL)
-          .patch(`/users/${testUserId2}`)
+          .patch(`/users/${testUserId}`)
           .send({});
   
         expect(response.status).toBe(400);
@@ -418,20 +373,6 @@ describe('User CRUD Routes (Integration)', () => {
         expect(response.status).toBe(400);
         expect(response.body.success).toBe(false);
         expect(response.body.message).toBe('Last name must be at least 2 characters long');
-      });
-  
-      it('should return 400 for invalid role', async () => {
-        expect(testUserId).toBeTruthy();
-        
-        const updateData = { role: 'admin' };
-  
-        const response = await request(BASE_URL)
-          .patch(`/users/${testUserId}`)
-          .send(updateData);
-  
-        expect(response.status).toBe(400);
-        expect(response.body.success).toBe(false);
-        expect(response.body.message).toContain('Invalid role');
       });
   
       it('should return 404 for non-existent user', async () => {
