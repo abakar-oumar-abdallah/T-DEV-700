@@ -46,13 +46,13 @@ class UserTeamController {
    */
   async createUserTeam(req, res) {
     try {
-      const { user_id, team_id, role } = req.body;
+      const { userId, teamId, role } = req.body;
 
       // Validate input
-      if (!user_id || !team_id || !role) {
+      if (!userId || !teamId || !role) {
         return res.status(400).json({
           success: false,
-          message: 'user_id, team_id and role are required'
+          message: 'userId, teamId and role are required'
         });
       }
 
@@ -69,7 +69,7 @@ class UserTeamController {
       const { data: existingUser, error: userError } = await supabase
         .from('user')
         .select('id')
-        .eq('id', user_id)
+        .eq('id', userId)
         .single();
 
       if (userError) {
@@ -91,7 +91,7 @@ class UserTeamController {
       const { data: existingTeam, error: teamError } = await supabase
         .from('team')
         .select('id')
-        .eq('id', team_id)
+        .eq('id', teamId)
         .single();
 
       if (teamError) {
@@ -113,8 +113,8 @@ class UserTeamController {
       const { data: existingAssociation, error: checkError } = await supabase
         .from('user_team')
         .select('*')
-        .eq('user_id', user_id)
-        .eq('team_id', team_id)
+        .eq('user_id', userId)
+        .eq('team_id', teamId)
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
@@ -138,8 +138,8 @@ class UserTeamController {
         .from('user_team')
         .insert([
           {
-            user_id: user_id,
-            team_id: team_id,
+            user_id: userId,
+            team_id: teamId,
             role: role
           }
         ])
@@ -325,7 +325,7 @@ class UserTeamController {
    */
   async getUserTeamById(req, res) {
     try {
-      const { user_id, team_id } = req.params;
+      const { userId, teamId } = req.params;
 
       const { data, error } = await supabase
         .from('user_team')
@@ -334,8 +334,8 @@ class UserTeamController {
           user:user_id (id, email, first_name, last_name),
           team:team_id (id, name, description)
         `)
-        .eq('user_id', user_id)
-        .eq('team_id', team_id)
+        .eq('user_id', userId)
+        .eq('team_id', teamId)
         .single();
 
       if (error) {
@@ -375,7 +375,7 @@ class UserTeamController {
    */
   async getTeamsByUserId(req, res) {
     try {
-      const { user_id } = req.params;
+      const { userId } = req.params;
 
       const { data, error } = await supabase
         .from('user_team')
@@ -383,7 +383,7 @@ class UserTeamController {
           role,
           team:team_id (id, name, description, lateness_limit)
         `)
-        .eq('user_id', user_id);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error fetching user teams:', error);
@@ -416,7 +416,7 @@ class UserTeamController {
    */
   async getUsersByTeamId(req, res) {
     try {
-      const { team_id } = req.params;
+      const { teamId } = req.params;
 
       const { data, error } = await supabase
         .from('user_team')
@@ -424,7 +424,7 @@ class UserTeamController {
           role,
           user:user_id (id, email, first_name, last_name)
         `)
-        .eq('team_id', team_id);
+        .eq('team_id', teamId);
 
       if (error) {
         console.error('Error fetching team users:', error);
@@ -457,7 +457,7 @@ class UserTeamController {
    */
   async updateUserTeam(req, res) {
     try {
-      const { user_id, team_id } = req.params;
+      const { userId, teamId } = req.params;
       const { role } = req.body;
 
       // Validate input
@@ -480,8 +480,8 @@ class UserTeamController {
       const { data, error } = await supabase
         .from('user_team')
         .update({ role: role })
-        .eq('user_id', user_id)
-        .eq('team_id', team_id)
+        .eq('user_id', userId)
+        .eq('team_id', teamId)
         .select(`
           *,
           user:user_id (id, email, first_name, last_name),
@@ -526,14 +526,14 @@ class UserTeamController {
    */
   async deleteUserTeam(req, res) {
     try {
-      const { user_id, team_id } = req.params;
+      const { userId, teamId } = req.params;
 
       // Check if association exists
       const { data: existingAssociation, error: checkError } = await supabase
         .from('user_team')
         .select('*')
-        .eq('user_id', user_id)
-        .eq('team_id', team_id)
+        .eq('user_id', userId)
+        .eq('team_id', teamId)
         .single();
 
       if (checkError) {
@@ -556,8 +556,8 @@ class UserTeamController {
       const { error } = await supabase
         .from('user_team')
         .delete()
-        .eq('user_id', user_id)
-        .eq('team_id', team_id);
+        .eq('user_id', userId)
+        .eq('team_id', teamId);
 
       if (error) {
         console.error('Error deleting user-team association:', error);

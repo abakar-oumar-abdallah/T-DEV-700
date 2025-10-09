@@ -43,8 +43,8 @@ router.get('/userteams', UserTeamController.getAllUserTeams);
  *               - role
  *             properties:
  *               userId:
- *                 type: string
- *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *                 type: integer
+ *                 example: 123
  *               teamId:
  *                 type: integer
  *                 example: 1
@@ -151,7 +151,7 @@ router.get('/userteams/:userId/:teamId', UserTeamController.getUserTeamById);
  *         name: userId
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *         description: User ID
  *     responses:
  *       200:
@@ -195,7 +195,7 @@ router.get('/teams/:teamId/users', UserTeamController.getUsersByTeamId);
  *         name: userId
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *         description: User ID
  *       - in: path
  *         name: teamId
