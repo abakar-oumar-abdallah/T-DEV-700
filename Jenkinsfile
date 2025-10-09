@@ -15,11 +15,9 @@ pipeline {
         stage('Installer les dépendances') {
             steps {
                 dir('backend') {
-                    sh '''
-                        node --version
-                        npm --version
-                        npm ci --cache .npm --prefer-offline'
-                    '''
+                    sh 'node --version'
+                    sh 'npm --version'
+                    sh 'npm ci --cache .npm --prefer-offline'
                 }
             }
         }
