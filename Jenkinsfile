@@ -49,7 +49,7 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline terminé pour la branche develop"
+            echo "Pipeline terminé"
         }
         success {
             echo "Pipeline a été exécutée avec succès"
