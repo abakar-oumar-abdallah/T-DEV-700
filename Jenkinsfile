@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node20-11'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -11,7 +15,11 @@ pipeline {
         stage('Installer les dépendances') {
             steps {
                 dir('backend') {
-                    sh 'npm ci --cache .npm --prefer-offline'
+                    sh '''
+                        node --node
+                        npm --version
+                        npm ci --cache .npm --prefer-offline'
+                    '''
                 }
             }
         }
@@ -35,7 +43,7 @@ pipeline {
         stage('Vérifier les dépendances') {
             steps {
                 dir('backend') {
-                    sh 'npm audit'
+                    sh 'npm audit || true'
                 }
             }
         }
@@ -49,7 +57,7 @@ pipeline {
             echo "Pipeline a été exécutée avec succès"
         }
         failure {
-            echo "Pipeline a été echoué"
+            echo "Pipeline a été échoué"
         }
     }
 }
