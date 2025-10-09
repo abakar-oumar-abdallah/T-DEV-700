@@ -1,28 +1,48 @@
 pipeline {
-    agent any 
+    agent any
+
+    environment {
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+    }
 
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'develop', url: 'https://github.com/abakar-oumar-abdallah/T-DEV-700'
+            }
+        }
 
         stage('Build') {
             steps {
-                echo 'Etape de construction en cours ...'
-                // Ici on va ajouter des commandes qui nous permettront de builder l'application dans pipeline
+                echo "Construction des images Docker"
+                sh "docker compose -f ${DOCKER_COMPOSE_FILE} build"
             }
         }
 
-        stage('Test') {
+        stage('Tests') {
             steps {
-                echo 'Etape de test en cours ...'
-                // Ici nous allons ajouter des commandes pour tester l'application 
+                echo "Exécution des tests sur le backend"
+                sh "docker compose -f ${DOCKER_COMPOSE_FILE} run backend npm test"
             }
         }
 
-        stage('Déploiement en Production') {
+        stage('Deploy (Préproduction)') {
             steps {
-                echo 'Etape de déploiement en cours ...'
-            // Ici nous allons ajouter des commandes pour le déploiement de l'application 
+                echo "Déploiement automatique de la branche develop"
+                sh "docker compose -f ${DOCKER_COMPOSE_FILE} up -d"
             }
         }
+    }
 
+    post {
+        always {
+            echo "Pipeline terminé pour la branche develop"
+        }
+        success {
+            echo "Pipeline a été exécutée avec succès"
+        }
+        failure {
+            echo "Pipeline a été echoué"
+        }
     }
 }
