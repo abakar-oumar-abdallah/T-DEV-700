@@ -19,10 +19,13 @@ app.use(cookieParser());
 const userRoute = require("./routes/user/user.js");
 const loginRoute = require("./routes/auth/auth.js");
 const teamRoute = require("./routes/team/team.js");
+const userTeamRoute = require("./routes/userTeam/userTeam.js");
+
 app.use("", teamRoute);
 const clockRoute = require("./routes/clock/clock.js");
 app.use("", clockRoute);
 app.use("", userRoute);
+app.use("", userTeamRoute);
 app.use("", loginRoute);
 
 
