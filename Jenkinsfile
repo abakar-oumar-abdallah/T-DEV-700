@@ -8,21 +8,35 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Installer les dépendances') {
             steps {
-                echo "Construction du projet en cours ..."
+                dir('backend') {
+                    sh 'npm ci --cache .npm --prefer-offline'
+                }
             }
         }
 
-        stage('Tests') {
+        stage('Exécution des tests sur le backend') {
             steps {
-                echo "Exécution des tests sur le backend"
+                dir('backend') {
+                    sh 'npm run test'
+                }
             }
         }
 
-        stage('Deploy (Préproduction)') {
+        stage('Vérifier les codes') {
             steps {
-                echo "Déploiement automatique de la branche develop"
+                dir('backend') {
+                    sh 'npm run lint'
+                }
+            }
+        }
+
+        stage('Vérifier les dépendances') {
+            steps {
+                dir('backend') {
+                    sh 'npm audit'
+                }
             }
         }
     }
