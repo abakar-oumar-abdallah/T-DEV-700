@@ -37,7 +37,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh 'export BASE_URL=http://backend:3001'
-                    sh 'npm run test'
+                    sh 'npm run test:coverage'
                 }
             }
         }
