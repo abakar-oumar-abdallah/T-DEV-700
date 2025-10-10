@@ -25,7 +25,9 @@ pipeline {
                 dir('backend') {
                     sh 'node --version'
                     sh 'npm --version'
-                    sh 'npm ci --cache .npm --prefer-offline'
+                    sh 'npm ci --cache .npm --prefer-offline' // On fait pas de npm i quand on est dans ci, on utilise ci. 
+                    // Permet de supprimer le node_module et réinstaller en lisant le package.json
+                    // Mettre en cache le dossier .npm toutes les librairies  à chaque push
                 }
             }
         }
@@ -34,7 +36,6 @@ pipeline {
         stage('Exécution des tests sur le backend') {
             steps {
                 dir('backend') {
-                    sh 'npm install'
                     sh 'export BASE_URL=http://backend:3001'
                     sh 'npm run test'
                 }
@@ -44,7 +45,7 @@ pipeline {
         stage('Vérifier les codes') {
             steps {
                 dir('backend') {
-                    sh 'npm run lint || true'
+                    sh 'npm run lint || true' // Permet de vérifier la syntaxe et la bonne pratique dans notre code
                 }
             }
         }
