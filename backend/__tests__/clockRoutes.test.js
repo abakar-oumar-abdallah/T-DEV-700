@@ -1,168 +1,634 @@
-const request = require('supertest');
+const ClockController = require('../src/controllers/clock/ClockController.js');
+const supabase = require('../config/supabaseClient.js');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
+// Mock de Supabase
+jest.mock('../config/supabaseClient.js', () => ({
+  from: jest.fn()
+}));
 
-let testClockId = null;
-let testUserId = null;
+describe('ClockController', () => {
+  let req, res;
 
-describe('Clock CRUD Routes (Integration)', () => {
-  
-  beforeAll(async () => {
-    const newUser = {
-      email: `clocktest${Date.now()}@test.com`,
-      password: 'password123',
-      first_name: 'Test',
-      last_name: 'Clock'
+  beforeEach(() => {
+    // Reset des mocks avant chaque test
+    jest.clearAllMocks();
+    
+    // Mock de la requête et de la réponse
+    req = {
+      body: {},
+      params: {}
     };
     
-    try {
-      const userResponse = await request(BASE_URL).post('/users').send(newUser);
-      
-      // Vérifier si la création a réussi
-      if (userResponse.body.success && userResponse.body.data) {
-        testUserId = userResponse.body.data.id;
-      } else {
-        console.error('Failed to create test user:', userResponse.body);
-      }
-    } catch (error) {
-      console.error('Error creating test user:', error);
-    }
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis()
+    };
   });
 
-  afterAll(async () => {
-    if (testUserId) {
-      try {
-        await request(BASE_URL).delete(`/users/${testUserId}`);
-      } catch (error) {
-        console.error('Error deleting test user:', error);
-      }
-    }
-  });
+  describe('getAllClocks', () => {
+    it('devrait retourner tous les clocks avec succès', async () => {
+      const mockClocks = [
+        { 
+          id: 1, 
+          user_team_id: 1, 
+          planning_id: 1,
+          arrival_time: '2025-10-10T08:00:00Z', 
+          departure_time: '2025-10-10T17:00:00Z' 
+        },
+        { 
+          id: 2, 
+          user_team_id: 2, 
+          planning_id: 2,
+          arrival_time: '2025-10-10T09:00:00Z', 
+          departure_time: '2025-10-10T18:00:00Z' 
+        }
+      ];
 
-  describe('GET /clocks - Get all clocks', () => {
-    it('should return all clocks successfully', async () => {
-      const response = await request(BASE_URL).get('/clocks');
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.count).toBeDefined();
-    });
-  });
-
-  describe('POST /clocks - Create new clock', () => {
-    it('should create clock successfully', async () => {
-      expect(testUserId).toBeTruthy();
-      
-      const newClock = {
-        user_id: testUserId,
-        clock_in: new Date().toISOString(),
-        clock_out: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
-      };
-
-      const response = await request(BASE_URL).post('/clocks').send(newClock);
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.user_id).toBe(newClock.user_id);
-      expect(response.body.data.clock_in).toBeDefined();
-      expect(response.body.data.clock_out).toBeDefined();
-
-      testClockId = response.body.data.id;
-    });
-
-    it('should create clock with partial data', async () => {
-      expect(testUserId).toBeTruthy();
-      const response = await request(BASE_URL).post('/clocks').send({ 
-        user_id: testUserId,
-        clock_in: new Date().toISOString(),
-        clock_out: null 
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          data: mockClocks,
+          error: null
+        })
       });
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
+
+      await ClockController.getAllClocks(req, res);
+
+      expect(supabase.from).toHaveBeenCalledWith('clock');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clocks retrieved successfully',
+        data: mockClocks,
+        count: 2
+      });
+    });
+
+    it('devrait gérer les erreurs de base de données', async () => {
+      const mockError = { message: 'Database error' };
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          data: null,
+          error: mockError
+        })
+      });
+
+      await ClockController.getAllClocks(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Failed to fetch clocks',
+        error: 'Database error'
+      });
+    });
+
+    it('devrait gérer les erreurs inattendues', async () => {
+      supabase.from.mockImplementation(() => {
+        throw new Error('Unexpected error');
+      });
+
+      await ClockController.getAllClocks(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Internal server error',
+        error: 'Unexpected error'
+      });
     });
   });
 
-  describe('GET /clocks/:id - Get clock by ID', () => {
-    it('should return clock by valid ID', async () => {
-      expect(testClockId).toBeTruthy();
-      const response = await request(BASE_URL).get(`/clocks/${testClockId}`);
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.id).toBe(testClockId);
-      expect(response.body.data.user_id).toBe(testUserId);
+  describe('createClock', () => {
+    beforeEach(() => {
+      req.body = {
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T17:00:00Z'
+      };
     });
 
-    it('should return 404 for non-existent clock', async () => {
-      const response = await request(BASE_URL).get('/clocks/6f4bfc69-0244-4d27-8912-73213f161f12');
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('Clock not found');
-    });
-  });
-
-  describe('PATCH /clocks/:id - Update clock', () => {
-    it('should update clock successfully', async () => {
-      expect(testClockId).toBeTruthy();
-      const updateData = {
-        clock_out: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString()
+    it('devrait créer un clock avec succès', async () => {
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T17:00:00Z'
       };
 
-      const response = await request(BASE_URL)
-        .patch(`/clocks/${testClockId}`)
-        .send(updateData);
+      supabase.from.mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockClock,
+              error: null
+            })
+          })
+        })
+      });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.id).toBe(testClockId);
-      expect(response.body.data.clock_out).toBeDefined();
+      await ClockController.createClock(req, res);
+
+      expect(supabase.from).toHaveBeenCalledWith('clock');
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock created successfully',
+        data: mockClock
+      });
     });
 
-    it('should update multiple fields successfully', async () => {
-      expect(testClockId).toBeTruthy();
-      const updateData = {
-        clock_in: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        clock_out: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString()
+    it('devrait créer un clock avec des champs optionnels manquants', async () => {
+      req.body = {
+        user_team_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z'
       };
 
-      const response = await request(BASE_URL)
-        .patch(`/clocks/${testClockId}`)
-        .send(updateData);
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: undefined,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: undefined
+      };
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
+      supabase.from.mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockClock,
+              error: null
+            })
+          })
+        })
+      });
+
+      await ClockController.createClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock created successfully',
+        data: mockClock
+      });
     });
 
-    it('should return 500 for non-existent clock', async () => {
-      const response = await request(BASE_URL)
-        .patch('/clocks/6f4bfc69-0244-4d27-8912-73213f161f12')
-        .send({ clock_out: new Date().toISOString() });
+    it('devrait gérer les erreurs lors de la création', async () => {
+      const mockError = { message: 'Foreign key violation' };
 
-      expect(response.status).toBe(500);
-      expect(response.body.success).toBe(false);
+      supabase.from.mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError
+            })
+          })
+        })
+      });
+
+      await ClockController.createClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Failed to create clock',
+        error: 'Foreign key violation'
+      });
     });
   });
 
-  describe('DELETE /clocks/:id - Delete clock', () => {
-    it('should delete clock successfully', async () => {
-      expect(testClockId).toBeTruthy();
-      const response = await request(BASE_URL).delete(`/clocks/${testClockId}`);
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe('Clock deleted successfully');
-      expect(response.body.data.deletedClock).toBeDefined();
+  describe('getClockById', () => {
+    it('devrait retourner un clock par son ID', async () => {
+      req.params.id = '1';
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T17:00:00Z'
+      };
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockClock,
+              error: null
+            })
+          })
+        })
+      });
+
+      await ClockController.getClockById(req, res);
+
+      expect(supabase.from).toHaveBeenCalledWith('clock');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock retrieved successfully',
+        data: mockClock
+      });
     });
 
-    it('should return 404 for already deleted clock', async () => {
-      expect(testClockId).toBeTruthy();
-      const response = await request(BASE_URL).delete(`/clocks/${testClockId}`);
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('Clock not found');
+    it('devrait retourner 404 si le clock n\'existe pas', async () => {
+      req.params.id = '999';
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: { code: 'PGRST116' }
+            })
+          })
+        })
+      });
+
+      await ClockController.getClockById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Clock not found'
+      });
     });
 
-    it('should return 500 for non-existent clock', async () => {
-      const response = await request(BASE_URL).delete('/clocks/6f4bfc69-0244-4d27-8912-73213f161f12');
-      expect(response.status).toBe(500);
-      expect(response.body.success).toBe(false);
+    it('devrait gérer les erreurs de base de données', async () => {
+      req.params.id = '1';
+      const mockError = { message: 'Database error', code: 'DB_ERROR' };
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError
+            })
+          })
+        })
+      });
+
+      await ClockController.getClockById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Failed to fetch clock',
+        error: 'Database error'
+      });
+    });
+  });
+
+  describe('getClockByUserTeamId', () => {
+    it('devrait retourner un clock par user_team_id', async () => {
+      req.params.user_team_id = '1';
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T17:00:00Z'
+      };
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockClock,
+              error: null
+            })
+          })
+        })
+      });
+
+      await ClockController.getClockByUserTeamId(req, res);
+
+      expect(supabase.from).toHaveBeenCalledWith('clock');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock retrieved successfully',
+        data: mockClock
+      });
+    });
+
+    it('devrait retourner 404 si aucun clock n\'est trouvé pour user_team_id', async () => {
+      req.params.user_team_id = '999';
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: { code: 'PGRST116' }
+            })
+          })
+        })
+      });
+
+      await ClockController.getClockByUserTeamId(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Clock not found'
+      });
+    });
+  });
+
+  describe('updateClock', () => {
+    beforeEach(() => {
+      req.params.id = '1';
+    });
+
+    it('devrait mettre à jour un clock avec succès', async () => {
+      req.body = {
+        departure_time: '2025-10-10T18:00:00Z'
+      };
+
+      const mockUpdatedClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T18:00:00Z'
+      };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockUpdatedClock,
+                error: null
+              })
+            })
+          })
+        })
+      });
+
+      await ClockController.updateClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock updated successfully',
+        data: mockUpdatedClock
+      });
+    });
+
+    it('devrait mettre à jour plusieurs champs', async () => {
+      req.body = {
+        arrival_time: '2025-10-10T07:00:00Z',
+        departure_time: '2025-10-10T16:00:00Z',
+        planning_id: 2
+      };
+
+      const mockUpdatedClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 2,
+        arrival_time: '2025-10-10T07:00:00Z',
+        departure_time: '2025-10-10T16:00:00Z'
+      };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockUpdatedClock,
+                error: null
+              })
+            })
+          })
+        })
+      });
+
+      await ClockController.updateClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock updated successfully',
+        data: mockUpdatedClock
+      });
+    });
+
+    it('devrait retourner 404 si le clock n\'existe pas', async () => {
+      req.body = { departure_time: '2025-10-10T18:00:00Z' };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: null,
+                error: { code: 'PGRST116' }
+              })
+            })
+          })
+        })
+      });
+
+      await ClockController.updateClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Clock not found'
+      });
+    });
+
+    it('devrait gérer les mises à jour vides (aucun champ fourni)', async () => {
+      req.body = {};
+
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T17:00:00Z'
+      };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockClock,
+                error: null
+              })
+            })
+          })
+        })
+      });
+
+      await ClockController.updateClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('devrait gérer les erreurs de base de données lors de la mise à jour', async () => {
+      req.body = { departure_time: '2025-10-10T18:00:00Z' };
+      const mockError = { message: 'Constraint violation', code: 'DB_ERROR' };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: null,
+                error: mockError
+              })
+            })
+          })
+        })
+      });
+
+      await ClockController.updateClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Failed to update clock',
+        error: 'Constraint violation'
+      });
+    });
+  });
+
+  describe('deleteClock', () => {
+    it('devrait supprimer un clock avec succès', async () => {
+      req.params.id = '1';
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        planning_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z',
+        departure_time: '2025-10-10T17:00:00Z'
+      };
+
+      // Mock pour vérifier l'existence
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockClock,
+              error: null
+            })
+          })
+        })
+      });
+
+      // Mock pour la suppression
+      supabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            error: null
+          })
+        })
+      });
+
+      await ClockController.deleteClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Clock deleted successfully',
+        data: {
+          deletedClock: mockClock
+        }
+      });
+    });
+
+    it('devrait retourner 404 si le clock n\'existe pas', async () => {
+      req.params.id = '999';
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: { code: 'PGRST116' }
+            })
+          })
+        })
+      });
+
+      await ClockController.deleteClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Clock not found'
+      });
+    });
+
+    it('devrait gérer les erreurs lors de la vérification d\'existence', async () => {
+      req.params.id = '1';
+      const mockError = { message: 'Database error', code: 'DB_ERROR' };
+
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError
+            })
+          })
+        })
+      });
+
+      await ClockController.deleteClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Failed to check clock existence',
+        error: 'Database error'
+      });
+    });
+
+    it('devrait gérer les erreurs lors de la suppression', async () => {
+      req.params.id = '1';
+      const mockClock = {
+        id: 1,
+        user_team_id: 1,
+        arrival_time: '2025-10-10T08:00:00Z'
+      };
+
+      // Mock pour vérifier l'existence
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockClock,
+              error: null
+            })
+          })
+        })
+      });
+
+      // Mock pour la suppression avec erreur
+      supabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            error: { message: 'Deletion failed' }
+          })
+        })
+      });
+
+      await ClockController.deleteClock(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Failed to delete clock',
+        error: 'Deletion failed'
+      });
     });
   });
 });
