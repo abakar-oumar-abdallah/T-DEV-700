@@ -36,16 +36,19 @@ router.get('/clocks', ClockController.getAllClocks);
  *           schema:
  *             type: object
  *             required:
- *               - user_id
- *               - clock_in
- *               - clock_out
+ *               - user_team_id
+ *               - planning_id
+ *               - arrival_time
+ *               - departure_time
  *             properties:
- *               user_id:
+ *               planning_id:
  *                 type: string
- *               clock_in:
+ *               user_team_id:
+ *                 type: string
+ *               arrival_time:
  *                 type: string
  *                 format: date-time
- *               clock_out:
+ *               departure_time:
  *                 type: string
  *                 format: date-time
  *     responses:
@@ -80,6 +83,30 @@ router.post('/clocks', ClockController.createClock);
  */
 router.get('/clocks/:id', ClockController.getClockById);
 
+// Get a clock by user team id
+/**
+ * @swagger
+ * /clocks/{user_team_id}:
+ *   get:
+ *     summary: Get clock by user_team_id
+ *     tags: [Clocks]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: user team id
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Clock found
+ *       404:
+ *         description: Clock not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/clocks/:user_team_id', ClockController.getClockByUserTeamId);
+
 // Update a clock
 /**
  * @swagger
@@ -101,12 +128,12 @@ router.get('/clocks/:id', ClockController.getClockById);
  *           schema:
  *             type: object
  *             properties:
- *               user_id:
+ *               user_team_id:
  *                 type: string
- *               clock_in:
+ *               arrival_time:
  *                 type: string
  *                 format: date-time
- *               clock_out:
+ *               departure_time:
  *                 type: string
  *                 format: date-time
  *     responses:
