@@ -44,13 +44,13 @@ class UserController {
    */
   async createUser(req, res) {
     try {
-      const { email, password, first_name, last_name} = req.body;
+      const { email, password, first_name, last_name, permission} = req.body;
 
       // Validation des champs requis
-      if (!email || !password || !first_name || !last_name) {
+      if (!email || !password || !first_name || !last_name || !permission) {
         return res.status(400).json({
           success: false,
-          message: 'Email, password, first_name and last_name are required'
+          message: 'Email, password, first_name, last_name and permission are required'
         });
       }
 
@@ -113,7 +113,8 @@ class UserController {
             email: email.toLowerCase().trim(),
             password: hashedPassword,
             first_name: first_name.trim(),
-            last_name: last_name.trim()
+            last_name: last_name.trim(),
+            permission:permission.trim()
           }
         ])
         .select()
@@ -250,10 +251,10 @@ class UserController {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { email, password, first_name, last_name } = req.body;
+      const { email, password, first_name, last_name, permission } = req.body;
 
       // Vérifier qu'au moins un champ est fourni
-      if (!email && !password && !first_name && !last_name) {
+      if (!email && !password && !first_name && !last_name  && !permission) {
         return res.status(400).json({
           success: false,
           message: 'At least one field must be provided to update'

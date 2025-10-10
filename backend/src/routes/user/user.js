@@ -40,6 +40,7 @@ router.get('/users', UserController.getAllUsers);
  *               - password
  *               - first_name
  *               - last_name
+ *               - permission
  *             properties:
  *               email:
  *                 type: string
@@ -53,6 +54,9 @@ router.get('/users', UserController.getAllUsers);
  *               last_name:
  *                 type: string
  *                 example: Doe
+ *               permission:
+ *                type: string
+ *                example: admin
  *     responses:
  *       201:
  *         description: User created
@@ -76,7 +80,7 @@ router.post('/users', UserController.createUser);
  *       - in: path
  *         name: id
  *         required: true
- *         description: User UUID
+ *         description: User id
  *         schema:
  *           type: string
  *     responses:
@@ -150,6 +154,9 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *               last_name:
  *                 type: string
  *                 example: Doe
+ *               permission:
+ *                type: string
+ *                example: admin
  *     responses:
  *       200:
  *         description: User updated
