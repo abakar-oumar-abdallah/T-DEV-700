@@ -96,7 +96,7 @@ class ClockController {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116' || data === null) {
+        if (error.code === 'PGRST116') {
           return res.status(404).json({
             success: false,
             message: 'Clock not found'
@@ -110,6 +110,14 @@ class ClockController {
           error: error.message
         });
       }
+
+      if (!data) {
+        return res.status(404).json({
+          success: false,
+          message: 'Clock not found'
+        });
+      }
+
 
       res.status(200).json({
         success: true,
