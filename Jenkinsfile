@@ -45,7 +45,7 @@ pipeline {
         stage('Vérifier les codes') {
             steps {
                 dir('backend') {
-                    sh 'npm run lint || true' // Permet de vérifier la syntaxe et la bonne pratique dans notre code
+                    sh 'npm run lint || true' // Permet de vérifier la syntaxe et la bonne pratique dans notre code.
                 }
             }
         }
@@ -53,7 +53,19 @@ pipeline {
         stage('Vérifier les dépendances') {
             steps {
                 dir('backend') {
-                    sh 'npm audit || true'
+                    sh 'npm audit || true' // Permet les toutes vulnérabilités des dépendances.
+                }
+            }
+        }
+
+        stage('Upload vers Codecov') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        curl -Os https://uploader.codecov.io/latest/linux/codecov
+                        chmod +x codecov
+                        ./codecov -t ${CODECOV_TOKEN}
+                    '''
                 }
             }
         }
