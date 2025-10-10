@@ -59,22 +59,19 @@ pipeline {
         }
 
         stage('Upload coverage vers Codecov') {
-            when {
-                branch 'develop'
+            environment {
+                CODECOV_TOKEN = credentials('codecov-token')
             }
             steps {
                 dir('backend') {
-                    withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
-                        sh '''
-                            curl -Os https://uploader.codecov.io/latest/linux/codecov
-                            chmod +x codecov
-                            ./codecov -t ${CODECOV_TOKEN} -f coverage/lcov.info -F backend
-                        '''
-                    }
+                    sh '''
+                        curl -Os https://uploader.codecov.io/latest/linux/codecov
+                        chmod +x codecov
+                        ./codecov -t ${CODECOV_TOKEN} -f coverage/lcov.info -F backend
+                    '''
                 }
             }
         }
-    }
     
     post {
         always {
