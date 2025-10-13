@@ -85,6 +85,30 @@ router.post('/teams', TeamController.createTeam);
  */
 router.get('/teams/:id', TeamController.getTeamById);
 
+// get a team by name
+/**
+ * @swagger
+ * /teams/{name}/name:
+ *   get:
+ *     summary: Get teams by name
+ *     tags: [Teams]
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: name of the team to retrieve
+ *     responses:
+ *       200:
+ *         description: Team found successfully
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/teams/:name/name', TeamController.getTeamByName);
+
 /**
  * @swagger
  * /teams/{id}:

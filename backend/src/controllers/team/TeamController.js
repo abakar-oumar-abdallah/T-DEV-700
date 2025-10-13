@@ -137,6 +137,51 @@ class TeamController {
     }
   }
 
+    /**
+   * Get team by name
+   */
+  async getTeamByName(req, res) {
+    try {
+      const { name } = req.params;
+
+      const { data, error } = await supabase
+        .from('team')
+        .select('*')
+        .eq('name', name)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116' || data === null) {
+          return res.status(404).json({
+            success: false,
+            message: 'Team not found'
+          });
+        }
+
+        console.error('Error fetching team:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to fetch team',
+          error: error.message
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Team retrieved successfully',
+        data: data
+      });
+
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: err.message
+      });
+    }
+  }
+
   /**
    * Update team
    */
