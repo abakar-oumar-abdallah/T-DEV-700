@@ -20,14 +20,17 @@ const userRoute = require("./routes/user/user.js");
 const loginRoute = require("./routes/auth/auth.js");
 const teamRoute = require("./routes/team/team.js");
 const userTeamRoute = require("./routes/userTeam/userTeam.js");
+const clockRoute = require("./routes/clock/clock.js");
+const planningRoute = require("./routes/planning/planning.js");
+const scheduleRoute = require("./routes/schedule/schedule.js");
 
 app.use("", teamRoute);
-const clockRoute = require("./routes/clock/clock.js");
 app.use("", clockRoute);
 app.use("", userRoute);
-app.use("", userTeamRoute);
 app.use("", loginRoute);
-
+app.use("", userTeamRoute);
+app.use("", planningRoute);
+app.use("", scheduleRoute);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
