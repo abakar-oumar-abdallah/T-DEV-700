@@ -51,7 +51,7 @@ router.get('/schedules/:id', ScheduleController.getScheduleById);
 // Get schedules by planning ID
 /**
  * @swagger
- * /plannings/{planningId}/schedules:
+ * /schedules/plannings/{planningId}:
  *   get:
  *     summary: Get all schedules for a specific planning
  *     tags: [Schedule]
@@ -70,7 +70,7 @@ router.get('/schedules/:id', ScheduleController.getScheduleById);
  *       500:
  *         description: Server error
  */
-router.get('/plannings/:planningId/schedules', ScheduleController.getSchedulesByPlanningId);
+router.get('/schedules/plannings/:planningId', ScheduleController.getSchedulesByPlanningId);
 
 // Update schedule
 /**
@@ -142,5 +142,53 @@ router.patch('/schedules/:id', ScheduleController.updateSchedule);
  *         description: Server error
  */
 router.delete('/schedules/:id', ScheduleController.deleteSchedule);
+
+// Get current schedule by user-team ID
+/**
+ * @swagger
+ * /schedules/user-teams/{userTeamId}/current:
+ *   get:
+ *     summary: Get current day schedule for a user-team association
+ *     tags: [Schedule]
+ *     parameters:
+ *       - in: path
+ *         name: userTeamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User-Team association ID
+ *     responses:
+ *       200:
+ *         description: Current schedule retrieved successfully
+ *       404:
+ *         description: User-team association not found or no schedule for today
+ *       500:
+ *         description: Server error
+ */
+router.get('/schedules/user-teams/:userTeamId/current', ScheduleController.getCurrentScheduleByUserTeam);
+
+// Get current default schedule by team ID
+/**
+ * @swagger
+ * /schedules/teams/{teamId}/current-default:
+ *   get:
+ *     summary: Get current day default schedule for a team
+ *     tags: [Schedule]
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     responses:
+ *       200:
+ *         description: Current default schedule retrieved successfully
+ *       404:
+ *         description: Team not found or no default schedule for today
+ *       500:
+ *         description: Server error
+ */
+router.get('/schedules/teams/:teamId/current-default', ScheduleController.getCurrentDefaultScheduleByTeam);
 
 module.exports = router;
