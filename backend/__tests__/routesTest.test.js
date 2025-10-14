@@ -5,6 +5,8 @@ const userRoutes = require('../src/routes/user/user');
 const teamRoutes = require('../src/routes/team/team');
 const clockRoutes = require('../src/routes/clock/clock');
 const userTeamRoutes = require('../src/routes/userTeam/userTeam');
+const planningRoutes = require('../src/routes/planning/planning');
+const scheduleRoutes = require('../src/routes/schedule/schedule');
 
 // Mock des contrôleurs
 jest.mock('../src/controllers/auth/AuthController', () => ({
@@ -50,6 +52,28 @@ jest.mock('../src/controllers/userteam/UserTeamController', () => ({
   deleteUserTeam: jest.fn((req, res) => res.status(200).json({ success: true }))
 }));
 
+jest.mock('../src/controllers/planning/PlanningController', () => ({
+  getAllPlannings: jest.fn((req, res) => res.status(200).json({ success: true, data: [] })),
+  createPlanning: jest.fn((req, res) => res.status(201).json({ success: true, data: { id: 1 } })),
+  getPlanningById: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
+  updatePlanning: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
+  deletePlanning: jest.fn((req, res) => res.status(200).json({ success: true })),
+  getDefaultPlanningByTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { team: { id: 1 }, planning: { id: 1 } } })),
+  getPlanningByUserTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { userTeam: { id: 1 }, planning: { id: 1 } } })),
+  modifyTeamPlanning: jest.fn((req, res) => res.status(201).json({ success: true, data: { newPlanning: { id: 1 } } })),
+  modifyUserTeamPlanning: jest.fn((req, res) => res.status(201).json({ success: true, data: { newPlanning: { id: 1 } } }))
+}));
+
+jest.mock('../src/controllers/schedule/ScheduleController', () => ({
+  getAllSchedules: jest.fn((req, res) => res.status(200).json({ success: true, data: [] })),
+  getScheduleById: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
+  getSchedulesByPlanningId: jest.fn((req, res) => res.status(200).json({ success: true, data: [] })),
+  updateSchedule: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
+  deleteSchedule: jest.fn((req, res) => res.status(200).json({ success: true })),
+  getCurrentScheduleByUserTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
+  getCurrentDefaultScheduleByTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } }))
+}));
+
 // Configuration de l'application Express pour les tests
 const app = express();
 app.use(express.json());
@@ -58,6 +82,8 @@ app.use('/api', userRoutes);
 app.use('/api', teamRoutes);
 app.use('/api', clockRoutes);
 app.use('/api', userTeamRoutes);
+app.use('/api', planningRoutes);
+app.use('/api', scheduleRoutes);
 
 describe('Routes Integration Tests', () => {
   
@@ -379,6 +405,160 @@ describe('Routes Integration Tests', () => {
       it('devrait supprimer une association user-team', async () => {
         const response = await request(app).delete('/api/userteams/1/1');
 
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
+  });
+
+  // ==================== PLANNING ROUTES ====================
+  describe('Planning Routes', () => {
+    describe('GET /api/plannings', () => {
+      it('devrait retourner tous les plannings', async () => {
+        const response = await request(app).get('/api/plannings');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(Array.isArray(response.body.data)).toBe(true);
+      });
+    });
+
+    describe('POST /api/plannings', () => {
+      it('devrait créer un planning', async () => {
+        const response = await request(app)
+          .post('/api/plannings')
+          .send({ is_default: false, schedules: [] });
+        expect(response.status).toBe(201);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('id');
+      });
+    });
+
+    describe('GET /api/plannings/:id', () => {
+      it('devrait retourner un planning par ID', async () => {
+        const response = await request(app).get('/api/plannings/1');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('id');
+      });
+    });
+
+    describe('PATCH /api/plannings/:id', () => {
+      it('devrait mettre à jour un planning', async () => {
+        const response = await request(app)
+          .patch('/api/plannings/1')
+          .send({ is_default: true });
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('DELETE /api/plannings/:id', () => {
+      it('devrait supprimer un planning', async () => {
+        const response = await request(app).delete('/api/plannings/1');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('GET /api/plannings/teams/:teamId/default', () => {
+      it('devrait retourner le planning par défaut d\'une équipe', async () => {
+        const response = await request(app).get('/api/plannings/teams/1/default');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('team');
+        expect(response.body.data).toHaveProperty('planning');
+      });
+    });
+
+    describe('GET /api/plannings/user-teams/:userTeamId', () => {
+      it('devrait retourner le planning d\'une association user-team', async () => {
+        const response = await request(app).get('/api/plannings/user-teams/1');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('userTeam');
+        expect(response.body.data).toHaveProperty('planning');
+      });
+    });
+
+    describe('POST /api/plannings/teams/:teamId/modify', () => {
+      it('devrait modifier le planning d\'une équipe', async () => {
+        const response = await request(app)
+          .post('/api/plannings/teams/1/modify')
+          .send({ schedules: [] });
+        expect(response.status).toBe(201);
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('POST /api/plannings/user-teams/:userTeamId/modify', () => {
+      it('devrait modifier le planning d\'une association', async () => {
+        const response = await request(app)
+          .post('/api/plannings/user-teams/1/modify')
+          .send({ schedules: [] });
+        expect(response.status).toBe(201);
+        expect(response.body.success).toBe(true);
+      });
+    });
+  });
+
+  // ==================== SCHEDULE ROUTES ====================
+  describe('Schedule Routes', () => {
+    describe('GET /api/schedules', () => {
+      it('devrait retourner tous les schedules', async () => {
+        const response = await request(app).get('/api/schedules');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(Array.isArray(response.body.data)).toBe(true);
+      });
+    });
+
+    describe('GET /api/schedules/:id', () => {
+      it('devrait retourner un schedule par ID', async () => {
+        const response = await request(app).get('/api/schedules/1');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toHaveProperty('id');
+      });
+    });
+
+    describe('GET /api/schedules/plannings/:planningId', () => {
+      it('devrait retourner les schedules d\'un planning', async () => {
+        const response = await request(app).get('/api/schedules/plannings/1');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(Array.isArray(response.body.data)).toBe(true);
+      });
+    });
+
+    describe('PATCH /api/schedules/:id', () => {
+      it('devrait mettre à jour un schedule', async () => {
+        const response = await request(app)
+          .patch('/api/schedules/1')
+          .send({ day: 'tuesday' });
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('DELETE /api/schedules/:id', () => {
+      it('devrait supprimer un schedule', async () => {
+        const response = await request(app).delete('/api/schedules/1');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('GET /api/schedules/user-teams/:userTeamId/current', () => {
+      it('devrait retourner le schedule courant d\'une association', async () => {
+        const response = await request(app).get('/api/schedules/user-teams/1/current');
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+      });
+    });
+
+    describe('GET /api/schedules/teams/:teamId/current-default', () => {
+      it('devrait retourner le schedule par défaut courant d\'une équipe', async () => {
+        const response = await request(app).get('/api/schedules/teams/1/current-default');
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
       });
