@@ -4,13 +4,15 @@ pipeline {
     
     stages {
         stage('Build') {
-            script {
+            steps {
+                script {
                 dir('frontend/2clock') {
                     dockerFrontendImage = docker.build("abakar98/jenkins-frontend:latest")
                     withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
                         dockerFrontendImage.push()
                     }
                 }
+            }
             }
         }
     }
