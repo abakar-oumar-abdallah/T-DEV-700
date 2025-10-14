@@ -1,10 +1,14 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {HomeIcon,ClockIcon,UserIcon,ChartBarIcon,Bars3Icon,ArrowRightOnRectangleIcon,} from '@heroicons/react/24/outline'
 
 export default function EmployeePage() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname() || ''
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path)
 
   useEffect(() => {
     if (mobileOpen) {
@@ -44,17 +48,25 @@ export default function EmployeePage() {
 
           <nav className="flex-1">
             <ul className="space-y-3">
-              <li className="rounded-md py-3 px-4 flex items-center gap-3" style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-secondary)' }}>
-                <HomeIcon className="w-5 h-5" />
-                <span className="font-medium">Accueil</span>
+              <li>
+                <Link href="/employee" className={`${isActive('/employee') ? 'rounded-md py-3 px-4 flex items-center gap-3 bg-[var(--color-primary)] text-[var(--color-secondary)]' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+                  <HomeIcon className="w-5 h-5" />
+                  <span className="font-medium">Accueil</span>
+                </Link>
               </li>
-              <li className="text-white/80 hover:text-white py-3 px-2 flex items-center gap-3">
-                <ClockIcon className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
-                <span>Pointage</span>
+
+              <li>
+                <Link href="/dashboard/clock" className={`${isActive('/dashboard/clock') ? 'rounded-md py-3 px-4 flex items-center gap-3 bg-[var(--color-primary)] text-[var(--color-secondary)]' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+                  <ClockIcon className="w-6 h-6" style={{ color: isActive('/dashboard/clock') ? 'var(--color-secondary)' : 'var(--color-primary)' }} />
+                  <span>Pointage</span>
+                </Link>
               </li>
-              <li className="text-white/80 hover:text-white py-3 px-2 flex items-center gap-3">
-                <UserIcon className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
-                <span>Profil</span>
+
+              <li>
+                <Link href="/employee" className={`${isActive('/employee') ? 'text-white/80 py-3 px-2 flex items-center gap-3' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+                  <UserIcon className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
+                  <span>Profil</span>
+                </Link>
               </li>
             </ul>
           </nav>
