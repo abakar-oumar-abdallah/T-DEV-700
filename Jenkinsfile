@@ -1,15 +1,16 @@
 pipeline {
     
-    agent {
-        docker {
-        image 'node:lts'
-        }
-    }
+    agent any
     
     stages {
         stage('Build') {
-            steps {
-                sh 'node -v'
+            script {
+                dir('frontend/2clock') {
+                    dockerFrontendImage = docker.build("abakar98/jenkins-frontend:latest")
+                    withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
+                        dockerFrontendImage.push()
+                    }
+                }
             }
         }
     }
