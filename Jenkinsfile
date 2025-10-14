@@ -1,10 +1,11 @@
 pipeline {
-    agent any 
-
-    docker {
+    
+    agent {
+        docker {
         image 'node:lts'
+        }
     }
-
+    
     stages {
         stage('Build') {
             steps {
