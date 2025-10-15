@@ -21,7 +21,9 @@ export default function LoginForm() {
     if (result.success && result.data) {
       console.log('Login successful:', result);
       localStorage.setItem('session', result.data.token);
-      router.push('/');
+      localStorage.setItem('userPrenom', result.data.user.first_name)
+      localStorage.setItem('userNom', result.data.user.last_name)
+      router.push('/employee');
     } else {
       setError(result.error || 'Login failed');
     }
