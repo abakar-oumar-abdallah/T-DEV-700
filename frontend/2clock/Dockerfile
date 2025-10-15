@@ -13,9 +13,7 @@ COPY . .
 
 # Variables d'environnement pour le build
 ENV NEXT_SKIP_NATIVE_SWC_BINARY=1
-
-# Utiliser la config de production
-RUN cp next.config.prod.ts next.config.ts
+ENV BUILD_MODE=production
 
 # Build de l'application en mode statique
 RUN npm run build
