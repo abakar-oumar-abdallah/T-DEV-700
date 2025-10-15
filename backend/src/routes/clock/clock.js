@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const ClockController = require('../../controllers/clock/ClockController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -57,7 +60,11 @@ router.get('/clocks', ClockController.getAllClocks);
  *       500:
  *         description: Server error
  */
-router.post('/clocks', ClockController.createClock);
+router.post('/clocks',
+    // AuthMiddleware,
+    // TeamRoleMiddleware(['employee', 'manager', 'admin']),
+    ClockController.createClock
+);
 
 // Get a clock by id
 /**
@@ -105,7 +112,11 @@ router.get('/clocks/:id', ClockController.getClockById);
  *       500:
  *         description: Server error
  */
-router.get('/clocks/:user_team_id', ClockController.getClockByUserTeamId);
+router.get('/clocks/:user_team_id',
+    // AuthMiddleware,
+    // TeamRoleMiddleware(['employee', 'manager', 'admin']),
+    ClockController.getClockByUserTeamId
+);
 
 // Update a clock
 /**

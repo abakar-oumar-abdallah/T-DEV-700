@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const UserTeamController = require('../../controllers/userteam/UserTeamController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -64,7 +67,11 @@ router.get('/userteams', UserTeamController.getAllUserTeams);
  *       500:
  *         description: Server error
  */
-router.post('/userteams', UserTeamController.createUserTeam);
+router.post('/userteams',
+    // AuthMiddleware,
+    // TeamRoleMiddleware(['manager', 'admin']),
+    UserTeamController.createUserTeam
+);
 
 // Create a new user-team association using email
 /**
@@ -107,7 +114,11 @@ router.post('/userteams', UserTeamController.createUserTeam);
  *       500:
  *         description: Server error
  */
-router.post('/userteams/email', UserTeamController.createUserTeamWithEmail);
+router.post('/userteams/email',
+    // AuthMiddleware,
+    // TeamRoleMiddleware(['manager', 'admin']),
+    UserTeamController.createUserTeamWithEmail
+);
 
 // Get user-team association by userId and teamId
 /**
