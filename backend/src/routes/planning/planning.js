@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const PlanningController = require('../../controllers/planning/PlanningController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -318,5 +320,39 @@ router.post('/plannings/teams/:teamId/modify', PlanningController.modifyTeamPlan
  *         description: Server error
  */
 router.post('/plannings/user-teams/:userTeamId/modify', PlanningController.modifyUserTeamPlanning);
+
+
+// ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================
+// Get current user's planning for specific team
+/**
+ * @swagger
+ * /plannings/myTeam/{teamId}:
+ *   get:
+ *     summary: Get current user's planning for specific team
+ *     tags: [Planning]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     responses:
+ *       200:
+ *         description: User planning for team retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User-team association not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/plannings/myTeam/:teamId', 
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager'], true),
+    PlanningController.getPlanningByUserTeam
+);
 
 module.exports = router;

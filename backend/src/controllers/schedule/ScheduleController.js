@@ -190,8 +190,16 @@ class ScheduleController {
   // Resource-specific operations
   getCurrentScheduleByUserTeam = async (req, res) => {
     try {
-      const { userTeamId } = req.params;
+      // Use userTeamId from params, or fall back to userTeamId added by TeamRoleMiddleware
+      const userTeamId = req.params.userTeamId || req.body.userTeamId;
       const currentDay = this.getCurrentDay();
+
+      if (!userTeamId) {
+        return res.status(400).json({
+          success: false,
+          message: 'User team ID is required'
+        });
+      }
 
       // Get user team info
       const userTeamResult = await this.safeQuery(
@@ -201,6 +209,7 @@ class ScheduleController {
       if (userTeamResult.error) return this.handleError(res, userTeamResult.error, 'User-team association not found', 404);
 
       const userTeam = userTeamResult.data;
+      // Use user's specific planning if exists, otherwise fall back to team's default planning
       const planningId = userTeam.planning_id || userTeam.team.default_planning_id;
       
       if (!planningId) {
@@ -220,7 +229,7 @@ class ScheduleController {
             data: {
               currentDay: currentDay,
               userTeam: { id: userTeam.id, role: userTeam.role, user: userTeam.user, team: userTeam.team },
-              isTeamDefault: !userTeam.planning_id
+              isTeamDefault: !userTeam.planning_id  // true if using team's default planning
             }
           });
         }
@@ -234,7 +243,7 @@ class ScheduleController {
           currentDay: currentDay,
           userTeam: { id: userTeam.id, role: userTeam.role, user: userTeam.user, team: userTeam.team },
           schedule: scheduleResult.data,
-          isTeamDefault: !userTeam.planning_id
+          isTeamDefault: !userTeam.planning_id  // true if using team's default planning
         }
       });
     } catch (err) {
