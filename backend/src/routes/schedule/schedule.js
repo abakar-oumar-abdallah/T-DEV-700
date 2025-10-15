@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const ScheduleController = require('../../controllers/schedule/ScheduleController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -190,5 +192,39 @@ router.get('/schedules/user-teams/:userTeamId/current', ScheduleController.getCu
  *         description: Server error
  */
 router.get('/schedules/teams/:teamId/current-default', ScheduleController.getCurrentDefaultScheduleByTeam);
+
+// ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================
+
+// Get current user's current schedule for specific team
+/**
+ * @swagger
+ * /schedules/myTeam/{teamId}/current:
+ *   get:
+ *     summary: Get current user's current schedule for specific team
+ *     tags: [Schedule]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     responses:
+ *       200:
+ *         description: Current schedule for team retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User-team association not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/schedules/myTeam/:teamId/current',
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager'], true),
+    ScheduleController.getCurrentScheduleByUserTeam
+);
 
 module.exports = router;
