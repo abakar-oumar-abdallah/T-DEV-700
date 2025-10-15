@@ -70,13 +70,7 @@ export default function ClockPage() {
     }
     setLoading(true)
     await new Promise((r) => setTimeout(r, 400))
-    if (pin !== '1234') {
-      setMessage('Code invalide (utilisez 1234 pour le test)')
-      setLoading(false)
-      setPin('')
-      return
-    }
-
+    
     const last = history[0]
     const nextType: Punch['type'] = last && last.type === 'Arrivée' ? 'Départ' : 'Arrivée'
     await addPunch(nextType)
