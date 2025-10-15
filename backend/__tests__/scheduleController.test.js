@@ -39,7 +39,37 @@ describe('ScheduleController', () => {
       expect(error).toBeNull();
     });
   });
-
+  
+  describe('helper methods', () => {
+  it('safeQuery should return data on success', async () => {
+  const result = await ScheduleController.safeQuery(Promise.resolve({ data: [1], error: null }));
+  expect(result).toEqual({ data: [1], error: null });
+  });
+  
+  it('safeQuery should catch and return error on rejection', async () => {
+  const testError = new Error('Reject');
+  const result = await ScheduleController.safeQuery(Promise.reject(testError));
+  expect(result).toEqual({ data: null, error: testError });
+  });
+  
+  it('handleError should map PGRST116 to 404 and transform message if needed', () => {
+  ScheduleController.handleError(res, { code: 'PGRST116' }, 'Failed to create schedule');
+  expect(res.status).toHaveBeenCalledWith(404);
+  expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Not found - create schedule' });
+  });
+  
+  it('handleError should return provided status and include error message for non-PGRST116', () => {
+  ScheduleController.handleError(res, { message: 'Boom' }, 'Custom error', 418);
+  expect(res.status).toHaveBeenCalledWith(418);
+  expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Custom error', error: 'Boom' });
+  });
+  
+  it('getCurrentDay should return a valid weekday', () => {
+  const day = ScheduleController.getCurrentDay();
+  expect(['sunday','monday','tuesday','wednesday','thursday','friday','saturday']).toContain(day);
+  });
+  });
+  
   describe('getAllSchedules', () => {
     it('should retrieve all schedules successfully', async () => {
       const mockSchedules = [
@@ -145,8 +175,24 @@ describe('ScheduleController', () => {
         message: 'Schedule not found'
       });
     });
-  });
+  it('should return 404 with error details when DB error occurs', async () => {
+      req.params.id = 's1';
 
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({ data: null, error: { code: 'XYZ', message: 'DB broken' } })
+          })
+        })
+      });
+
+      await ScheduleController.getScheduleById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Schedule not found', error: 'DB broken' });
+    });
+  });
+  
   describe('getSchedulesByPlanningId', () => {
     it('should retrieve schedules for a planning', async () => {
       req.params.planningId = 'p1';
@@ -406,19 +452,61 @@ describe('ScheduleController', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      req.params.id = 's1';
-      req.body = { time_out: '18:00:00' };
-
-      supabase.from = jest.fn().mockImplementation(() => { throw new Error('Unexpected error'); });
-
-      await ScheduleController.updateSchedule(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Internal server error', error: 'Unexpected error' });
+    req.params.id = 's1';
+    req.body = { time_out: '18:00:00' };
+    
+    supabase.from = jest.fn().mockImplementation(() => { throw new Error('Unexpected error'); });
+    
+    await ScheduleController.updateSchedule(req, res);
+    
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Internal server error', error: 'Unexpected error' });
     });
-  });
-
-  describe('deleteSchedule', () => {
+    
+    it('should fail with invalid time_out', async () => {
+    req.params.id = 's1';
+    req.body = { time_out: '28:00:00' };
+    
+    await ScheduleController.updateSchedule(req, res);
+    
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ success: false, message: 'time_out format must be HH:MM:SS' });
+    });
+    
+    it('should return 409 when a schedule for the same day already exists', async () => {
+    req.params.id = 's1';
+    req.body = { day: 'monday' };
+    
+    const mockCurrentSchedule = { planning_id: 'p1' };
+    
+    supabase.from = jest.fn()
+    .mockReturnValueOnce({
+    select: jest.fn().mockReturnValue({
+    eq: jest.fn().mockReturnValue({
+    single: jest.fn().mockResolvedValue({ data: mockCurrentSchedule, error: null })
+    })
+    })
+    })
+    .mockReturnValueOnce({
+    select: jest.fn().mockReturnValue({
+    eq: jest.fn().mockReturnValue({
+    eq: jest.fn().mockReturnValue({
+    neq: jest.fn().mockReturnValue({
+    single: jest.fn().mockResolvedValue({ data: { id: 's2' }, error: null })
+    })
+    })
+    })
+    })
+    });
+    
+    await ScheduleController.updateSchedule(req, res);
+    
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({ success: false, message: 'A schedule for this day already exists in the planning' });
+    });
+    });
+    
+    describe('deleteSchedule', () => {
     it('should delete schedule successfully', async () => {
       req.params.id = 's1';
       const mockSchedule = { 
