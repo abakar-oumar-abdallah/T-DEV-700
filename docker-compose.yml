@@ -1,10 +1,10 @@
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend/2clock
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:80" # Nginx écoute sur le port 80 à l'intérieur du container
     env_file:
       - ./frontend/2clock/.env
     volumes:

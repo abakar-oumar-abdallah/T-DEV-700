@@ -1,19 +1,73 @@
 pipeline {
     
-    agent {
-        docker {
-        image 'node:lts'
-        }
+    agent any
+
+    environment {
+        DOCKERHUB_ACCOUNT = 'abakar98'
+        FRONT_REPOSITORY = 'jenkins-frontend'
+        BACK_REPOSITORY = 'jenkins-api'
     }
     
     stages {
-        stage('Build') {
-            steps {
-                sh 'node -v'
+        stage('Build & Push') {
+            parallel {
+
+                stage('Frontend') {
+                    stages {
+                        stage('frontend') {
+                            steps {
+                                script {
+                                    dir('frontend/2clock') {
+                                        dockerFrontendImage = docker.build("${DOCKERHUB_ACCOUNT}/${FRONT_REPOSITORY}:latest")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Pousser sur Docker Hub Frontend') {
+                    steps {
+                        script {
+                            withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
+                                dockerFrontendImage.push()
+                            }
+                        }
+                    }
+                }
+
+                stage('Backend') {
+                    
+                    stages {
+
+                        stage('Construire image Docker Backend') {
+                            steps {
+                                script {
+                                    dir('backend') {
+                                        dockerBackendImage = docker.build("${DOCKERHUB_ACCOUNT}/${BACK_REPOSITORY}:latest")
+                                    }
+                                }
+                            }
+                        }
+
+                        stage('Pousser sur Docker Hub Backend') {
+                            steps {
+                                script {
+                                    withDockerRegistry([credentials: 'JENKINS_DOCKERHUB_TOKEN']) {
+                                        dockerBackendImage.push()
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+
             }
         }
     }
 }
+
 
 
 
