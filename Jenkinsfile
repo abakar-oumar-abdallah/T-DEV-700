@@ -13,8 +13,10 @@ pipeline {
             parallel {
 
                 stage('Frontend') {
+
                     stages {
-                        stage('frontend') {
+
+                        stage('Build Frontend Image') {
                             steps {
                                 script {
                                     dir('frontend/2clock') {
@@ -23,18 +25,20 @@ pipeline {
                                 }
                             }
                         }
+
+                        stage('Pousser sur Docker Hub Frontend') {
+                            steps {
+                                script {
+                                    withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
+                                        dockerFrontendImage.push()
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
                 
-                stage('Pousser sur Docker Hub Frontend') {
-                    steps {
-                        script {
-                            withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
-                                dockerFrontendImage.push()
-                            }
-                        }
-                    }
-                }
 
                 stage('Backend') {
                     
@@ -53,7 +57,7 @@ pipeline {
                         stage('Pousser sur Docker Hub Backend') {
                             steps {
                                 script {
-                                    withDockerRegistry([credentials: 'JENKINS_DOCKERHUB_TOKEN']) {
+                                    withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
                                         dockerBackendImage.push()
                                     }
                                 }
