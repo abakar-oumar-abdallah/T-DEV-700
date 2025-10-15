@@ -16,6 +16,21 @@ pipeline {
 
                     stages {
 
+                        stage('Checks Frontend') {
+                            agent {
+                                docker {
+                                    image 'node:lts'
+                                }
+                                steps {
+                                    dir('frontend/2clock') {
+                                        sh 'npm ci'
+                                        sh 'npm run lint'
+                                        sh 'npm audit'
+                                    }
+                                }
+                            }
+                        }
+
                         stage('Build Frontend Image') {
                             steps {
                                 script {
@@ -43,6 +58,22 @@ pipeline {
                 stage('Backend') {
                     
                     stages {
+
+                        stage('Checks Backend') {
+                            agent {
+                                docker {
+                                    image 'node:lts'
+                                }
+                                steps {
+                                    dir('backend') {
+                                        sh 'npm ci'
+                                        sh 'npm run lint'
+                                        sh 'npm audit'
+                                        sh 'npm test:ci'
+                                    }
+                                }
+                            }
+                        }
 
                         stage('Construire image Docker Backend') {
                             steps {
