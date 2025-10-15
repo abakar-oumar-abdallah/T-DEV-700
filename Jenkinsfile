@@ -21,13 +21,13 @@ pipeline {
                                 docker {
                                     image 'node:lts'
                                 }
-                                steps {
+                            }
+                            steps {
                                     dir('frontend/2clock') {
                                         sh 'npm ci'
                                         sh 'npm run lint'
                                         sh 'npm audit'
                                     }
-                                }
                             }
                         }
 
@@ -64,14 +64,14 @@ pipeline {
                                 docker {
                                     image 'node:lts'
                                 }
-                                steps {
+                            }
+                            steps {
                                     dir('backend') {
                                         sh 'npm ci'
                                         sh 'npm run lint'
                                         sh 'npm audit'
                                         sh 'npm test:ci'
                                     }
-                                }
                             }
                         }
 
