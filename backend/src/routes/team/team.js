@@ -24,8 +24,8 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *         description: List of all teams
  */
 router.get('/teams', 
-    AuthMiddleware,
-    PermissionMiddleware('superadmin'),
+    // AuthMiddleware,
+    // PermissionMiddleware('superadmin'),
     TeamController.getAllTeams
 );
 
@@ -67,8 +67,8 @@ router.get('/teams',
  */
 router.post(
     '/teams', 
-    AuthMiddleware,
-    PermissionMiddleware('admin'),
+    // AuthMiddleware,
+    // PermissionMiddleware('admin'),
     TeamController.createTeam
 );
 
