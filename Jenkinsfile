@@ -101,6 +101,20 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu, sacha.morez@epitech.eu, jerome.muscat@epitech.eu, jugurtha.deghaimi@epitech.eu, mathieu.hernandez@epitech.eu')
+        }
+
+        failure {
+            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu, sacha.morez@epitech.eu, jerome.muscat@epitech.eu, jugurtha.deghaimi@epitech.eu, mathieu.hernandez@epitech.eu')
+        }
+
+        always {
+            echo "L'exécution du pipeline est terminée. "
+        }
+    }
 }
 
 
