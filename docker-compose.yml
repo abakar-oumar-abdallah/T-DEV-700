@@ -2,16 +2,19 @@ services:
   frontend:
     build:
       context: ./frontend/2clock
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
-      - "3000:80" # Nginx écoute sur le port 80 à l'intérieur du container
+      - "3000:3000" 
     env_file:
       - ./frontend/2clock/.env
     volumes:
       - ./frontend/2clock:/app
       - /app/node_modules
+      - /app/.next
     networks:
       - jenkins
+    environment:
+      - WATCHPACK_POLLING=true
 
   backend:
     build:
