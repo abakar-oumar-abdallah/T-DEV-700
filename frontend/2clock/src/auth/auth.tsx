@@ -7,7 +7,8 @@ interface LoginResponse {
   success: boolean;
   message: string;
   session?: any;
-  data?: { 
+  data?: {
+    user: any; 
     token: string;
     loginTime: string;
   };
