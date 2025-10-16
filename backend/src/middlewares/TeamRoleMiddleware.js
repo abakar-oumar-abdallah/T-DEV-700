@@ -8,7 +8,7 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
       if (!req.user || !req.user.userId) {
         return res.status(401).json({ 
           success: false, 
-          message: "Unauthorized - User authentication required" 
+          message: 'Unauthorized - User authentication required' 
         });
       }
 
@@ -19,7 +19,7 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
       if (requireTeamContext && !teamId) {
         return res.status(400).json({ 
           success: false, 
-          message: "Bad Request - Team context required for this operation" 
+          message: 'Bad Request - Team context required for this operation' 
         });
       }
 
@@ -44,7 +44,7 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
         if (teamError || !userTeam) {
           return res.status(403).json({ 
             success: false, 
-            message: "Forbidden - User not member of this team" 
+            message: 'Forbidden - User not member of this team' 
           });
         }
 
@@ -74,16 +74,16 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
         // Team roles specified but no teamId provided
         return res.status(400).json({ 
           success: false, 
-          message: "Bad Request - teamId required for team role validation" 
+          message: 'Bad Request - teamId required for team role validation' 
         });
       }
 
       next();
     } catch (error) {
-      console.error("TeamRoleMiddleware error:", error);
+      console.error('TeamRoleMiddleware error:', error);
       res.status(500).json({ 
         success: false, 
-        message: "Internal Server Error" 
+        message: 'Internal Server Error' 
       });
     }
   };
