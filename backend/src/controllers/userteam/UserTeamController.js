@@ -57,7 +57,7 @@ class UserTeamController {
       }
 
       // Validate role
-      const validRoles = ["employee", "manager"];
+      const validRoles = ['employee', 'manager'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
@@ -200,7 +200,7 @@ class UserTeamController {
       }
 
       // Validate role
-      const validRoles = ["employee", "manager"];
+      const validRoles = ['employee', 'manager'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
@@ -497,7 +497,7 @@ class UserTeamController {
       }
 
       // Validate role
-      const validRoles = ["employee", "manager"];
+      const validRoles = ['employee', 'manager'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,

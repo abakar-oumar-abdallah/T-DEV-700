@@ -11,7 +11,7 @@ const AuthMiddleware = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({ 
         success: false, 
-        message: "Unauthorized - No token provided" 
+        message: 'Unauthorized - No token provided' 
       });
     }
 
@@ -33,7 +33,7 @@ const AuthMiddleware = async (req, res, next) => {
     if (userError || !user) {
       return res.status(401).json({ 
         success: false, 
-        message: "Unauthorized - User not found" 
+        message: 'Unauthorized - User not found' 
       });
     }
 
@@ -45,20 +45,20 @@ const AuthMiddleware = async (req, res, next) => {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ 
         success: false, 
-        message: "Unauthorized - Invalid token" 
+        message: 'Unauthorized - Invalid token' 
       });
     }
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 
         success: false, 
-        message: "Unauthorized - Token expired" 
+        message: 'Unauthorized - Token expired' 
       });
     }
     
-    console.error("AuthMiddleware error:", error);
+    console.error('AuthMiddleware error:', error);
     res.status(500).json({ 
       success: false, 
-      message: "Internal Server Error" 
+      message: 'Internal Server Error' 
     });
   }
 };
