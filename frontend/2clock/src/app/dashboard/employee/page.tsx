@@ -58,7 +58,7 @@ export default function EmployeePage() {
           <nav className="flex-1">
             <ul className="space-y-3">
               <li>
-                <Link href="/employee" className={`${isActive('/employee') ? 'rounded-md py-3 px-4 flex items-center gap-3 bg-[var(--color-primary)] text-[var(--color-secondary)]' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+                <Link href="/dashboard/employee" className={`${isActive('/dashboard/employee') && !isActive('/dashboard/employee/punches') ? 'rounded-md py-3 px-4 flex items-center gap-3 bg-[var(--color-primary)] text-[var(--color-secondary)]' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
                   <HomeIcon className="w-5 h-5" />
                   <span className="font-medium">Accueil</span>
                 </Link>
@@ -72,7 +72,7 @@ export default function EmployeePage() {
               </li>
 
               <li>
-                <Link href="/employee" className={`${isActive('/employee') ? 'text-white/80 py-3 px-2 flex items-center gap-3' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+                <Link href="/dashboard/employee" className={`${isActive('/dashboard/employee') ? 'text-white/80 py-3 px-2 flex items-center gap-3' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
                   <UserIcon className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
                   <span>Profil</span>
                 </Link>
@@ -135,7 +135,7 @@ export default function EmployeePage() {
                 </article>
               </Link>
 
-              <Link href="/employee">
+              <Link href="/dashboard/employee">
                 <article className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer" style={{ borderTop: '4px solid #7a5bdc' }}>
                   <div className="flex flex-col items-center text-center">
                     <div className="p-4 rounded-full mb-4" style={{ background: 'rgba(122,91,220,0.08)' }}>
@@ -147,7 +147,7 @@ export default function EmployeePage() {
                 </article>
               </Link>
 
-              <Link href="/employee/punches">
+              <Link href="/dashboard/employee/punches">
                 <article className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer" style={{ borderTop: '4px solid #3bb273' }}>
                   <div className="flex flex-col items-center text-center">
                     <div className="p-4 rounded-full mb-4" style={{ background: 'rgba(59,178,115,0.08)' }}>

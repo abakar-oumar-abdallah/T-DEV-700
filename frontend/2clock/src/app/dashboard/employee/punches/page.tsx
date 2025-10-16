@@ -67,9 +67,9 @@ const EmployeePunchesPage = () => {
           <ul className="space-y-3">
             <li>
               <Link
-                href="/employee"
+                href="/dashboard/employee"
                 className={`${
-                  isActive("/employee") && !isActive("/employee/punches")
+                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
@@ -81,9 +81,9 @@ const EmployeePunchesPage = () => {
 
             <li>
               <Link
-                href="/employee/punches"
+                href="/dashboard/employee/punches"
                 className={`${
-                  isActive("/employee/punches")
+                  isActive("/dashboard/employee/punches")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
@@ -91,7 +91,7 @@ const EmployeePunchesPage = () => {
                 <ChartBarIcon
                   className="w-6 h-6"
                   style={{
-                    color: isActive("/employee/punches")
+                    color: isActive("/dashboard/employee/punches")
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }}

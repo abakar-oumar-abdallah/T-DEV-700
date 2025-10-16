@@ -21,6 +21,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
+  const userPrenomStr = localStorage.getItem('userPrenom')!;
+  const userNomStr = localStorage.getItem('userNom')!;
+
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
   }, [mobileOpen]);
@@ -62,15 +65,19 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           <ul className="space-y-3">
             <li>
               <Link
-                href="/employee"
+                href="/dashboard/employee"
                 className={`${
-                  isActive("/employee") && !isActive("/employee/punches")
+                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
                 onClick={() => setMobileOpen(false)}
               >
-                <HomeIcon className="w-5 h-5" />
+                <HomeIcon className="w-5 h-5 " style={{
+                    color: isActive("/dashboard/clock")
+                      ? "var(--color-secondary)"
+                      : "var(--color-primary)",
+                  }} />
                 <span className="font-medium">Accueil</span>
               </Link>
             </li>
@@ -99,9 +106,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
             <li>
               <Link
-                href="/employee/punches"
+                href="/dashboard/employee/punches"
                 className={`${
-                  isActive("/employee/punches")
+                  isActive("/dashboard/employee/punches")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
@@ -110,7 +117,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <ChartBarIcon
                   className="w-6 h-6"
                   style={{
-                    color: isActive("/employee/punches")
+                    color: isActive("/dashboard/employee/punches")
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }}
@@ -121,7 +128,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
             <li>
               <Link
-                href="/employee/profile"
+                href="/dashboard/employee/profile"
                 className="text-white/80 hover:text-white py-3 px-4 flex items-center gap-3"
                 onClick={() => setMobileOpen(false)}
               >
@@ -133,14 +140,11 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         </nav>
 
         <div className="mt-6 px-6 pb-6">
-          <button className="flex items-center gap-3 text-white/80 hover:text-white">
-            <ArrowRightOnRectangleIcon
-              className="w-5 h-5"
-              style={{ color: "var(--color-primary)" }}
-            />
-            <span>Déconnexion</span>
-          </button>
-        </div>
+            <button className="flex items-center gap-3 text-white/80 hover:text-white">
+              <Image src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} alt='Image de profile' width={40} height={40} style={{ borderRadius: '50%' }} />
+              <span>{userPrenomStr} {userNomStr}</span>
+            </button>
+          </div>
       </aside>
 
       <div

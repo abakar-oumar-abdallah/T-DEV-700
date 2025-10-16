@@ -37,16 +37,20 @@ export default function ClockPage() {
   }, [mobileOpen])
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('clock_history')
-      if (raw) setHistory(JSON.parse(raw))
-    } catch (e) {
-      // Ignore error
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('clock_history')
+        if (raw) setHistory(JSON.parse(raw))
+      } catch (e) {
+        // Ignore error
+      }
     }
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('clock_history', JSON.stringify(history))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('clock_history', JSON.stringify(history))
+    }
   }, [history])
 
   const addPunch = async (type: Punch['type']) => {
@@ -104,7 +108,7 @@ export default function ClockPage() {
         <nav className="flex-1">
           <ul className="space-y-3">
             <li>
-              <Link href="/employee" className={`${isActive('/employee') ? 'rounded-md py-3 px-4 flex items-center gap-3 bg-[var(--color-primary)] text-[var(--color-secondary)]' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+              <Link href="/dashboard/employee" className={`${isActive('/dashboard/employee') ? 'rounded-md py-3 px-4 flex items-center gap-3 bg-[var(--color-primary)] text-[var(--color-secondary)]' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
                 <HomeIcon className="w-5 h-5" />
                 <span className="font-medium">Accueil</span>
               </Link>
@@ -116,7 +120,7 @@ export default function ClockPage() {
               </Link>
             </li>
             <li>
-              <Link href="/employee" className={`${isActive('/employee') ? 'text-white/80 py-3 px-2 flex items-center gap-3' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
+              <Link href="/dashboard/employee" className={`${isActive('/dashboard/employee') ? 'text-white/80 py-3 px-2 flex items-center gap-3' : 'text-white/80 hover:text-white py-3 px-2 flex items-center gap-3'}`}>
                 <UserIcon className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
                 <span>Profil</span>
               </Link>
