@@ -93,7 +93,7 @@ router.get('/clocks/:id', ClockController.getClockById);
 // Get a clock by user team id
 /**
  * @swagger
- * /clocks/{user_team_id}:
+ * /clocks/userteams/{user_team_id}:
  *   get:
  *     summary: Get clock by user_team_id
  *     tags: [Clocks]
@@ -112,7 +112,7 @@ router.get('/clocks/:id', ClockController.getClockById);
  *       500:
  *         description: Server error
  */
-router.get('/clocks/:user_team_id',
+router.get('/clocks/userteams/:user_team_id',
     // AuthMiddleware,
     // TeamRoleMiddleware(['employee', 'manager', 'admin']),
     ClockController.getClockByUserTeamId
@@ -221,7 +221,7 @@ router.post('/clocks/myTeam/:teamId/clockInOut',
 // Get all clocks for current user
 /**
  * @swagger
- * /clocks/myClocks:
+ * /clocks/users/myClocks:
  *   get:
  *     summary: Get all clocks for current user (token-based)
  *     tags: [Clocks]
@@ -235,7 +235,7 @@ router.post('/clocks/myTeam/:teamId/clockInOut',
  *       500:
  *         description: Server error
  */
-router.get('/clocks/myClocks',
+router.get('/clocks/users/myClocks',
     AuthMiddleware,
     ClockController.getClocksByCurrentUser
 );

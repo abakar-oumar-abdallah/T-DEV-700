@@ -295,207 +295,209 @@ class ClockController {
       });
     }
   }
-/**
- * Create clock in/out for current user (token-based)
- */
-async createClockInOut(req, res) {
-  try {
-    const userTeamId = req.body.userTeamId;
-    
-    if (!userTeamId) {
-      return res.status(400).json({
-        success: false,
-        message: 'User team ID is required'
-      });
-    }
 
-    // Get user team info including team lateness limit
-    const { data: userTeam, error: userTeamError } = await supabase
-      .from('user_team')
-      .select('id, team:team_id(id, name, lateness_limit), planning_id')
-      .eq('id', userTeamId)
-      .single();
-
-    if (userTeamError || !userTeam) {
-      return res.status(404).json({
-        success: false,
-        message: 'User team association not found'
-      });
-    }
-
-    // Get planning ID using existing PlanningController function
-    let planningId = null;
-    await PlanningController.getPlanningByUserTeam(
-      { body: { userTeamId }, params: {} },
-      { 
-        status: (code) => ({ 
-          json: (data) => { 
-            if (code === 200 && data.success && data.data.planning) {
-              planningId = data.data.planning.id;
-            }
-          } 
-        }) 
-      }
-    );
-
-    if (!planningId) {
-      return res.status(404).json({
-        success: false,
-        message: 'No planning found for user team'
-      });
-    }
-
-    // Get current day and schedule with proper timezone handling
-    const timeZone = 'Europe/Paris'; // Set your timezone
-    const now = new Date();
-
-    const currentDay = now.toLocaleDateString('en-US', { 
-      weekday: 'long',
-      timeZone: timeZone 
-    }).toLowerCase();
-
-    const { data: schedule, error: scheduleError } = await supabase
-      .from('schedule')
-      .select('*')
-      .eq('planning_id', planningId)
-      .eq('day', currentDay)
-      .single();
-
-    if (scheduleError || !schedule) {
-      return res.status(400).json({
-        success: false,
-        message: `No schedule found for ${currentDay}. Cannot clock in/out on days without scheduled work.`
-      });
-    }
-
-    // Check for active clock (arrival without departure)
-    const { data: activeClock, error: checkError } = await supabase
-      .from('clock')
-      .select('*')
-      .eq('user_team_id', userTeamId)
-      .is('departure_time', null)
-      .order('arrival_time', { ascending: false })
-      .limit(1)
-      .single();
-
-    // Get current time in local timezone
-    const currentTime = now.toLocaleTimeString('en-GB', {
-      timeZone: timeZone,
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit', 
-      second: '2-digit'
-    });
-
-    const nowISO = new Date(now.toLocaleString('en-US', { timeZone: timeZone })).toISOString();
-
-    if (activeClock && !checkError) {
-      // Clock out - validate departure time
-      const scheduledEnd = schedule.time_out;
-      const [schedHours, schedMinutes, schedSeconds] = scheduledEnd.split(':').map(Number);
-      const [currHours, currMinutes, currSeconds] = currentTime.split(':').map(Number);
+  /**
+   * Create clock in/out for current user (token-based)
+   */
+  async createClockInOut(req, res) {
+    try {
+      const userTeamId = req.body.userTeamId;
       
-      const scheduledEndMinutes = schedHours * 60 + schedMinutes;
-      const currentMinutes = currHours * 60 + currMinutes;
-      
-      let warnings = [];
-      
-      if (currentMinutes < scheduledEndMinutes) {
-        const earlyMinutes = scheduledEndMinutes - currentMinutes;
-        warnings.push(`Leaving ${earlyMinutes} minutes early (scheduled until ${scheduledEnd})`);
-      } else if (currentMinutes > scheduledEndMinutes) {
-        const lateMinutes = currentMinutes - scheduledEndMinutes;
-        warnings.push(`Working ${lateMinutes} minutes overtime (scheduled until ${scheduledEnd})`);
-      }
-
-      const { data, error } = await supabase
-        .from('clock')
-        .update({ departure_time: nowISO })
-        .eq('id', activeClock.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating clock:', error);
-        return res.status(500).json({
+      if (!userTeamId) {
+        return res.status(400).json({
           success: false,
-          message: 'Failed to clock out',
-          error: error.message
+          message: 'User team ID is required'
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: 'Clock out successful',
-        data: data,
-        warnings: warnings.length > 0 ? warnings : undefined
-      });
-    } else {
-      // Clock in - validate arrival time
-      const scheduledStart = schedule.time_in;
-      const latenessLimit = userTeam.team.lateness_limit || 0; // minutes
-      
-      const [schedHours, schedMinutes, schedSeconds] = scheduledStart.split(':').map(Number);
-      const [currHours, currMinutes, currSeconds] = currentTime.split(':').map(Number);
-      
-      const scheduledStartMinutes = schedHours * 60 + schedMinutes;
-      const currentMinutes = currHours * 60 + currMinutes;
-      
-      let warnings = [];
-      let isLate = false;
-      
-      if (currentMinutes > scheduledStartMinutes) {
-        const lateMinutes = currentMinutes - scheduledStartMinutes;
-        warnings.push(`Late by ${lateMinutes} minutes (scheduled start: ${scheduledStart})`);
-        isLate = true;
-        
-        // Add additional warning if exceeding lateness limit
-        if (lateMinutes > latenessLimit) {
-          warnings.push(`Warning: You exceeded the lateness limit of ${latenessLimit} minutes`);
+      // Get user team info including team lateness limit AND timezone
+      const { data: userTeam, error: userTeamError } = await supabase
+        .from('user_team')
+        .select('id, team:team_id(id, name, lateness_limit, timezone), planning_id')
+        .eq('id', userTeamId)
+        .single();
+
+      if (userTeamError || !userTeam) {
+        return res.status(404).json({
+          success: false,
+          message: 'User team association not found'
+        });
+      }
+
+      // Get planning ID using existing PlanningController function
+      let planningId = null;
+      await PlanningController.getPlanningByUserTeam(
+        { body: { userTeamId }, params: {} },
+        { 
+          status: (code) => ({ 
+            json: (data) => { 
+              if (code === 200 && data.success && data.data.planning) {
+                planningId = data.data.planning.id;
+              }
+            } 
+          }) 
         }
-      } else if (currentMinutes < scheduledStartMinutes) {
-        const earlyMinutes = scheduledStartMinutes - currentMinutes;
-        warnings.push(`Early by ${earlyMinutes} minutes (scheduled start: ${scheduledStart})`);
-      }
+      );
 
-      const { data, error } = await supabase
-        .from('clock')
-        .insert([{
-          user_team_id: userTeamId,
-          planning_id: planningId,
-          arrival_time: nowISO,
-          departure_time: null
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating clock:', error);
-        return res.status(500).json({
+      if (!planningId) {
+        return res.status(404).json({
           success: false,
-          message: 'Failed to clock in',
-          error: error.message
+          message: 'No planning found for user team'
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: 'Clock in successful',
-        data: data,
-        warnings: warnings.length > 0 ? warnings : undefined,
-        isLate: isLate
+      // Get current day and schedule with team's timezone
+      const timeZone = userTeam.team.timezone || 'UTC'; // Use team's timezone, fallback to UTC
+      const now = new Date();
+
+      const currentDay = now.toLocaleDateString('en-US', { 
+        weekday: 'long',
+        timeZone: timeZone 
+      }).toLowerCase();
+
+      // Get today's schedule
+      const { data: schedule, error: scheduleError } = await supabase
+        .from('schedule')
+        .select('*')
+        .eq('planning_id', planningId)
+        .eq('day', currentDay)
+        .single();
+
+      if (scheduleError || !schedule) {
+        return res.status(400).json({
+          success: false,
+          message: `No schedule found for ${currentDay}. Cannot clock in/out on days without scheduled work.`
+        });
+      }
+
+      // Check for active clock (arrival without departure)
+      const { data: activeClock, error: checkError } = await supabase
+        .from('clock')
+        .select('*')
+        .eq('user_team_id', userTeamId)
+        .is('departure_time', null)
+        .order('arrival_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Get current time in team's timezone
+      const currentTime = now.toLocaleTimeString('en-GB', {
+        timeZone: timeZone,
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit', 
+        second: '2-digit'
+      });
+
+      // Convert to team's timezone for storage
+      const nowISO = now.toISOString(); // Keep UTC for storage consistency
+
+      if (activeClock && !checkError) {
+        // Clock out - validate departure time
+        const scheduledEnd = schedule.time_out;
+        const [schedHours, schedMinutes, schedSeconds] = scheduledEnd.split(':').map(Number);
+        const [currHours, currMinutes, currSeconds] = currentTime.split(':').map(Number);
+        
+        const scheduledEndMinutes = schedHours * 60 + schedMinutes;
+        const currentMinutes = currHours * 60 + currMinutes;
+        
+        let warnings = [];
+        
+        if (currentMinutes < scheduledEndMinutes) {
+          const earlyMinutes = scheduledEndMinutes - currentMinutes;
+          warnings.push(`Leaving ${earlyMinutes} minutes early (scheduled until ${scheduledEnd})`);
+        } else if (currentMinutes > scheduledEndMinutes) {
+          const lateMinutes = currentMinutes - scheduledEndMinutes;
+          warnings.push(`Working ${lateMinutes} minutes overtime (scheduled until ${scheduledEnd})`);
+        }
+
+        const { data, error } = await supabase
+          .from('clock')
+          .update({ departure_time: nowISO })
+          .eq('id', activeClock.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error updating clock:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to clock out',
+            error: error.message
+          });
+        }
+
+        res.status(201).json({
+          success: true,
+          message: 'Clock out successful',
+          data: data,
+          warnings: warnings.length > 0 ? warnings : undefined
+        });
+      } else {
+        // Clock in - validate arrival time
+        const scheduledStart = schedule.time_in;
+        const latenessLimit = userTeam.team.lateness_limit || 0; // minutes
+        
+        const [schedHours, schedMinutes, schedSeconds] = scheduledStart.split(':').map(Number);
+        const [currHours, currMinutes, currSeconds] = currentTime.split(':').map(Number);
+        
+        const scheduledStartMinutes = schedHours * 60 + schedMinutes;
+        const currentMinutes = currHours * 60 + currMinutes;
+        
+        let warnings = [];
+        let isLate = false;
+        
+        if (currentMinutes > scheduledStartMinutes) {
+          const lateMinutes = currentMinutes - scheduledStartMinutes;
+          if (lateMinutes > latenessLimit) {
+            warnings.push(`Warning: You are ${lateMinutes} minutes late (limit: ${latenessLimit} minutes). Scheduled start: ${scheduledStart}`);
+          } else {
+            warnings.push(`Late by ${lateMinutes} minutes (scheduled start: ${scheduledStart})`);
+          }
+          isLate = true;
+        } else if (currentMinutes < scheduledStartMinutes) {
+          const earlyMinutes = scheduledStartMinutes - currentMinutes;
+          warnings.push(`Early by ${earlyMinutes} minutes (scheduled start: ${scheduledStart})`);
+        }
+
+        const { data, error } = await supabase
+          .from('clock')
+          .insert([{
+            user_team_id: userTeamId,
+            planning_id: planningId,
+            arrival_time: nowISO,
+            departure_time: null
+          }])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating clock:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to clock in',
+            error: error.message
+          });
+        }
+
+        res.status(201).json({
+          success: true,
+          message: 'Clock in successful',
+          data: data,
+          warnings: warnings.length > 0 ? warnings : undefined,
+          isLate: isLate
+        });
+      }
+
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: err.message
       });
     }
-
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: err.message
-    });
   }
-}
 
   /**
    * Get all clocks for current user across all teams
