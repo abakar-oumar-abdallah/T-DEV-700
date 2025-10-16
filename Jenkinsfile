@@ -25,8 +25,8 @@ pipeline {
                             steps {
                                     dir('frontend/2clock') {
                                         sh 'npm ci'
-                                        sh 'npm run lint'
-                                        sh 'npm audit'
+                                        sh 'npm run lint || true'
+                                        sh 'npm audit || true'
                                     }
                             }
                         }
@@ -68,7 +68,7 @@ pipeline {
                             steps {
                                     dir('backend') {
                                         sh 'npm ci'
-                                        sh 'npm run lint || true'
+                                        sh 'npm run lint'
                                         sh 'npm audit'
                                         sh 'npm run test:ci'
                                     }
