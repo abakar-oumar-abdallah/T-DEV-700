@@ -44,13 +44,13 @@ class UserController {
    */
   async createUser(req, res) {
     try {
-      const { email, password, first_name, last_name, permission} = req.body;
+      const { email, password, first_name, last_name, permission, phone_number} = req.body;
 
       // Validation des champs requis
-      if (!email || !password || !first_name || !last_name || !permission) {
+      if (!email || !password || !first_name || !last_name || !permission || !phone_number) {
         return res.status(400).json({
           success: false,
-          message: 'Email, password, first_name, last_name and permission are required'
+          message: 'Email, password, first_name, last_name, permission and phone number are required'
         });
       }
 
@@ -75,6 +75,13 @@ class UserController {
         return res.status(400).json({
           success: false,
           message: 'Last name must be at least 2 characters long'
+        });
+      }
+
+      if (phone_number.length < 9) {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number must be at least 9 characters long'
         });
       }
 
@@ -251,10 +258,10 @@ class UserController {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { email, password, first_name, last_name, permission } = req.body;
+      const { email, password, first_name, last_name, permission, phone_number } = req.body;
 
       // Vérifier qu'au moins un champ est fourni
-      if (!email && !password && !first_name && !last_name  && !permission) {
+      if (!email && !password && !first_name && !last_name  && !permission && !phone_number) {
         return res.status(400).json({
           success: false,
           message: 'At least one field must be provided to update'
@@ -334,6 +341,21 @@ class UserController {
           });
         }
         updateData.last_name = last_name.trim();
+      }
+      // Ajout de la permission
+      if (permission) {
+        updateData.permission = permission.trim();
+      }
+        
+      // Validation et ajout du numéro de téléphone
+      if (phone_number) {
+        if (phone_number.length < 9) {
+          return res.status(400).json({
+            success: false,
+            message: 'Phone number must be at least 9 characters long'
+          });
+        }
+        updateData.phone_number = phone_number;
       }
       // Ajouter la date de mise à jour
       updateData.updated_at = new Date().toISOString();
