@@ -45,6 +45,7 @@ router.get('/teams',
  *               - name
  *               - description
  *               - lateness_limit
+ *               - timezone
  *             properties:
  *               name:
  *                 type: string
@@ -55,6 +56,10 @@ router.get('/teams',
  *               lateness_limit:
  *                 type: integer
  *                 example: 10
+ *               timezone:
+ *                 type: string
+ *                 example: Europe/Paris
+ *                 description: Team's timezone (required)
  *     responses:
  *       201:
  *         description: Team created
@@ -150,6 +155,10 @@ router.get('/teams/:name/name', TeamController.getTeamByName);
  *               lateness_limit:
  *                 type: integer
  *                 example: 15
+ *               timezone:
+ *                 type: string
+ *                 example: America/New_York
+ *                 description: Team's timezone (optional)
  *     responses:
  *       200:
  *         description: Team updated successfully
