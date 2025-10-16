@@ -62,15 +62,19 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           <ul className="space-y-3">
             <li>
               <Link
-                href="/employee"
+                href="/dashboard/employee"
                 className={`${
-                  isActive("/employee") && !isActive("/employee/punches")
+                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
                 onClick={() => setMobileOpen(false)}
               >
-                <HomeIcon className="w-5 h-5" />
+                <HomeIcon className="w-5 h-5 " style={{
+                    color: isActive("/dashboard/clock")
+                      ? "var(--color-secondary)"
+                      : "var(--color-primary)",
+                  }} />
                 <span className="font-medium">Accueil</span>
               </Link>
             </li>
@@ -99,9 +103,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
             <li>
               <Link
-                href="/employee/punches"
+                href="/dashboard/employee/punches"
                 className={`${
-                  isActive("/employee/punches")
+                  isActive("/dashboard/employee/punches")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
@@ -110,7 +114,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <ChartBarIcon
                   className="w-6 h-6"
                   style={{
-                    color: isActive("/employee/punches")
+                    color: isActive("/dashboard/employee/punches")
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }}
