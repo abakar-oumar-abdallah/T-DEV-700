@@ -74,7 +74,7 @@ class PlanningController {
       supabase.from('planning').select('*, schedule:schedule (id, day, time_in, time_out, created_at)').order('created_at', { ascending: false })
     );
     return this.handleResponse(res, result.error, result.data, 'Plannings retrieved successfully', 'Failed to fetch plannings');
-  }
+  };
 
   createPlanning = async (req, res) => {
     const { is_default, schedules } = req.body;
@@ -87,14 +87,14 @@ class PlanningController {
     } catch (err) {
       return this.handleResponse(res, err, null, null, 'Failed to create planning');
     }
-  }
+  };
 
   getPlanningById = async (req, res) => {
     const result = await this.safeQuery(
       supabase.from('planning').select('*, schedule:schedule (id, day, time_in, time_out, created_at)').eq('id', req.params.id).single()
     );
     return this.handleResponse(res, result.error, result.data, 'Planning retrieved successfully', 'Planning not found');
-  }
+  };
 
   updatePlanning = async (req, res) => {
     const { is_default } = req.body;
@@ -105,7 +105,7 @@ class PlanningController {
         .select('*, schedule:schedule (id, day, time_in, time_out, created_at)').single()
     );
     return this.handleResponse(res, result.error, result.data, 'Planning updated successfully', 'Planning not found');
-  }
+  };
 
   deletePlanning = async (req, res) => {
     const planningResult = await this.safeQuery(
@@ -126,7 +126,7 @@ class PlanningController {
 
     const { error } = await supabase.from('planning').delete().eq('id', req.params.id);
     return this.handleResponse(res, error, { deletedPlanning: planningResult.data }, 'Planning deleted successfully', 'Failed to delete planning');
-  }
+  };
 
   // Resource-specific operations - using arrow functions to preserve 'this' context
   getDefaultPlanningByTeam = async (req, res) => {
@@ -144,7 +144,7 @@ class PlanningController {
     if (planningResult.error) return this.handleResponse(res, planningResult.error, null, null, 'Default planning not found');
 
     return this.handleResponse(res, null, { team: { id: teamResult.data.id, name: teamResult.data.name }, planning: planningResult.data }, 'Default planning retrieved successfully');
-  }
+  };
   
   getPlanningByUserTeam = async (req, res) => {
     // Use userTeamId from params, or fall back to userTeamId added by TeamRoleMiddleware
@@ -176,7 +176,7 @@ class PlanningController {
       planning: planningResult.data,
       isTeamDefault: !userTeamResult.data.planning_id  // true if using team's default planning
     }, 'Planning retrieved successfully');
-  }
+  };
 
   // Modification operations
   modifyTeamPlanning = async (req, res) => {
@@ -205,7 +205,7 @@ class PlanningController {
     } catch (err) {
       return this.handleResponse(res, err, null, null, 'Failed to update team planning');
     }
-  }
+  };
 
   modifyUserTeamPlanning = async (req, res) => {
     const { schedules } = req.body;
@@ -234,7 +234,7 @@ class PlanningController {
     } catch (err) {
       return this.handleResponse(res, err, null, null, 'Failed to update user-team planning');
     }
-  }
+  };
 }
 
 module.exports = new PlanningController();

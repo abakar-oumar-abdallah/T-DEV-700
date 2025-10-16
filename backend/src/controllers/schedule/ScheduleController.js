@@ -59,7 +59,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 
   getScheduleById = async (req, res) => {
     try {
@@ -80,7 +80,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 
   getSchedulesByPlanningId = async (req, res) => {
     try {
@@ -107,7 +107,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 
   updateSchedule = async (req, res) => {
     try {
@@ -161,7 +161,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 
   deleteSchedule = async (req, res) => {
     try {
@@ -185,7 +185,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 
   // Resource-specific operations
   getCurrentScheduleByUserTeam = async (req, res) => {
@@ -250,7 +250,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 
   getCurrentDefaultScheduleByTeam = async (req, res) => {
     try {
@@ -297,7 +297,7 @@ class ScheduleController {
       console.error('Unexpected error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
     }
-  }
+  };
 }
 
 module.exports = new ScheduleController();

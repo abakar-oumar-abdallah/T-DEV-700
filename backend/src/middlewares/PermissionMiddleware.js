@@ -4,7 +4,7 @@ const PermissionMiddleware = (requiredPermission) => {
     if (!req.user || !req.user.permission) {
       return res.status(401).json({ 
         success: false, 
-        message: "Unauthorized - User authentication required" 
+        message: 'Unauthorized - User authentication required' 
       });
     }
 

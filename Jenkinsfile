@@ -70,7 +70,7 @@ pipeline {
                                         sh 'npm ci'
                                         sh 'npm run lint || true'
                                         sh 'npm audit'
-                                        sh 'npm test:ci'
+                                        sh 'npm run test:ci'
                                     }
                             }
                         }
