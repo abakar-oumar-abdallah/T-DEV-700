@@ -7,11 +7,19 @@ import {HomeIcon,ClockIcon,UserIcon,ChartBarIcon,Bars3Icon,ArrowRightOnRectangle
 
 export default function EmployeePage() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const userPrenomStr = localStorage.getItem('userPrenom')!;
-  const userNomStr = localStorage.getItem('userNom')!;
+  const [userPrenom, setUserPrenom] = useState('')
+  const [userNom, setUserNom] = useState('')
   
   const pathname = usePathname() || ''
   const isActive = (path: string) => pathname === path || pathname.startsWith(path)
+
+  // Charger les données du localStorage côté client uniquement
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserPrenom(localStorage.getItem('userPrenom') || 'Employé')
+      setUserNom(localStorage.getItem('userNom') || '')
+    }
+  }, [])
 
   useEffect(() => {
     if (mobileOpen) {
@@ -73,16 +81,24 @@ export default function EmployeePage() {
           </nav>
 
           <div className="mt-6">
-            <button className="flex items-center gap-3 text-white/80 hover:text-white" onClick={() => setMobileOpen(false)}>
-              <Image src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} alt='Image de profile' width={40} height={40} style={{ borderRadius: '50%' }} />
-              <span>{userPrenomStr} {userNomStr}</span>
-            </button>
+            {userPrenom && (
+              <button className="flex items-center gap-3 text-white/80 hover:text-white" onClick={() => setMobileOpen(false)}>
+                <Image 
+                  src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenom.charAt(0)}${userNom.charAt(0)}`} 
+                  alt='Image de profile' 
+                  width={40} 
+                  height={40} 
+                  style={{ borderRadius: '50%' }} 
+                />
+                <span>{userPrenom} {userNom}</span>
+              </button>
+            )}
           </div>
         </aside>
 
-  <div className={`${mobileOpen ? 'block' : 'hidden'} fixed inset-0 bg-black/40 z-40 sm:hidden`} onClick={() => setMobileOpen(false)} aria-hidden={!mobileOpen} />
+        <div className={`${mobileOpen ? 'block' : 'hidden'} fixed inset-0 bg-black/40 z-40 sm:hidden`} onClick={() => setMobileOpen(false)} aria-hidden={!mobileOpen} />
 
-  <div className={`flex-1 ${mobileOpen ? 'pointer-events-none' : 'pointer-events-auto'}`}>
+        <div className={`flex-1 ${mobileOpen ? 'pointer-events-none' : 'pointer-events-auto'}`}>
           <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20">
             <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 rounded-md" style={{ color: 'var(--color-secondary)' }}>
               <Bars3Icon className="w-6 h-6" />
@@ -98,7 +114,9 @@ export default function EmployeePage() {
                   <ClockIcon className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>Bienvenue, Employé(e)</h1>
+                  <h1 className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                    Bienvenue{userPrenom ? `, ${userPrenom}` : ', Employé(e)'}
+                  </h1>
                   <p className="text-gray-600">Accédez à vos pointages et gérez votre temps de travail</p>
                 </div>
               </div>

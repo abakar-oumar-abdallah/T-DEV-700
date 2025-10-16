@@ -41,7 +41,7 @@ export default function ClockPage() {
       const raw = localStorage.getItem('clock_history')
       if (raw) setHistory(JSON.parse(raw))
     } catch (e) {
-
+      // Ignore error
     }
   }, [])
 
@@ -59,6 +59,7 @@ export default function ClockPage() {
         body: JSON.stringify({ type, time: p.time, pin }),
       })
     } catch (e) {
+      // Ignore error
     }
   }
 
@@ -87,7 +88,6 @@ export default function ClockPage() {
   }
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen flex" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       <aside
         className="flex flex-col w-56 max-w-[78%] sm:w-64 sm:max-w-none h-screen p-6 overflow-y-auto"
@@ -128,26 +128,17 @@ export default function ClockPage() {
           <button className="flex items-center gap-3 text-white/80 hover:text-white">
             <ArrowRightOnRectangleIcon className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
             <span>Déconnexion</span>
-=======
-    <div
-      className="min-h-screen flex"
-      style={{ background: "var(--background)", color: "var(--foreground)" }}
-    >
-      <EmployeeSidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-
-      <div className="flex-1 sm:ml-64 flex flex-col items-center w-full">
-        <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20 w-full shadow-sm">
-          <button onClick={() => setMobileOpen(true)} className="p-2 rounded-md">
-            <Bars3Icon
-              className="w-6 h-6"
-              style={{ color: "var(--color-secondary)" }}
-            />
->>>>>>> develop
           </button>
         </div>
       </aside>
 
       <div className="flex-1">
+        <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20 w-full shadow-sm">
+          <button onClick={() => setMobileOpen(true)} className="p-2 rounded-md">
+            <Bars3Icon className="w-6 h-6" style={{ color: "var(--color-secondary)" }} />
+          </button>
+        </header>
+
         <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start py-8">
           <section className="lg:col-span-2">
             <div className="text-center mb-6">

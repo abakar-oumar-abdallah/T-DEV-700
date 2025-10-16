@@ -7,7 +7,7 @@
         "start": "node src/server.js",
         "dev": "nodemon src/server.js",
         "test": "jest --coverage",
-        "test:ci": "jest --ci --coverage --maxWorkers=2", 
+        "test:ci": "jest --ci --coverage --maxWorkers=2",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint src/"
@@ -28,7 +28,7 @@
         "joi": "^17.11.0",
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.0.3",
-        "nodemailer": "^6.9.7",
+        "nodemailer": "^7.0.9",
         "swagger-jsdoc": "^6.2.8",
         "swagger-ui-express": "^5.0.1"
     },

@@ -3,12 +3,23 @@ interface LoginCredentials {
   password: string;
 }
 
+interface UserData {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  name?: string;
+  role?: string;
+  permission?: string;
+  phone_number?: string;
+}
+
 interface LoginResponse {
   success: boolean;
   message: string;
-  session?: any;
+  session?: Record<string, unknown>;
   data?: {
-    user: any; 
+    user: UserData;
     token: string;
     loginTime: string;
   };

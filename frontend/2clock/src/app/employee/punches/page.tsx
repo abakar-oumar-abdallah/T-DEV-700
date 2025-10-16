@@ -47,7 +47,6 @@ const EmployeePunchesPage = () => {
       className="min-h-screen flex"
       style={{ background: "var(--background)", color: "var(--foreground)" }}
     >
-<<<<<<< HEAD
       <aside
         className="fixed top-0 bottom-0 left-0 z-50 transform transition-transform duration-300 sm:translate-x-0 sm:static sm:transform-none flex flex-col w-56 max-w-[78%] sm:w-64 sm:max-w-none sm:h-screen p-6 overflow-y-auto"
         style={{ background: "var(--color-secondary)", color: "white" }}
@@ -110,14 +109,6 @@ const EmployeePunchesPage = () => {
               style={{ color: "var(--color-primary)" }}
             />
             <span>Déconnexion</span>
-=======
-      <EmployeeSidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-
-      <div className="flex-1 sm:ml-64 flex flex-col items-center w-full">
-        <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20 w-full shadow-sm">
-          <button onClick={() => setMobileOpen(true)} className="p-2 rounded-md">
-            <Bars3Icon className="w-6 h-6" style={{ color: "var(--color-secondary)" }} />
->>>>>>> develop
           </button>
         </div>
       </aside>
@@ -133,13 +124,8 @@ const EmployeePunchesPage = () => {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-=======
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse text-sm md:text-base">
->>>>>>> develop
               <thead>
                 <tr className="bg-gray-100 text-gray-700 text-sm md:text-base">
                   <th className="py-3 px-4 text-left rounded-tl-lg">Date</th>
@@ -184,10 +170,6 @@ const EmployeePunchesPage = () => {
             </table>
           </div>
 
-<<<<<<< HEAD
-          <div className="text-center mt-8 border-t pt-6">
-            <p className="text-lg font-medium text-gray-700">
-=======
           <div className="space-y-4 md:hidden">
             {punches.map((p, i) => (
               <div
@@ -230,7 +212,6 @@ const EmployeePunchesPage = () => {
 
           <div className="text-center mt-10 border-t pt-6">
             <p className="text-base md:text-lg font-medium text-gray-700">
->>>>>>> develop
               Total des heures sur cette période :{" "}
               <span className="text-[var(--color-primary)] font-bold">
                 {punches
