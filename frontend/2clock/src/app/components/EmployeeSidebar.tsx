@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,12 +9,10 @@ import {
   ClockIcon,
   UserIcon,
   ChartBarIcon,
-  Bars3Icon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 interface SidebarProps {
-  /** Permet d'ouvrir ou fermer la sidebar sur mobile */
   mobileOpen: boolean;
   setMobileOpen: (value: boolean) => void;
 }
@@ -23,7 +21,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
-  // Empêche le scroll quand la sidebar mobile est ouverte
+  // Bloque le scroll quand la sidebar mobile est ouverte
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
   }, [mobileOpen]);
@@ -32,36 +30,40 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
     <>
       {/* === SIDEBAR === */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 transform transition-transform duration-300 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } sm:translate-x-0 sm:static sm:transform-none flex flex-col w-56 max-w-[78%] sm:w-64 sm:max-w-none sm:h-screen p-6 overflow-y-auto`}
-        style={{ background: "var(--color-secondary)", color: "white" }}
+        className={`fixed top-0 left-0 z-50 h-screen sm:h-screen sm:min-h-screen transform transition-transform duration-300
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+        sm:translate-x-0 sm:static sm:transform-none
+        flex flex-col w-[100vw] sm:w-64 overflow-y-auto`}
+        style={{
+          background: "var(--color-secondary)",
+          color: "white",
+        }}
       >
         {/* Bouton fermer (mobile) */}
         <button
-          className="sm:hidden absolute top-4 right-4 p-2 text-white text-xl leading-none"
-          aria-label="Close menu"
+          className="sm:hidden absolute top-4 left-4 p-2 text-white text-2xl z-50"
+          aria-label="Fermer le menu"
           onClick={() => setMobileOpen(false)}
         >
           ✕
         </button>
 
         {/* Logo */}
-        <div className="mb-6">
+        <div className="flex justify-center items-center mt-8 mb-6">
           <Image src="/2clocktitle.svg" alt="2Clock" width={160} height={44} />
         </div>
 
         {/* Profil */}
         <div
-          className="rounded-md p-4 mb-6 text-center"
+          className="rounded-md p-4 mb-6 text-center mx-6"
           style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
         >
           <div className="font-semibold">Employé(e)</div>
           <div className="text-sm text-white/70">Bienvenue</div>
         </div>
 
-        {/* Liens de navigation */}
-        <nav className="flex-1">
+        {/* Liens */}
+        <nav className="flex-1 px-6">
           <ul className="space-y-3">
             <li>
               <Link
@@ -136,7 +138,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         </nav>
 
         {/* Déconnexion */}
-        <div className="mt-6">
+        <div className="mt-6 px-6 pb-6">
           <button className="flex items-center gap-3 text-white/80 hover:text-white">
             <ArrowRightOnRectangleIcon
               className="w-5 h-5"
