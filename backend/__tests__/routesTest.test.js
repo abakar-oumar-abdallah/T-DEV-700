@@ -206,7 +206,8 @@ describe('Routes Integration Tests', () => {
           .send({
             name: 'Dev Team',
             description: 'Backend developers',
-            lateness_limit: 10
+            lateness_limit: 10,
+            timezone: 'UTC' 
           });
 
         expect(response.status).toBe(201);

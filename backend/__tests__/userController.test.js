@@ -83,7 +83,8 @@ describe('UserController', () => {
         password: 'password123',
         first_name: 'John',
         last_name: 'Doe',
-        permission: 'user'
+        permission: 'user',
+        phone_number: '0123456789'
       };
     });
 
@@ -95,7 +96,8 @@ describe('UserController', () => {
         password: hashedPassword,
         first_name: 'John',
         last_name: 'Doe',
-        permission: 'user'
+        permission: 'user',
+        phone_number: '0123456789'
       };
 
       bcrypt.hash.mockResolvedValue(hashedPassword);
@@ -149,7 +151,7 @@ describe('UserController', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Email, password, first_name, last_name and permission are required'
+        message: 'Email, password, first_name, last_name, permission and phone number are required'
       });
     });
 
@@ -186,6 +188,18 @@ describe('UserController', () => {
       expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Last name must be at least 2 characters long'
+      });
+    });
+
+    it('devrait retourner une erreur si le numéro de téléphone est trop court', async () => {
+      req.body.phone_number = '12345';
+
+      await UserController.createUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Phone number must be at least 9 characters long'
       });
     });
 
@@ -349,7 +363,8 @@ describe('UserController', () => {
         email: 'test@example.com',
         password: 'hashedPassword',
         first_name: 'Jane',
-        last_name: 'Updated'
+        last_name: 'Updated',
+        updated_at: new Date().toISOString()
       };
 
       supabase.from.mockReturnValue({
@@ -402,7 +417,7 @@ describe('UserController', () => {
           eq: jest.fn().mockReturnValue({
             select: jest.fn().mockReturnValue({
               single: jest.fn().mockResolvedValue({
-                data: { id: 1, password: hashedPassword },
+                data: { id: 1, password: hashedPassword, updated_at: new Date().toISOString() },
                 error: null
               })
             })
@@ -425,6 +440,88 @@ describe('UserController', () => {
       expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Password must be at least 6 characters long'
+      });
+    });
+
+    it('devrait mettre à jour le numéro de téléphone', async () => {
+      req.body = { phone_number: '0987654321' };
+
+      const mockUpdatedUser = {
+        id: 1,
+        email: 'test@example.com',
+        phone_number: '0987654321',
+        updated_at: new Date().toISOString()
+      };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockUpdatedUser,
+                error: null
+              })
+            })
+          })
+        })
+      });
+
+      await UserController.updateUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'User updated successfully',
+        data: expect.objectContaining({
+          phone_number: '0987654321'
+        })
+      });
+    });
+
+    it('devrait retourner une erreur si le numéro de téléphone est trop court', async () => {
+      req.body = { phone_number: '12345' };
+
+      await UserController.updateUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Phone number must be at least 9 characters long'
+      });
+    });
+
+    it('devrait mettre à jour la permission', async () => {
+      req.body = { permission: 'admin' };
+
+      const mockUpdatedUser = {
+        id: 1,
+        email: 'test@example.com',
+        permission: 'admin',
+        updated_at: new Date().toISOString()
+      };
+
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockUpdatedUser,
+                error: null
+              })
+            })
+          })
+        })
+      });
+
+      await UserController.updateUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'User updated successfully',
+        data: expect.objectContaining({
+          permission: 'admin'
+        })
       });
     });
 
