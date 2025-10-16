@@ -7,6 +7,10 @@ const clockRoutes = require('../src/routes/clock/clock');
 const userTeamRoutes = require('../src/routes/userTeam/userTeam');
 const planningRoutes = require('../src/routes/planning/planning');
 const scheduleRoutes = require('../src/routes/schedule/schedule');
+const AuthMiddleware = require('../src/middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../src/middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../src/middlewares/TeamRoleMiddleware');
+
 
 // Mock des contrôleurs
 jest.mock('../src/controllers/auth/AuthController', () => ({
@@ -38,7 +42,11 @@ jest.mock('../src/controllers/clock/ClockController', () => ({
   getClockById: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
   getClockByUserTeamId: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
   updateClock: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
-  deleteClock: jest.fn((req, res) => res.status(200).json({ success: true }))
+  deleteClock: jest.fn((req, res) => res.status(200).json({ success: true })),
+  createClockInOut: jest.fn((req, res) => res.status(201).json({ success: true, data: { id: 1 } })),
+  getClocksByCurrentUser: jest.fn((req, res) => res.status(200).json({ success: true, data: [] })),
+  getClocksByDateRange: jest.fn((req, res) => res.status(200).json({ success: true, data: [] })),
+  getClocksByDate: jest.fn((req, res) => res.status(200).json({ success: true, data: [] }))
 }));
 
 jest.mock('../src/controllers/userteam/UserTeamController', () => ({
@@ -73,6 +81,67 @@ jest.mock('../src/controllers/schedule/ScheduleController', () => ({
   getCurrentScheduleByUserTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
   getCurrentDefaultScheduleByTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } }))
 }));
+jest.mock('../src/middlewares/AuthMiddleware', () => 
+  jest.fn((req, res, next) => {
+    req.user = {
+      userId: 'test-user-id',
+      email: 'test@example.com',
+      role: 'employee',
+      permission: 'admin'
+    };
+    
+    if (!req.body) req.body = {};
+    req.body.userId = 'test-user-id';
+    
+    next();
+  })
+);
+
+jest.mock('../src/middlewares/PermissionMiddleware', () => 
+  jest.fn((requiredPermission) => 
+    jest.fn((req, res, next) => {
+      req.user = req.user || {
+        userId: 'test-user-id',
+        email: 'test@example.com',
+        permission: 'admin'
+      };
+      next();
+    })
+  )
+);
+
+jest.mock('../src/middlewares/TeamRoleMiddleware', () => 
+  jest.fn((allowedRoles, requireTeamContext) => 
+    jest.fn((req, res, next) => {
+      req.user = req.user || {
+        userId: 'test-user-id',
+        email: 'test@example.com',
+        role: 'employee',
+        permission: 'admin'
+      };
+      
+      if (requireTeamContext) {
+        const teamId = req.params.teamId || req.body.teamId || '1';
+        
+        if (!req.body) req.body = {};
+        req.body.userTeamId = 'test-user-team-id';
+        
+        req.user.teamContext = {
+          id: parseInt(teamId),
+          name: 'Test Team',
+          userRole: 'employee',
+          userTeamId: 'test-user-team-id',
+          defaultPlanningId: 'test-planning-id'
+        };
+        
+        req.user.teamRole = 'employee';
+      }
+      
+      next();
+    })
+  )
+);
+
 
 // Configuration de l'application Express pour les tests
 const app = express();
