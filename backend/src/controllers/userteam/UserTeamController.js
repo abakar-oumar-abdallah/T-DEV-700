@@ -322,10 +322,20 @@ class UserTeamController {
 
   /**
    * Get user-team association by user_id and team_id
+   * If userId not in params, uses current user from token
    */
   async getUserTeamById(req, res) {
     try {
-      const { userId, teamId } = req.params;
+      // Use userId from params, or fall back to current user from token
+      const userId = req.params.userId || req.user?.userId;
+      const { teamId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'User ID is required'
+        });
+      }
 
       const { data, error } = await supabase
         .from('user_team')
@@ -372,10 +382,18 @@ class UserTeamController {
 
   /**
    * Get all teams for a specific user
+   * If userId not in params, uses current user from token
    */
   async getTeamsByUserId(req, res) {
     try {
-      const { userId } = req.params;
+      // Use userId from params, or fall back to current user from token
+      const userId = req.params.userId || req.user?.userId;
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'User ID is required'
+        });
+      }
 
       const { data, error } = await supabase
         .from('user_team')
@@ -454,11 +472,21 @@ class UserTeamController {
 
   /**
    * Update user-team association role
+   * If userId not in params, uses current user from token
    */
   async updateUserTeam(req, res) {
     try {
-      const { userId, teamId } = req.params;
+      // Use userId from params, or fall back to current user from token
+      const userId = req.params.userId || req.user?.userId;
+      const { teamId } = req.params;
       const { role } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'User ID is required'
+        });
+      }
 
       // Validate input
       if (!role) {
@@ -523,10 +551,20 @@ class UserTeamController {
 
   /**
    * Delete user-team association
+   * If userId not in params, uses current user from token
    */
   async deleteUserTeam(req, res) {
     try {
-      const { userId, teamId } = req.params;
+      // Use userId from params, or fall back to current user from token
+      const userId = req.params.userId || req.user?.userId;
+      const { teamId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'User ID is required'
+        });
+      }
 
       // Check if association exists
       const { data: existingAssociation, error: checkError } = await supabase

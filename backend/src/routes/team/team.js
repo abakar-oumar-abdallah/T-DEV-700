@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const TeamController = require('../../controllers/team/TeamController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -20,7 +23,11 @@ const TeamController = require('../../controllers/team/TeamController');
  *       200:
  *         description: List of all teams
  */
-router.get('/teams', TeamController.getAllTeams);
+router.get('/teams', 
+    // AuthMiddleware,
+    // PermissionMiddleware('superadmin'),
+    TeamController.getAllTeams
+);
 
 /**
  * @swagger
@@ -58,7 +65,12 @@ router.get('/teams', TeamController.getAllTeams);
  *       500:
  *         description: Server error
  */
-router.post('/teams', TeamController.createTeam);
+router.post(
+    '/teams', 
+    // AuthMiddleware,
+    // PermissionMiddleware('admin'),
+    TeamController.createTeam
+);
 
 
 // get a team by id
@@ -84,6 +96,30 @@ router.post('/teams', TeamController.createTeam);
  *         description: Server error
  */
 router.get('/teams/:id', TeamController.getTeamById);
+
+// get a team by name
+/**
+ * @swagger
+ * /teams/{name}/name:
+ *   get:
+ *     summary: Get teams by name
+ *     tags: [Teams]
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: name of the team to retrieve
+ *     responses:
+ *       200:
+ *         description: Team found successfully
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/teams/:name/name', TeamController.getTeamByName);
 
 /**
  * @swagger
@@ -148,6 +184,11 @@ router.patch('/teams/:id', TeamController.updateTeam);
  *       500:
  *         description: Server error
  */
-router.delete('/teams/:id', TeamController.deleteTeam);
+router.delete('/teams/:id', 
+    // AuthMiddleware,
+    // PermissionMiddleware('admin'),
+    // TeamRoleMiddleware(['manager']),
+    TeamController.deleteTeam
+);
 
 module.exports = router;

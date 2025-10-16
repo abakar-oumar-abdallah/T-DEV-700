@@ -1,18 +1,18 @@
 "use client";
 import React, { useState } from "react";
-import EmployeeSidebar from "../components/EmployeeSidebar"; // ✅ import
+import EmployeeSidebar from "../components/EmployeeSidebar"; 
 import Image from "next/image";
 import { ClockIcon, UserIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 
 export default function EmployeePage() {
+
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--background)" }}>
       <EmployeeSidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-
       <div className="flex-1">
         {/* Header mobile */}
         <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20">

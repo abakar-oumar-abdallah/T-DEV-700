@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const UserTeamController = require('../../controllers/userteam/UserTeamController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -22,7 +25,10 @@ const UserTeamController = require('../../controllers/userteam/UserTeamControlle
  *       500:
  *         description: Server error
  */
-router.get('/userteams', UserTeamController.getAllUserTeams);
+router.get('/userteams',
+    // AuthMiddleware, 
+    // PermissionMiddleware(['superadmin']),
+    UserTeamController.getAllUserTeams);
 
 // Create a new user-team association
 /**
@@ -64,7 +70,11 @@ router.get('/userteams', UserTeamController.getAllUserTeams);
  *       500:
  *         description: Server error
  */
-router.post('/userteams', UserTeamController.createUserTeam);
+router.post('/userteams',
+    // AuthMiddleware,
+    // TeamRoleMiddleware(['manager', 'admin']),
+    UserTeamController.createUserTeam
+);
 
 // Create a new user-team association using email
 /**
@@ -107,7 +117,145 @@ router.post('/userteams', UserTeamController.createUserTeam);
  *       500:
  *         description: Server error
  */
-router.post('/userteams/email', UserTeamController.createUserTeamWithEmail);
+router.post('/userteams/email',
+    // AuthMiddleware,
+    // TeamRoleMiddleware(['manager', 'admin']),
+    UserTeamController.createUserTeamWithEmail
+);
+
+// ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================
+
+// Get current user's teams (no userId in params)
+/**
+ * @swagger
+ * /userteams/myTeams:
+ *   get:
+ *     summary: Get all teams for current user (token-based)
+ *     tags: [UserTeams]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user teams retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/userteams/myTeams', 
+    AuthMiddleware,
+    UserTeamController.getTeamsByUserId
+);
+
+// Get current user's association with specific team
+/**
+ * @swagger
+ * /userteams/myAssociation/{teamId}:
+ *   get:
+ *     summary: Get current user's association with specific team
+ *     tags: [UserTeams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     responses:
+ *       200:
+ *         description: User-team association found
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Association not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/userteams/myAssociation/:teamId', 
+    AuthMiddleware,
+    UserTeamController.getUserTeamById
+);
+
+// Update current user's role in specific team
+/**
+ * @swagger
+ * /userteams/myAssociation/{teamId}:
+ *   patch:
+ *     summary: Update current user's role in specific team
+ *     tags: [UserTeams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - role
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [employee, manager]
+ *                 example: manager
+ *     responses:
+ *       200:
+ *         description: User-team association updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Association not found
+ *       500:
+ *         description: Server error
+ */
+router.patch('/userteams/myAssociation/:teamId', 
+    AuthMiddleware,
+    UserTeamController.updateUserTeam
+);
+
+// Delete current user's association with specific team (leave team)
+/**
+ * @swagger
+ * /userteams/myAssociation/{teamId}:
+ *   delete:
+ *     summary: Delete current user's association with specific team
+ *     tags: [UserTeams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     responses:
+ *       200:
+ *         description: User-team association deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Association not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/userteams/myAssociation/:teamId', 
+    AuthMiddleware,
+    UserTeamController.deleteUserTeam
+);
+
+// ==================== ADMIN/MANAGER ROUTES (PARAM-BASED) ====================
 
 // Get user-team association by userId and teamId
 /**
