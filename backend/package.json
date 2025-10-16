@@ -12,6 +12,19 @@
         "test:coverage": "jest --coverage",
         "lint": "eslint src/"
     },
+    "jest": {
+        "testEnvironment": "node",
+        "setupFilesAfterEnv": ["<rootDir>/__tests__/jest.setup.js"],
+        "coverageDirectory": "coverage",
+        "collectCoverageFrom": [
+            "src/**/*.js",
+            "!src/server.js",
+            "!src/swagger.js"
+        ],
+        "testMatch": [
+            "**/__tests__/**/*.test.js"
+        ]
+    },
     "dependencies": {
         "@supabase/supabase-js": "^2.38.5",
         "bcrypt": "^6.0.0",
