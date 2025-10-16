@@ -21,6 +21,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
+  const userPrenomStr = localStorage.getItem('userPrenom')!;
+  const userNomStr = localStorage.getItem('userNom')!;
+
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
   }, [mobileOpen]);
@@ -137,14 +140,11 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         </nav>
 
         <div className="mt-6 px-6 pb-6">
-          <button className="flex items-center gap-3 text-white/80 hover:text-white">
-            <ArrowRightOnRectangleIcon
-              className="w-5 h-5"
-              style={{ color: "var(--color-primary)" }}
-            />
-            <span>Déconnexion</span>
-          </button>
-        </div>
+            <button className="flex items-center gap-3 text-white/80 hover:text-white">
+              <Image src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} alt='Image de profile' width={40} height={40} style={{ borderRadius: '50%' }} />
+              <span>{userPrenomStr} {userNomStr}</span>
+            </button>
+          </div>
       </aside>
 
       <div
