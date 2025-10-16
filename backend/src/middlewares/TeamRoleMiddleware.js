@@ -5,7 +5,7 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
     try {
       // Check if user is authenticated (should be called after AuthMiddleware)
 
-      if (!req.user && !req.user.userId) {
+      if (!req.user || !req.user.userId) {
         return res.status(401).json({ 
           success: false, 
           message: "Unauthorized - User authentication required" 
