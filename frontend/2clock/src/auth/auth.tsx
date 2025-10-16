@@ -15,9 +15,12 @@ interface LoginResponse {
   error?: string;
 }
 
+
 export const LoginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    const response = await fetch(`http://localhost:3001/login`, {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL
+
+    const response = await fetch(`${backendUrl}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

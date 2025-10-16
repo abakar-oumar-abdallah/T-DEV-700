@@ -23,7 +23,7 @@ export default function LoginForm() {
       localStorage.setItem('session', result.data.token);
       localStorage.setItem('userPrenom', result.data.user.first_name);
       localStorage.setItem('userNom', result.data.user.last_name);
-      router.push('/employee');
+      router.push('/dashboard/employee');
     } else {
       setError(result.error || 'Login failed');
     }
