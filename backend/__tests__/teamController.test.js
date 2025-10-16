@@ -6,6 +6,9 @@ jest.mock('../config/supabaseClient.js', () => ({
   from: jest.fn()
 }));
 
+// Mock console.error to suppress error messages during tests
+jest.spyOn(console, 'error').mockImplementation(() => {});
+
 describe('TeamController', () => {
   let req, res;
 
@@ -205,7 +208,8 @@ describe('TeamController', () => {
       req.body = {
         name: 'Team Test',
         description: 'Test',
-        lateness_limit: 10
+        lateness_limit: 10,
+        timezone: 'Europe/Paris'
       };
 
       const mockError = { message: 'Constraint violation' };
