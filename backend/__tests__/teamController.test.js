@@ -32,13 +32,15 @@ describe('TeamController', () => {
           id: 1, 
           name: 'Team Alpha', 
           description: 'First team',
-          lateness_limit: 15
+          lateness_limit: 15,
+          timezone: 'UTC' 
         },
         { 
           id: 2, 
           name: 'Team Beta', 
           description: 'Second team',
-          lateness_limit: 10
+          lateness_limit: 10,
+          timezone: 'UTC' 
         }
       ];
 
@@ -102,14 +104,16 @@ describe('TeamController', () => {
       req.body = {
         name: 'Team Gamma',
         description: 'New team',
-        lateness_limit: 20
+        lateness_limit: 20,
+        timezone: 'Europe/Paris'
       };
 
       const mockTeam = {
         id: 1,
         name: 'Team Gamma',
         description: 'New team',
-        lateness_limit: 20
+        lateness_limit: 20,
+        timezone: 'Europe/Paris'
       };
 
       supabase.from.mockReturnValue({
@@ -226,6 +230,40 @@ describe('TeamController', () => {
         error: 'Constraint violation'
       });
     });
+
+    it('devrait retourner une erreur si timezone est manquant', async () => {
+  req.body = {
+    name: 'Team Test',
+    description: 'Test',
+    lateness_limit: 10
+    // timezone missing
+  };
+
+  await TeamController.createTeam(req, res);
+
+  expect(res.status).toHaveBeenCalledWith(400);
+  expect(res.json).toHaveBeenCalledWith({
+    success: false,
+    message: 'Timezone is required'
+  });
+});
+
+  it('devrait retourner une erreur si timezone est invalide', async () => {
+    req.body = {
+      name: 'Team Test',
+      description: 'Test',
+      lateness_limit: 10,
+      timezone: 'Invalid/Timezone'
+    };
+
+    await TeamController.createTeam(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: expect.stringContaining('Invalid timezone. Must be one of:')
+    });
+  }); 
   });
 
   describe('getTeamById', () => {
@@ -235,7 +273,8 @@ describe('TeamController', () => {
         id: 1,
         name: 'Team Alpha',
         description: 'First team',
-        lateness_limit: 15
+        lateness_limit: 15,
+        timezone: 'UTC' 
       };
 
       supabase.from.mockReturnValue({
@@ -316,7 +355,9 @@ describe('TeamController', () => {
         id: 1,
         name: 'Team Alpha',
         description: 'First team',
-        lateness_limit: 15
+        lateness_limit: 15,
+        timezone: 'UTC' 
+
       };
 
       supabase.from.mockReturnValue({
@@ -399,14 +440,16 @@ describe('TeamController', () => {
       req.body = {
         name: 'Updated Team',
         description: 'Updated description',
-        lateness_limit: 25
+        lateness_limit: 25,
+        timezone: 'America/New_York'
       };
 
       const mockUpdatedTeam = {
         id: 1,
         name: 'Updated Team',
         description: 'Updated description',
-        lateness_limit: 25
+        lateness_limit: 25,
+        timezone: 'America/New_York'
       };
 
       supabase.from.mockReturnValue({
@@ -441,7 +484,8 @@ describe('TeamController', () => {
         id: 1,
         name: 'New Name',
         description: 'Old description',
-        lateness_limit: 15
+        lateness_limit: 15,
+        timezone: 'UTC' 
       };
 
       supabase.from.mockReturnValue({
@@ -562,7 +606,9 @@ describe('TeamController', () => {
         id: 1,
         name: 'Team Alpha',
         description: 'First team',
-        lateness_limit: 15
+        lateness_limit: 15,
+        timezone: 'UTC' 
+
       };
 
       // Mock pour vérifier l'existence
@@ -650,7 +696,9 @@ describe('TeamController', () => {
         id: 1,
         name: 'Team Alpha',
         description: 'First team',
-        lateness_limit: 15
+        lateness_limit: 15,
+        timezone: 'UTC' 
+
       };
 
       // Mock pour vérifier l'existence
