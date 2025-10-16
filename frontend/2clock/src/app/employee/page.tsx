@@ -7,6 +7,9 @@ import {HomeIcon,ClockIcon,UserIcon,ChartBarIcon,Bars3Icon,ArrowRightOnRectangle
 
 export default function EmployeePage() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const userPrenomStr = localStorage.getItem('userPrenom');
+  const userNomStr = localStorage.getItem('userNom');
+  
   const pathname = usePathname() || ''
   const isActive = (path: string) => pathname === path || pathname.startsWith(path)
 
@@ -71,8 +74,8 @@ export default function EmployeePage() {
 
           <div className="mt-6">
             <button className="flex items-center gap-3 text-white/80 hover:text-white" onClick={() => setMobileOpen(false)}>
-              <ArrowRightOnRectangleIcon className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-              <span>Déconnexion</span>
+              <Image src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} alt='Image de profile' width={40} height={40} style={{ borderRadius: '50%' }} />
+              <span>{userPrenomStr} {userNomStr}</span>
             </button>
           </div>
         </aside>
