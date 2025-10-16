@@ -124,7 +124,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
             <li>
               <Link
-                href="/employee"
+                href="/employee/profile"
                 className="text-white/80 hover:text-white py-3 px-4 flex items-center gap-3"
                 onClick={() => setMobileOpen(false)}
               >
