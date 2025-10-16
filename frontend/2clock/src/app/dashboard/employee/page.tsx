@@ -73,7 +73,7 @@ export default function EmployeePage() {
                 </article>
               </Link>
 
-              <Link href="/dashboard/employee">
+              <Link href="/dashboard/employee/profile">
                 <article className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer" style={{ borderTop: '4px solid #7a5bdc' }}>
                   <div className="flex flex-col items-center text-center">
                     <div className="p-4 rounded-full mb-4" style={{ background: 'rgba(122,91,220,0.08)' }}>
