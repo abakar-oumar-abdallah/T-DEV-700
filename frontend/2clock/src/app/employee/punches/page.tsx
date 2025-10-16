@@ -40,12 +40,9 @@ const EmployeePunchesPage = () => {
       className="min-h-screen flex flex-col sm:flex-row"
       style={{ background: "var(--background)", color: "var(--foreground)" }}
     >
-      {/* Sidebar */}
       <EmployeeSidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
 
-      {/* Contenu principal */}
       <div className="flex-1 sm:ml-64 flex flex-col items-center w-full">
-        {/* Header mobile */}
         <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20 w-full shadow-sm">
           <button onClick={() => setMobileOpen(true)} className="p-2 rounded-md">
             <Bars3Icon className="w-6 h-6" style={{ color: "var(--color-secondary)" }} />
@@ -64,7 +61,6 @@ const EmployeePunchesPage = () => {
             </p>
           </div>
 
-          {/* TABLEAU (bureau/tablette) */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse text-sm md:text-base">
               <thead>
@@ -108,7 +104,6 @@ const EmployeePunchesPage = () => {
             </table>
           </div>
 
-          {/* VERSION MOBILE : cartes empilées */}
           <div className="space-y-4 md:hidden">
             {punches.map((p, i) => (
               <div
@@ -149,7 +144,6 @@ const EmployeePunchesPage = () => {
             ))}
           </div>
 
-          {/* TOTAL */}
           <div className="text-center mt-10 border-t pt-6">
             <p className="text-base md:text-lg font-medium text-gray-700">
               Total des heures sur cette période :{" "}

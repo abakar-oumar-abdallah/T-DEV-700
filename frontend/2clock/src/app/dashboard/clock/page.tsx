@@ -97,12 +97,9 @@ export default function ClockPage() {
       className="min-h-screen flex"
       style={{ background: "var(--background)", color: "var(--foreground)" }}
     >
-      {/* Sidebar réutilisable */}
       <EmployeeSidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
 
-      {/* Contenu principal */}
       <div className="flex-1 sm:ml-64 flex flex-col items-center w-full">
-        {/* Header mobile */}
         <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-20 w-full shadow-sm">
           <button onClick={() => setMobileOpen(true)} className="p-2 rounded-md">
             <Bars3Icon

@@ -21,14 +21,12 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
-  // Bloque le scroll quand la sidebar mobile est ouverte
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
   }, [mobileOpen]);
 
   return (
     <>
-      {/* === SIDEBAR === */}
       <aside
         className={`fixed top-0 left-0 z-50 h-screen sm:h-screen sm:min-h-screen transform transition-transform duration-300
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
@@ -39,7 +37,6 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           color: "white",
         }}
       >
-        {/* Bouton fermer (mobile) */}
         <button
           className="sm:hidden absolute top-4 left-4 p-2 text-white text-2xl z-50"
           aria-label="Fermer le menu"
@@ -48,12 +45,10 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           ✕
         </button>
 
-        {/* Logo */}
         <div className="flex justify-center items-center mt-8 mb-6">
           <Image src="/2clocktitle.svg" alt="2Clock" width={160} height={44} />
         </div>
 
-        {/* Profil */}
         <div
           className="rounded-md p-4 mb-6 text-center mx-6"
           style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
@@ -137,7 +132,6 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           </ul>
         </nav>
 
-        {/* Déconnexion */}
         <div className="mt-6 px-6 pb-6">
           <button className="flex items-center gap-3 text-white/80 hover:text-white">
             <ArrowRightOnRectangleIcon
@@ -149,7 +143,6 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         </div>
       </aside>
 
-      {/* Overlay mobile */}
       <div
         className={`${
           mobileOpen ? "block" : "hidden"
