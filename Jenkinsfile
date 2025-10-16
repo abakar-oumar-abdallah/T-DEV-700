@@ -13,8 +13,25 @@ pipeline {
             parallel {
 
                 stage('Frontend') {
+
                     stages {
-                        stage('frontend') {
+
+                        stage('Checks Frontend') {
+                            agent {
+                                docker {
+                                    image 'node:lts'
+                                }
+                            }
+                            steps {
+                                    dir('frontend/2clock') {
+                                        sh 'npm ci'
+                                        sh 'npm run lint'
+                                        sh 'npm audit'
+                                    }
+                            }
+                        }
+
+                        stage('Build Frontend Image') {
                             steps {
                                 script {
                                     dir('frontend/2clock') {
@@ -23,22 +40,40 @@ pipeline {
                                 }
                             }
                         }
+
+                        stage('Pousser sur Docker Hub Frontend') {
+                            steps {
+                                script {
+                                    withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
+                                        dockerFrontendImage.push()
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
                 
-                stage('Pousser sur Docker Hub Frontend') {
-                    steps {
-                        script {
-                            withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
-                                dockerFrontendImage.push()
-                            }
-                        }
-                    }
-                }
 
                 stage('Backend') {
                     
                     stages {
+
+                        stage('Checks Backend') {
+                            agent {
+                                docker {
+                                    image 'node:lts'
+                                }
+                            }
+                            steps {
+                                    dir('backend') {
+                                        sh 'npm ci'
+                                        sh 'npm run lint || true'
+                                        sh 'npm audit'
+                                        sh 'npm test:ci'
+                                    }
+                            }
+                        }
 
                         stage('Construire image Docker Backend') {
                             steps {
@@ -53,7 +88,7 @@ pipeline {
                         stage('Pousser sur Docker Hub Backend') {
                             steps {
                                 script {
-                                    withDockerRegistry([credentials: 'JENKINS_DOCKERHUB_TOKEN']) {
+                                    withDockerRegistry([credentialsId: 'JENKINS_DOCKERHUB_TOKEN']) {
                                         dockerBackendImage.push()
                                     }
                                 }
@@ -64,6 +99,20 @@ pipeline {
                 }
 
             }
+        }
+    }
+
+    post {
+        success {
+            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu, sacha.morez@epitech.eu, jerome.muscat@epitech.eu, jugurtha.deghaimi@epitech.eu, mathieu.hernandez@epitech.eu')
+        }
+
+        failure {
+            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu, sacha.morez@epitech.eu, jerome.muscat@epitech.eu, jugurtha.deghaimi@epitech.eu, mathieu.hernandez@epitech.eu')
+        }
+
+        always {
+            echo "L'exécution du pipeline est terminée. "
         }
     }
 }

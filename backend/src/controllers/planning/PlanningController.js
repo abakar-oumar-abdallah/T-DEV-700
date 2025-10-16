@@ -145,13 +145,24 @@ class PlanningController {
 
     return this.handleResponse(res, null, { team: { id: teamResult.data.id, name: teamResult.data.name }, planning: planningResult.data }, 'Default planning retrieved successfully');
   }
-
+  
   getPlanningByUserTeam = async (req, res) => {
+    // Use userTeamId from params, or fall back to userTeamId added by TeamRoleMiddleware
+    const userTeamId = req.params.userTeamId || req.body.userTeamId;
+    
+    if (!userTeamId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User team ID is required' 
+      });
+    }
+
     const userTeamResult = await this.safeQuery(
-      supabase.from('user_team').select('id, role, planning_id, user:user_id (*), team:team_id (*)').eq('id', req.params.userTeamId).single()
+      supabase.from('user_team').select('id, role, planning_id, user:user_id (*), team:team_id (id, name, default_planning_id)').eq('id', userTeamId).single()
     );
     if (userTeamResult.error) return this.handleResponse(res, userTeamResult.error, null, null, 'User-team association not found');
 
+    // Use user's specific planning if exists, otherwise fall back to team's default planning
     const planningId = userTeamResult.data.planning_id || userTeamResult.data.team.default_planning_id;
     if (!planningId) return res.status(404).json({ success: false, message: 'No planning assigned to this user or team' });
 
@@ -163,7 +174,7 @@ class PlanningController {
     return this.handleResponse(res, null, {
       userTeam: { id: userTeamResult.data.id, role: userTeamResult.data.role, user: userTeamResult.data.user, team: userTeamResult.data.team },
       planning: planningResult.data,
-      isTeamDefault: !userTeamResult.data.planning_id
+      isTeamDefault: !userTeamResult.data.planning_id  // true if using team's default planning
     }, 'Planning retrieved successfully');
   }
 
@@ -179,7 +190,7 @@ class PlanningController {
     if (teamResult.error) return this.handleResponse(res, teamResult.error, null, null, 'Team not found');
 
     try {
-      const newPlanning = await this.createPlanningWithSchedules(schedules, false);
+      const newPlanning = await this.createPlanningWithSchedules(schedules, true);
       const { error } = await supabase.from('team').update({ default_planning_id: newPlanning.id }).eq('id', req.params.teamId);
       
       if (error) {
