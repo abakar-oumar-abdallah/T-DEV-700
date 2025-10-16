@@ -181,4 +181,155 @@ router.patch('/clocks/:id', ClockController.updateClock);
  */
 router.delete('/clocks/:id', ClockController.deleteClock);
 
+
+// ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================
+
+// Clock in/out for current user
+/**
+ * @swagger
+ * /clocks/myTeam/{teamId}/clockInOut:
+ *   post:
+ *     summary: Clock in/out for current user in specific team
+ *     tags: [Clocks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *     responses:
+ *       201:
+ *         description: Clock in/out successful
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User-team association or planning not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/clocks/myTeam/:teamId/clockInOut',
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager'], true),
+    ClockController.createClockInOut
+);
+
+// Get all clocks for current user
+/**
+ * @swagger
+ * /clocks/myClocks:
+ *   get:
+ *     summary: Get all clocks for current user (token-based)
+ *     tags: [Clocks]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user clocks retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/clocks/myClocks',
+    AuthMiddleware,
+    ClockController.getClocksByCurrentUser
+);
+
+// Get clocks for current user by specific date
+/**
+ * @swagger
+ * /clocks/myTeam/{teamId}/date/{date}:
+ *   get:
+ *     summary: Get current user's clocks for specific team by date
+ *     tags: [Clocks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *       - in: path
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Date in YYYY-MM-DD format
+ *         example: "2024-01-15"
+ *     responses:
+ *       200:
+ *         description: Clocks for date retrieved successfully
+ *       400:
+ *         description: Invalid date format
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User-team association not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/clocks/myTeam/:teamId/date/:date',
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager'], true),
+    ClockController.getClocksByDate
+);
+
+// Get clocks for current user by date range
+/**
+ * @swagger
+ * /clocks/myTeam/{teamId}/range/{startDate}/{endDate}:
+ *   get:
+ *     summary: Get current user's clocks for specific team by date range
+ *     tags: [Clocks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Team ID
+ *       - in: path
+ *         name: startDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date in YYYY-MM-DD format
+ *         example: "2024-01-01"
+ *       - in: path
+ *         name: endDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date in YYYY-MM-DD format
+ *         example: "2024-01-31"
+ *     responses:
+ *       200:
+ *         description: Clocks for date range retrieved successfully
+ *       400:
+ *         description: Invalid date format or range
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User-team association not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/clocks/myTeam/:teamId/range/:startDate/:endDate',
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager'], true),
+    ClockController.getClocksByDateRange
+);
+
 module.exports = router;
