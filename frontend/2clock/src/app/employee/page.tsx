@@ -7,8 +7,8 @@ import {HomeIcon,ClockIcon,UserIcon,ChartBarIcon,Bars3Icon,ArrowRightOnRectangle
 
 export default function EmployeePage() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const userPrenomStr = localStorage.getItem('userPrenom');
-  const userNomStr = localStorage.getItem('userNom');
+  const userPrenomStr = localStorage.getItem('userPrenom')!;
+  const userNomStr = localStorage.getItem('userNom')!;
   
   const pathname = usePathname() || ''
   const isActive = (path: string) => pathname === path || pathname.startsWith(path)
