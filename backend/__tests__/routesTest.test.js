@@ -15,7 +15,8 @@ const TeamRoleMiddleware = require('../src/middlewares/TeamRoleMiddleware');
 // Mock des contrôleurs
 jest.mock('../src/controllers/auth/AuthController', () => ({
   login: jest.fn((req, res) => res.status(200).json({ success: true, token: 'mock-token' })),
-  logout: jest.fn((req, res) => res.status(200).json({ success: true, message: 'Logged out' }))
+  logout: jest.fn((req, res) => res.status(200).json({ success: true, message: 'Logged out' })),
+  checkAuth: jest.fn((req, res) => res.status(200).json({ success: true, message: 'Logged in' }))
 }));
 
 jest.mock('../src/controllers/user/UserController', () => ({

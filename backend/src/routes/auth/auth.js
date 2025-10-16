@@ -61,8 +61,29 @@ router.post('/login', AuthController.login);
  *         description: Server error
  */
 router.post('/logout',
-    // AuthMiddleware,
+    AuthMiddleware,
     AuthController.logout
+);
+
+/**
+ * @swagger
+ * /checkAuth:
+ *   get:
+ *     summary: Check authentication and get user info
+ *     tags: [Users/Login]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Authentication valid
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/checkAuth',
+    AuthMiddleware,
+    AuthController.checkAuth
 );
 
 module.exports = router;
