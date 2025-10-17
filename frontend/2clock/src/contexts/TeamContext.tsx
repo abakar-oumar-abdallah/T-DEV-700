@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { CheckAuth } from '@/auth/auth';
 
 interface Team {
   id: string;
@@ -23,23 +24,15 @@ interface User {
   permission: string;
 }
 
-interface AuthData {
-  user: User;
-  teams: Team[];
-  teamsCount: number;
-  authenticated: boolean;
-}
-
 interface TeamContextType {
   currentTeam: Team | null;
   user: User | null;
   teams: Team[];
   setCurrentTeam: (team: Team) => void;
   clearTeamContext: () => void;
-  checkAuth: () => Promise<AuthData | null>;
-  initializeContext: (userData: User, teamsData: Team[]) => void;
   isLoading: boolean;
   authError: string | null;
+  refreshAuth: () => Promise<void>;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -55,31 +48,53 @@ export function TeamProvider({ children }: TeamProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Load team context from localStorage on mount
+  const refreshAuth = async () => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await CheckAuth();
+      
+      if (result.success && result.data) {
+        setUser(result.data.user);
+        setTeams(result.data.teams);
+        localStorage.setItem('user', JSON.stringify(result.data.user));
+        localStorage.setItem('userTeams', JSON.stringify(result.data.teams));
+        localStorage.setItem('userPrenom', result.data.user.first_name);
+        localStorage.setItem('userNom', result.data.user.last_name);
+      } else {
+        setAuthError(result.error || 'Authentication failed');
+        clearTeamContext();
+      }
+    } catch (error) {
+      console.error('Auth refresh error:', error);
+      setAuthError('Failed to verify authentication');
+      clearTeamContext();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadTeamContext = () => {
+    const loadInitialData = async () => {
       try {
         const savedTeam = localStorage.getItem('currentTeam');
         const savedUser = localStorage.getItem('user');
         const savedTeams = localStorage.getItem('userTeams');
 
-        if (savedTeam) {
-          setCurrentTeamState(JSON.parse(savedTeam));
-        }
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-        if (savedTeams) {
-          setTeams(JSON.parse(savedTeams));
-        }
+        if (savedTeam) setCurrentTeamState(JSON.parse(savedTeam));
+        if (savedUser) setUser(JSON.parse(savedUser));
+        if (savedTeams) setTeams(JSON.parse(savedTeams));
+
+        // Always refresh auth to ensure data is current
+        await refreshAuth();
       } catch (error) {
         console.error('Error loading team context:', error);
-      } finally {
         setIsLoading(false);
       }
     };
 
-    loadTeamContext();
+    loadInitialData();
   }, []);
 
   const setCurrentTeam = (team: Team) => {
@@ -100,75 +115,15 @@ export function TeamProvider({ children }: TeamProviderProps) {
     localStorage.removeItem('userNom');
   };
 
-  // Function to initialize context with auth data
-  const initializeContext = (userData: User, teamsData: Team[]) => {
-    setUser(userData);
-    setTeams(teamsData);
-    setAuthError(null);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('userTeams', JSON.stringify(teamsData));
-    localStorage.setItem('userPrenom', userData.first_name);
-    localStorage.setItem('userNom', userData.last_name);
-  };
-
-  // CheckAuth function integrated into context
-  const checkAuth = async (): Promise<AuthData | null> => {
-    try {
-      setAuthError(null);
-      const token = localStorage.getItem('session');
-      
-      if (!token) {
-        setAuthError('No authentication token found');
-        return null;
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}/checkAuth`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-          // Automatically initialize context with the auth data
-          initializeContext(result.data.user, result.data.teams);
-          
-          return {
-            user: result.data.user,
-            teams: result.data.teams,
-            teamsCount: result.data.teamsCount,
-            authenticated: result.data.authenticated
-          };
-        } else {
-          setAuthError(result.message || 'Authentication failed');
-          return null;
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({ message: 'Network error' }));
-        setAuthError(errorData.message || 'Authentication failed');
-        return null;
-      }
-    } catch (error) {
-      console.error('CheckAuth error:', error);
-      setAuthError('Network error. Please try again.');
-      return null;
-    }
-  };
-
   const value: TeamContextType = {
     currentTeam,
     user,
     teams,
     setCurrentTeam,
     clearTeamContext,
-    checkAuth,
-    initializeContext,
     isLoading,
     authError,
+    refreshAuth,
   };
 
   return (
