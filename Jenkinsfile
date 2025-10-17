@@ -2,6 +2,13 @@ pipeline {
     
     agent any
 
+    when {
+        anyOf {
+            branch 'develop'
+            branch 'administation-jenkins'
+        }
+    }
+
     environment {
         DOCKERHUB_ACCOUNT = 'abakar98'
         FRONT_REPOSITORY = 'jenkins-frontend'
@@ -112,7 +119,7 @@ pipeline {
         }
 
         always {
-            echo "L'exécution du pipeline est terminée avec webhook"
+            echo "L'exécution du pipeline est terminée. "
         }
     }
 }
