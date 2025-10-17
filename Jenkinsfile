@@ -112,7 +112,7 @@ pipeline {
         }
 
         always {
-            echo "L'exécution du pipeline est terminée. "
+            echo "L'exécution du pipeline est terminée avec webhook"
         }
     }
 }
