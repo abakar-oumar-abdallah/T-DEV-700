@@ -17,17 +17,30 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const result = await LoginUser({ email, password });
-    if (result.success && result.data) {
-      console.log('Login successful:', result);
-      localStorage.setItem('session', result.data.token);
-      localStorage.setItem('userPrenom', result.data.user.first_name);
-      localStorage.setItem('userNom', result.data.user.last_name);
-      router.push('/dashboard/employee');
-    } else {
-      setError(result.error || 'Login failed');
+
+    try {
+      const result = await LoginUser({ email, password });
+      
+      if (result.success && result.data) {
+        console.log('Login successful:', result);
+        
+        // Store basic login data
+        localStorage.setItem('session', result.data.token);
+        localStorage.setItem('userPrenom', result.data.user.first_name);
+        localStorage.setItem('userNom', result.data.user.last_name);
+        
+        // TODO : Sélectionner automatiquement l'équipe si une seule équipe est disponible
+        // TODO : Rediriger vers la page de la dernière équipe sélectionnée
+        router.push('/teams');
+      } else {
+        setError(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

@@ -10,7 +10,9 @@ import {
   UserIcon,
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
+  BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
+import { useTeam } from "@/contexts/TeamContext";
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -20,6 +22,7 @@ interface SidebarProps {
 export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
+  const { currentTeam } = useTeam();
 
   const userPrenomStr = localStorage.getItem('userPrenom')!;
   const userNomStr = localStorage.getItem('userNom')!;
@@ -56,8 +59,22 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           className="rounded-md p-4 mb-6 text-center mx-6"
           style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
         >
-          <div className="font-semibold">Employé(e)</div>
-          <div className="text-sm text-white/70">Bienvenue</div>
+          {currentTeam ? (
+            <>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <BuildingOffice2Icon className="w-4 h-4 text-white/70" />
+                <div className="font-semibold">{currentTeam.team.name}</div>
+              </div>
+              <div className="text-sm text-white/70 capitalize">
+                {currentTeam.role === 'manager' ? 'Responsable' : 'Employé'}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="font-semibold">Employé(e)</div>
+              <div className="text-sm text-white/70">Bienvenue</div>
+            </>
+          )}
         </div>
 
         {/* Liens */}
@@ -74,7 +91,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 onClick={() => setMobileOpen(false)}
               >
                 <HomeIcon className="w-5 h-5 " style={{
-                    color: isActive("/dashboard/clock")
+                    color: isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }} />
@@ -134,6 +151,17 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               >
                 <UserIcon className="w-6 h-6" style={{ color: "var(--color-primary)" }} />
                 <span>Profil</span>
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/teams"
+                className="text-white/80 hover:text-white rounded-md py-3 px-4 flex items-center gap-3"
+                onClick={() => setMobileOpen(false)}
+              >
+                <BuildingOffice2Icon className="w-6 h-6" style={{ color: "var(--color-primary)" }} />
+                <span className="font-medium">Équipes</span>
               </Link>
             </li>
           </ul>
