@@ -1,13 +1,6 @@
 pipeline {
     
     agent any
-    
-    when {
-        anyOf {
-            branch 'develop'
-            branch 'feature/administation-jenkins'
-        }
-    }
 
     environment {
         DOCKERHUB_ACCOUNT = 'abakar98'
