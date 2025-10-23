@@ -22,10 +22,10 @@ interface SidebarProps {
 export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
-  const { currentTeam } = useTeam();
+  const { currentTeam, user } = useTeam();
 
-  const userPrenomStr = localStorage.getItem('userPrenom')!;
-  const userNomStr = localStorage.getItem('userNom')!;
+  const userPrenomStr = user?.first_name ?? '';
+  const userNomStr = user?.last_name ?? '';
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -157,10 +157,19 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
             <li>
               <Link
                 href="/teams"
-                className="text-white/80 hover:text-white rounded-md py-3 px-4 flex items-center gap-3"
+                className={`${
+                  isActive("/teams")
+                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
+                    : "text-white/80 hover:text-white"
+                } rounded-md py-3 px-4 flex items-center gap-3`}
                 onClick={() => setMobileOpen(false)}
               >
-                <BuildingOffice2Icon className="w-6 h-6" style={{ color: "var(--color-primary)" }} />
+                <BuildingOffice2Icon className="w-6 h-6"
+                  style={{
+                    color: isActive("/teams")
+                      ? "var(--color-secondary)"
+                      : "var(--color-primary)",
+                  }} />
                 <span className="font-medium">Équipes</span>
               </Link>
             </li>

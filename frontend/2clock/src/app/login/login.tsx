@@ -23,11 +23,8 @@ export default function LoginForm() {
       
       if (result.success && result.data) {
         console.log('Login successful:', result);
-        
-        // Store basic login data
+        localStorage.clear();
         localStorage.setItem('session', result.data.token);
-        localStorage.setItem('userPrenom', result.data.user.first_name);
-        localStorage.setItem('userNom', result.data.user.last_name);
         
         // TODO : Sélectionner automatiquement l'équipe si une seule équipe est disponible
         // TODO : Rediriger vers la page de la dernière équipe sélectionnée
