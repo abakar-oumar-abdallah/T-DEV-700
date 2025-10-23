@@ -15,9 +15,9 @@ function formatTime(d = new Date()) {
     year: "numeric",
     month: "long",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
+    // hour: "2-digit",
+    // minute: "2-digit",
+    // second: "2-digit"
   })
 }
 
@@ -49,6 +49,9 @@ export default function ClockPage() {
     localStorage.setItem("clock_history", JSON.stringify(history))
   }, [history])
 
+  //TODO : Délocaliser cette fonction (avec les autres fonctions de clock)
+  // et faire une requête à la route clocks/clockInOut
+  //TODO : Récupérer les infos de retard/avance renvoyées par clockInOut
   const addPunch = async (type: Punch["type"]) => {
     const p: Punch = { id: String(Date.now()), type, time: nowIso() }
     setHistory((s) => [p, ...s])
@@ -111,7 +114,7 @@ export default function ClockPage() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         <section className="lg:col-span-2">
-          {currentTeam && (
+          {/* {currentTeam && (
             <div className="bg-white rounded-lg shadow p-4 mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
@@ -123,7 +126,7 @@ export default function ClockPage() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="text-center mb-6">
             <h2 className="text-4xl font-semibold text-gray-800 mb-2">
