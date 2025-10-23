@@ -48,6 +48,14 @@ export function TeamProvider({ children }: TeamProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  const clearTeamContext = () => {
+    setCurrentTeamState(null);
+    setUser(null);
+    setTeams([]);
+    setAuthError(null);
+
+  };
+
   const refreshAuth = async () => {
     setIsLoading(true);
     setAuthError(null);
@@ -58,10 +66,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
       if (result.success && result.data) {
         setUser(result.data.user);
         setTeams(result.data.teams);
-        localStorage.setItem('user', JSON.stringify(result.data.user));
-        localStorage.setItem('userTeams', JSON.stringify(result.data.teams));
-        localStorage.setItem('userPrenom', result.data.user.first_name);
-        localStorage.setItem('userNom', result.data.user.last_name);
+
       } else {
         setAuthError(result.error || 'Authentication failed');
         clearTeamContext();
@@ -78,6 +83,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        // Load saved data first
         const savedTeam = localStorage.getItem('currentTeam');
         const savedUser = localStorage.getItem('user');
         const savedTeams = localStorage.getItem('userTeams');
@@ -86,8 +92,13 @@ export function TeamProvider({ children }: TeamProviderProps) {
         if (savedUser) setUser(JSON.parse(savedUser));
         if (savedTeams) setTeams(JSON.parse(savedTeams));
 
-        // Always refresh auth to ensure data is current
-        await refreshAuth();
+        refreshAuth()
+        const session = localStorage.getItem('session');
+        if (session) {
+          await refreshAuth();
+        } else {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Error loading team context:', error);
         setIsLoading(false);
@@ -95,24 +106,11 @@ export function TeamProvider({ children }: TeamProviderProps) {
     };
 
     loadInitialData();
-  }, []);
+  }, []); 
 
   const setCurrentTeam = (team: Team) => {
     setCurrentTeamState(team);
     localStorage.setItem('currentTeam', JSON.stringify(team));
-  };
-
-  const clearTeamContext = () => {
-    setCurrentTeamState(null);
-    setUser(null);
-    setTeams([]);
-    setAuthError(null);
-    localStorage.removeItem('currentTeam');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userTeams');
-    localStorage.removeItem('session');
-    localStorage.removeItem('userPrenom');
-    localStorage.removeItem('userNom');
   };
 
   const value: TeamContextType = {
