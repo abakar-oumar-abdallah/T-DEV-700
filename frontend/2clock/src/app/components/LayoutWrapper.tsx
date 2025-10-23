@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import EmployeeSidebar from './EmployeeSidebar';
 import Loader from './Loader';
+import PageTransition from './PageTransition';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { useTeam } from '@/contexts/TeamContext';
@@ -39,7 +40,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
           isLoading={teamLoading} 
           message="Vérification de l'authentification..."
         />
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
       </>
     );
   }
@@ -54,13 +57,13 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
         <EmployeeSidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
         
-        <div className={`${mobileOpen ? 'block' : 'hidden'} fixed inset-0 bg-black/40 z-40 sm:hidden`} onClick={() => setMobileOpen(false)} />
+        <div className={`${mobileOpen ? 'block' : 'hidden'} fixed inset-0 bg-black/40 z-40 sm:hidden transition-opacity duration-300`} onClick={() => setMobileOpen(false)} />
         
         <div className="min-h-screen sm:ml-64">
-          <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-30">
+          <header className="sm:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-30 transition-all duration-300">
             <button 
               onClick={() => setMobileOpen(true)} 
-              className="p-2 rounded-md" 
+              className="p-2 rounded-md transition-all duration-200 hover:bg-gray-100 active:scale-95" 
               style={{ color: 'var(--color-secondary)' }}
             >
               <Bars3Icon className="w-6 h-6" />
@@ -69,7 +72,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             <div />
           </header>
           
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </div>
       </div>
     </>

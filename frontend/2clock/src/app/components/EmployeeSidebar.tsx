@@ -31,6 +31,39 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
     document.body.style.overflow = mobileOpen ? "hidden" : "";
   }, [mobileOpen]);
 
+  const navigationItems = [
+    {
+      href: "/dashboard/employee",
+      icon: HomeIcon,
+      label: "Accueil",
+      isActive: isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches") && !isActive("/dashboard/employee/profile")
+    },
+    {
+      href: "/dashboard/clock",
+      icon: ClockIcon,
+      label: "Pointage",
+      isActive: isActive("/dashboard/clock")
+    },
+    {
+      href: "/dashboard/employee/punches",
+      icon: ChartBarIcon,
+      label: "Statistiques",
+      isActive: isActive("/dashboard/employee/punches")
+    },
+    {
+      href: "/dashboard/employee/profile",
+      icon: UserIcon,
+      label: "Profil",
+      isActive: isActive("/dashboard/employee/profile")
+    },
+    {
+      href: "/teams",
+      icon: BuildingOffice2Icon,
+      label: "Équipes",
+      isActive: isActive("/teams")
+    }
+  ];
+
   return (
     <>
       <aside
@@ -56,7 +89,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         </div>
 
         <div
-          className="rounded-md p-4 mb-6 text-center mx-6"
+          className="rounded-md p-4 mb-6 text-center mx-6 transition-all duration-300"
           style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
         >
           {currentTeam ? (
@@ -77,117 +110,70 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           )}
         </div>
 
-        {/* Liens */}
+        {/* Navigation */}
         <nav className="flex-1 px-6">
-          <ul className="space-y-3">
-            <li>
-              <Link
-                href="/dashboard/employee"
-                className={`${
-                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                    : "text-white/80 hover:text-white"
-                } rounded-md py-3 px-4 flex items-center gap-3`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <HomeIcon className="w-5 h-5 " style={{
-                    color: isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
-                      ? "var(--color-secondary)"
-                      : "var(--color-primary)",
-                  }} />
-                <span className="font-medium">Accueil</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/dashboard/clock"
-                className={`${
-                  isActive("/dashboard/clock")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                    : "text-white/80 hover:text-white"
-                } rounded-md py-3 px-4 flex items-center gap-3`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <ClockIcon
-                  className="w-6 h-6"
-                  style={{
-                    color: isActive("/dashboard/clock")
-                      ? "var(--color-secondary)"
-                      : "var(--color-primary)",
-                  }}
-                />
-                <span>Pointage</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/dashboard/employee/punches"
-                className={`${
-                  isActive("/dashboard/employee/punches")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                    : "text-white/80 hover:text-white"
-                } rounded-md py-3 px-4 flex items-center gap-3`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <ChartBarIcon
-                  className="w-6 h-6"
-                  style={{
-                    color: isActive("/dashboard/employee/punches")
-                      ? "var(--color-secondary)"
-                      : "var(--color-primary)",
-                  }}
-                />
-                <span className="font-medium">Statistiques</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/dashboard/employee/profile"
-                className="text-white/80 hover:text-white py-3 px-4 flex items-center gap-3"
-                onClick={() => setMobileOpen(false)}
-              >
-                <UserIcon className="w-6 h-6" style={{ color: "var(--color-primary)" }} />
-                <span>Profil</span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/teams"
-                className={`${
-                  isActive("/teams")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                    : "text-white/80 hover:text-white"
-                } rounded-md py-3 px-4 flex items-center gap-3`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <BuildingOffice2Icon className="w-6 h-6"
-                  style={{
-                    color: isActive("/teams")
-                      ? "var(--color-secondary)"
-                      : "var(--color-primary)",
-                  }} />
-                <span className="font-medium">Équipes</span>
-              </Link>
-            </li>
+          <ul className="space-y-2 relative">
+            {navigationItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <li key={item.href} className="relative">
+                  <Link
+                    href={item.href}
+                    className={`relative rounded-lg py-3 px-4 flex items-center gap-3 transition-all duration-300 ease-in-out transform hover:scale-[1.02] ${
+                      item.isActive
+                        ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-[1.02]"
+                        : "text-white/80 hover:text-white hover:bg-white/5"
+                    }`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <IconComponent
+                      className={`w-5 h-5 transition-all duration-300 ${
+                        item.isActive ? "scale-110" : ""
+                      }`}
+                      style={{
+                        color: item.isActive
+                          ? "var(--color-secondary)"
+                          : "var(--color-primary)",
+                      }}
+                    />
+                    <span className={`font-medium transition-all duration-300 ${
+                      item.isActive ? "font-semibold" : ""
+                    }`}>
+                      {item.label}
+                    </span>
+                    
+                    {/* Active indicator */}
+                    <div className={`absolute right-2 w-2 h-2 rounded-full transition-all duration-300 ${
+                      item.isActive 
+                        ? "bg-[var(--color-secondary)] opacity-100 scale-100" 
+                        : "bg-transparent opacity-0 scale-0"
+                    }`} />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
         <div className="mt-6 px-6 pb-6">
-            <button className="flex items-center gap-3 text-white/80 hover:text-white">
-              <Image src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} alt='Image de profile' width={40} height={40} style={{ borderRadius: '50%' }} />
-              <span>{userPrenomStr} {userNomStr}</span>
-            </button>
-          </div>
+          <button className="flex items-center gap-3 text-white/80 hover:text-white transition-all duration-300 hover:scale-105">
+            <Image 
+              src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} 
+              alt='Image de profile' 
+              width={40} 
+              height={40} 
+              style={{ borderRadius: '50%' }} 
+              className="transition-transform duration-300 hover:scale-110"
+            />
+            <span className="transition-all duration-300">{userPrenomStr} {userNomStr}</span>
+          </button>
+        </div>
       </aside>
 
       <div
         className={`${
           mobileOpen ? "block" : "hidden"
-        } fixed inset-0 bg-black/40 z-40 sm:hidden`}
+        } fixed inset-0 bg-black/40 z-40 sm:hidden transition-opacity duration-300`}
         onClick={() => setMobileOpen(false)}
         aria-hidden={!mobileOpen}
       />
