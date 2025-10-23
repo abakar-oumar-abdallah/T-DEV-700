@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { TeamProvider } from "@/contexts/TeamContext";
+import LayoutWrapper from "./components/LayoutWrapper";
 
 export const metadata: Metadata = {
   title: "2Clock - Time Management",
@@ -19,7 +20,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <TeamProvider>
-          {children}
+          <LayoutWrapper>{children}</LayoutWrapper>
         </TeamProvider>
       </body>
     </html>

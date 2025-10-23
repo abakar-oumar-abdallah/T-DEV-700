@@ -34,9 +34,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen sm:h-screen sm:min-h-screen transform transition-transform duration-300
+        className={`fixed top-0 left-0 z-50 h-screen transform transition-transform duration-300
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-        sm:translate-x-0 sm:static sm:transform-none
+        sm:translate-x-0
         flex flex-col w-[100vw] sm:w-64 overflow-y-auto`}
         style={{
           background: "var(--color-secondary)",
