@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation"
 import { Bars3Icon } from "@heroicons/react/24/outline"
 import EmployeeSidebar from "@/app/components/EmployeeSidebar"
 
+export const dynamic = 'force-dynamic'
+
 const EmployeePunchesPage = () => {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
