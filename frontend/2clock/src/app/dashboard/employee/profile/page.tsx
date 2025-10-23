@@ -20,35 +20,41 @@ export default function ProfilePage() {
         </div>
 
         {user && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Prénom</label>
-                <div className="mt-1 p-3 border border-gray-300 rounded-md bg-gray-50">
-                  {user.first_name}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Nom</label>
-                <div className="mt-1 p-3 border border-gray-300 rounded-md bg-gray-50">
-                  {user.last_name}
-                </div>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+              <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
+                {user.first_name}
               </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <div className="mt-1 p-3 border border-gray-300 rounded-md bg-gray-50">
-                  {user.email}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Rôle</label>
-                <div className="mt-1 p-3 border border-gray-300 rounded-md bg-gray-50">
-                  {user.permission}
-                </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+              <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
+                {user.last_name}
               </div>
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
+                {user.email}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+              <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
+                {user.phonenumber??'Aucun numéro fourni.'}
+              </div>
+            </div>
+            
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rôle</label>
+              <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
+                {user.permission}
+              </div>
+            </div> */}
           </div>
         )}
       </div>
