@@ -63,7 +63,7 @@ export default function TeamSelectionPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur d'authentification</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur d&apos;authentification</h3>
           <p className="text-gray-600 mb-4">{authError}</p>
           <button onClick={() => (clearTeamContext(), router.push('/login'))} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Retour à la connexion</button>
         </div>
