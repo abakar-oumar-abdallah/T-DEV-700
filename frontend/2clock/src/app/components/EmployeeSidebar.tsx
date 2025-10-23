@@ -22,10 +22,10 @@ interface SidebarProps {
 export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const pathname = usePathname() || "";
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
-  const { currentTeam } = useTeam();
+  const { currentTeam, user } = useTeam();
 
-  const userPrenomStr = localStorage.getItem('userPrenom')!;
-  const userNomStr = localStorage.getItem('userNom')!;
+  const userPrenomStr = user?.first_name ?? '';
+  const userNomStr = user?.last_name ?? '';
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
