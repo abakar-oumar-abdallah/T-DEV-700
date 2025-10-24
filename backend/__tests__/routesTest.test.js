@@ -10,6 +10,8 @@ const scheduleRoutes = require('../src/routes/schedule/schedule');
 const AuthMiddleware = require('../src/middlewares/AuthMiddleware');
 const PermissionMiddleware = require('../src/middlewares/PermissionMiddleware');
 const TeamRoleMiddleware = require('../src/middlewares/TeamRoleMiddleware');
+const totpRoutes = require('../src/routes/totp/totp.js');
+
 
 
 // Mock des contrôleurs
