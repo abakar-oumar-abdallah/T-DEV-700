@@ -10,12 +10,6 @@ pipeline {
     
     stages {
         stage('Build & Push') {
-            // when {
-            //     anyOf {
-            //         branch 'develop'
-            //         branch 'feature/administation-jenkins'
-            //     } 
-            // }
             parallel {
 
                 stage('Frontend') {
