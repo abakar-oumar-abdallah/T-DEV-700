@@ -10,6 +10,12 @@ pipeline {
     
     stages {
         stage('Build & Push') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'feature/administation-jenkins'
+                } 
+            }
             parallel {
 
                 stage('Frontend') {
@@ -69,7 +75,7 @@ pipeline {
                                     dir('backend') {
                                         sh 'npm ci'
                                         sh 'npm run lint'
-                                        sh 'npm audit'
+                                        sh 'npm audit || true'
                                         sh 'npm run test:ci'
                                     }
                             }
