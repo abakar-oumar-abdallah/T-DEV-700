@@ -84,14 +84,14 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               <Link
                 href="/dashboard/employee"
                 className={`${
-                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
+                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches") && !isActive("/dashboard/employee/profile")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
                     : "text-white/80 hover:text-white"
                 } rounded-md py-3 px-4 flex items-center gap-3`}
                 onClick={() => setMobileOpen(false)}
               >
                 <HomeIcon className="w-5 h-5 " style={{
-                    color: isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches")
+                    color: isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches") && !isActive("/dashboard/employee/profile")
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }} />
@@ -146,10 +146,19 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
             <li>
               <Link
                 href="/dashboard/employee/profile"
-                className="text-white/80 hover:text-white py-3 px-4 flex items-center gap-3"
+                className={`${
+                  isActive("/dashboard/employee/profile")
+                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
+                    : "text-white/80 hover:text-white"
+                } rounded-md py-3 px-4 flex items-center gap-3`}
                 onClick={() => setMobileOpen(false)}
               >
-                <UserIcon className="w-6 h-6" style={{ color: "var(--color-primary)" }} />
+                <UserIcon className="w-6 h-6"
+                  style={{
+                    color: isActive("/dashboard/employee/profile")
+                      ? "var(--color-secondary)"
+                      : "var(--color-primary)",
+                  }} />
                 <span>Profil</span>
               </Link>
             </li>
