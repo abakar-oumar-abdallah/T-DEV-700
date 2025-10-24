@@ -1,20 +1,17 @@
 services:
   frontend:
     build:
-      context: ./frontend/2clock
-      dockerfile: Dockerfile.dev
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000" 
+      - "3000:3000"
     env_file:
       - ./frontend/2clock/.env
     volumes:
       - ./frontend/2clock:/app
       - /app/node_modules
-      - /app/.next
     networks:
       - jenkins
-    environment:
-      - WATCHPACK_POLLING=true
 
   backend:
     build:
@@ -29,7 +26,7 @@ services:
       - jenkins
 
   jenkins:
-    image: jenkins/jenkins:jdk17
+    image: jenkins/jenkins:lts
     container_name: jenkins
     privileged: true
     user: root

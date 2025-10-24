@@ -1,9 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const TeamController = require('../../controllers/team/TeamController');
-const AuthMiddleware = require('../../middlewares/AuthMiddleware');
-const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
-const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -23,11 +20,7 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *       200:
  *         description: List of all teams
  */
-router.get('/teams', 
-    // AuthMiddleware,
-    // PermissionMiddleware('superadmin'),
-    TeamController.getAllTeams
-);
+router.get('/teams', TeamController.getAllTeams);
 
 /**
  * @swagger
@@ -45,7 +38,6 @@ router.get('/teams',
  *               - name
  *               - description
  *               - lateness_limit
- *               - timezone
  *             properties:
  *               name:
  *                 type: string
@@ -56,10 +48,6 @@ router.get('/teams',
  *               lateness_limit:
  *                 type: integer
  *                 example: 10
- *               timezone:
- *                 type: string
- *                 example: Europe/Paris
- *                 description: Team's timezone (required)
  *     responses:
  *       201:
  *         description: Team created
@@ -70,12 +58,7 @@ router.get('/teams',
  *       500:
  *         description: Server error
  */
-router.post(
-    '/teams', 
-    // AuthMiddleware,
-    // PermissionMiddleware('admin'),
-    TeamController.createTeam
-);
+router.post('/teams', TeamController.createTeam);
 
 
 // get a team by id
@@ -101,30 +84,6 @@ router.post(
  *         description: Server error
  */
 router.get('/teams/:id', TeamController.getTeamById);
-
-// get a team by name
-/**
- * @swagger
- * /teams/{name}/name:
- *   get:
- *     summary: Get teams by name
- *     tags: [Teams]
- *     parameters:
- *       - in: path
- *         name: name
- *         required: true
- *         schema:
- *           type: string
- *         description: name of the team to retrieve
- *     responses:
- *       200:
- *         description: Team found successfully
- *       404:
- *         description: Team not found
- *       500:
- *         description: Server error
- */
-router.get('/teams/:name/name', TeamController.getTeamByName);
 
 /**
  * @swagger
@@ -155,10 +114,6 @@ router.get('/teams/:name/name', TeamController.getTeamByName);
  *               lateness_limit:
  *                 type: integer
  *                 example: 15
- *               timezone:
- *                 type: string
- *                 example: America/New_York
- *                 description: Team's timezone (optional)
  *     responses:
  *       200:
  *         description: Team updated successfully
@@ -193,11 +148,6 @@ router.patch('/teams/:id', TeamController.updateTeam);
  *       500:
  *         description: Server error
  */
-router.delete('/teams/:id', 
-    // AuthMiddleware,
-    // PermissionMiddleware('admin'),
-    // TeamRoleMiddleware(['manager']),
-    TeamController.deleteTeam
-);
+router.delete('/teams/:id', TeamController.deleteTeam);
 
 module.exports = router;

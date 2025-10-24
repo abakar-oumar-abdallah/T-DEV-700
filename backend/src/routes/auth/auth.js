@@ -1,9 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const AuthController = require('../../controllers/auth/AuthController');
-const AuthMiddleware = require('../../middlewares/AuthMiddleware');
-// const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
-// const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -60,30 +57,6 @@ router.post('/login', AuthController.login);
  *       500:
  *         description: Server error
  */
-router.post('/logout',
-    AuthMiddleware,
-    AuthController.logout
-);
-
-/**
- * @swagger
- * /checkAuth:
- *   get:
- *     summary: Check authentication and get user info
- *     tags: [Users/Login]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Authentication valid
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.get('/checkAuth',
-    AuthMiddleware,
-    AuthController.checkAuth
-);
+router.post('/logout', AuthController.logout);
 
 module.exports = router;

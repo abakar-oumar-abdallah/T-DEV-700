@@ -171,47 +171,6 @@ class AuthController {
       });
     }
   }
-
-
-  /**
-   * Check authentication status and return user info with teams
-   */
-  async checkAuth(req, res) {
-    try {
-      const userId = req.user.userId;
-
-      // Get user info (excluding password)
-      const { data: user, error: userError } = await supabase
-        .from('user')
-        .select('id, email, first_name, last_name, permission')
-        .eq('id', userId)
-        .single();
-
-      if (userError || !user) {
-        return res.status(401).json({ success: false, message: 'User not found' });
-      }
-
-      // Get user teams using existing controller pattern
-      const { data: userTeams } = await supabase
-        .from('user_team')
-        .select('id, role, planning_id, team:team_id(id, name, timezone, lateness_limit)')
-        .eq('user_id', userId);
-
-      res.status(200).json({
-        success: true,
-        message: 'Authentication valid',
-        data: {
-          user,
-          teams: userTeams || [],
-          teamsCount: userTeams?.length || 0,
-          authenticated: true
-        }
-      });
-
-    } catch (err) {
-      res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
-    }
-  }
 }
 
 module.exports = new AuthController();
