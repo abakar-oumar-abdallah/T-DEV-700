@@ -22,7 +22,7 @@ const UserController = require('../../controllers/user/UserController');
  */
 router.get('/users', UserController.getAllUsers);
 
-// create a user with email, password, first_name, last_name and role
+// create a user with email, password, first_name and last_name 
 /**
  * @swagger
  * /users:
@@ -40,6 +40,7 @@ router.get('/users', UserController.getAllUsers);
  *               - password
  *               - first_name
  *               - last_name
+ *               - permission
  *             properties:
  *               email:
  *                 type: string
@@ -53,11 +54,9 @@ router.get('/users', UserController.getAllUsers);
  *               last_name:
  *                 type: string
  *                 example: Doe
- *               role:
- *                 type: string
- *                 enum: [manager , employee]
- *                 default: employee
- *                 example: employee
+ *               permission:
+ *                type: string
+ *                example: admin
  *     responses:
  *       201:
  *         description: User created
@@ -81,7 +80,7 @@ router.post('/users', UserController.createUser);
  *       - in: path
  *         name: id
  *         required: true
- *         description: User UUID
+ *         description: User id
  *         schema:
  *           type: string
  *     responses:
@@ -155,10 +154,9 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *               last_name:
  *                 type: string
  *                 example: Doe
- *               role:
- *                 type: string
- *                 enum: [employee , manager]
- *                 example: employee
+ *               permission:
+ *                type: string
+ *                example: admin
  *     responses:
  *       200:
  *         description: User updated

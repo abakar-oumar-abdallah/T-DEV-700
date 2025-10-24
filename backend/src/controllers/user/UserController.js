@@ -44,13 +44,13 @@ class UserController {
    */
   async createUser(req, res) {
     try {
-      const { email, password, first_name, last_name, role } = req.body;
+      const { email, password, first_name, last_name, permission, phone_number} = req.body;
 
       // Validation des champs requis
-      if (!email || !password || !first_name || !last_name) {
+      if (!email || !password || !first_name || !last_name || !permission || !phone_number) {
         return res.status(400).json({
           success: false,
-          message: 'Email, password, first_name and last_name are required'
+          message: 'Email, password, first_name, last_name, permission and phone number are required'
         });
       }
 
@@ -78,14 +78,10 @@ class UserController {
         });
       }
 
-      // Validation du rôle
-      const validRoles = ['manager', 'employee'];
-      const userRole = role || 'employee';
-      
-      if (!validRoles.includes(userRole)) {
+      if (phone_number.length < 9) {
         return res.status(400).json({
           success: false,
-          message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+          message: 'Phone number must be at least 9 characters long'
         });
       }
 
@@ -125,7 +121,7 @@ class UserController {
             password: hashedPassword,
             first_name: first_name.trim(),
             last_name: last_name.trim(),
-            role: userRole
+            permission:permission.trim()
           }
         ])
         .select()
@@ -262,10 +258,10 @@ class UserController {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { email, password, first_name, last_name, role } = req.body;
+      const { email, password, first_name, last_name, permission, phone_number } = req.body;
 
       // Vérifier qu'au moins un champ est fourni
-      if (!email && !password && !first_name && !last_name && !role) {
+      if (!email && !password && !first_name && !last_name  && !permission && !phone_number) {
         return res.status(400).json({
           success: false,
           message: 'At least one field must be provided to update'
@@ -346,19 +342,21 @@ class UserController {
         }
         updateData.last_name = last_name.trim();
       }
-
-      // Validation et ajout du rôle
-      if (role) {
-        const validRoles = ["manager", "employee"];
-        if (!validRoles.includes(role)) {
+      // Ajout de la permission
+      if (permission) {
+        updateData.permission = permission.trim();
+      }
+        
+      // Validation et ajout du numéro de téléphone
+      if (phone_number) {
+        if (phone_number.length < 9) {
           return res.status(400).json({
             success: false,
-            message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+            message: 'Phone number must be at least 9 characters long'
           });
         }
-        updateData.role = role;
+        updateData.phone_number = phone_number;
       }
-
       // Ajouter la date de mise à jour
       updateData.updated_at = new Date().toISOString();
 

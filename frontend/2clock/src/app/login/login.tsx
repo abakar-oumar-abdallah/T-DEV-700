@@ -17,15 +17,27 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const result = await LoginUser({ email, password });
-    if (result.success && result.data) {
-      console.log('Login successful:', result);
-      localStorage.setItem('session', result.data.token);
-      router.push('/');
-    } else {
-      setError(result.error || 'Login failed');
+
+    try {
+      const result = await LoginUser({ email, password });
+      
+      if (result.success && result.data) {
+        console.log('Login successful:', result);
+        localStorage.clear();
+        localStorage.setItem('session', result.data.token);
+        
+        // TODO : Sélectionner automatiquement l'équipe si une seule équipe est disponible
+        // TODO : Rediriger vers la page de la dernière équipe sélectionnée
+        router.push('/teams');
+      } else {
+        setError(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
