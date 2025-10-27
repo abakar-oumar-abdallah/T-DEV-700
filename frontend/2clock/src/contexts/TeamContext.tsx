@@ -19,6 +19,7 @@ interface Team {
 interface User {
   id: string;
   email: string;
+  phonenumber: string;
   first_name: string;
   last_name: string;
   permission: string;
