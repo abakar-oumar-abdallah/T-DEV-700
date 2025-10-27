@@ -18,7 +18,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased" cz-shortcut-listen="true">
         <TeamProvider>
           <LayoutWrapper>{children}</LayoutWrapper>
         </TeamProvider>
