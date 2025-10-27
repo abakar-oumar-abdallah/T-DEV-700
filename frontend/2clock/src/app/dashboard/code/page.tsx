@@ -4,7 +4,7 @@ import { useTeam } from '@/contexts/TeamContext'
 import { generateTotp, resetTeamSecret } from '@/totp/totp'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import io, { Socket } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 
 interface TotpData {
   teamId: string;
@@ -21,7 +21,13 @@ export default function TotpManagerPage() {
   const [isActive, setIsActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [socket, setSocket] = useState<typeof Socket | null>(null)
+  const [socket, setSocket] = useState<Socket | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Mount animation
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Vérifier si l'utilisateur est manager
   const isManager = currentTeam?.role === 'manager'
@@ -144,9 +150,6 @@ export default function TotpManagerPage() {
         setIsActive(false)
         setTimeRemaining(0)
         setLoading(false)
-        // setTimeout(() => {
-        //   alert('Secret réinitialisé avec succès.')
-        // }, 100)
       } else {
         setError(result.error || 'Échec réinitialisation')
         setLoading(false)
@@ -174,7 +177,9 @@ export default function TotpManagerPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+          <div className={`bg-white rounded-2xl shadow-2xl p-8 text-center transition-all duration-700 ${
+            mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}>
             <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
               <ExclamationTriangleIcon className="w-8 h-8 text-orange-600" />
             </div>
@@ -189,8 +194,12 @@ export default function TotpManagerPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
       <div className="max-w-2xl w-full">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="text-center mb-8">
+        <div className={`bg-white rounded-2xl shadow-2xl p-8 transition-all duration-700 ${
+          mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        }`}>
+          <div className={`text-center mb-8 transition-all duration-500 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+          }`} style={{ transitionDelay: '100ms' }}>
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-[rgba(255,51,30,0.1)]">
               <svg className="w-8 h-8 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -211,7 +220,9 @@ export default function TotpManagerPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className={`bg-red-50 border border-red-200 rounded-lg p-4 mb-6 transition-all duration-500 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`} style={{ transitionDelay: '200ms' }}>
               <div className="flex items-center justify-center gap-2">
                 <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
                 <p className="text-red-800 font-medium text-center">{error}</p>
@@ -220,7 +231,9 @@ export default function TotpManagerPage() {
           )}
 
           {/* Code Display */}
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-8">
+          <div className={`bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-8 transition-all duration-700 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '300ms' }}>
             <div className="text-center">
               {isActive && totpData ? (
                 <>
@@ -229,7 +242,10 @@ export default function TotpManagerPage() {
                     {totpData.code.split("").map((digit, i) => (
                       <div
                         key={i}
-                        className="w-14 h-20 bg-white rounded-lg shadow-md flex items-center justify-center text-4xl font-bold text-[var(--color-primary)]"
+                        className={`w-14 h-20 bg-white rounded-lg shadow-md flex items-center justify-center text-4xl font-bold text-[var(--color-primary)] transition-all duration-300 ${
+                          mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+                        }`}
+                        style={{ transitionDelay: `${400 + i * 50}ms` }}
                       >
                         {digit}
                       </div>
@@ -258,7 +274,10 @@ export default function TotpManagerPage() {
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div
                         key={i}
-                        className="w-14 h-20 bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-4xl font-bold text-gray-400"
+                        className={`w-14 h-20 bg-gray-100 rounded-lg shadow-md flex items-center justify-center text-4xl font-bold text-gray-400 transition-all duration-300 ${
+                          mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+                        }`}
+                        style={{ transitionDelay: `${400 + i * 50}ms` }}
                       >
                         {loading ? '•' : '—'}
                       </div>
@@ -273,15 +292,9 @@ export default function TotpManagerPage() {
           </div>
 
           {/* Controls */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            {/* <button
-              onClick={handleManualRefresh}
-              disabled={loading || !socket?.connected}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200"
-            >
-              {loading ? 'Génération...' : !socket?.connected ? 'Connexion...' : 'Générer Nouveau Code'}
-            </button> */}
-
+          <div className={`mt-6 flex flex-col sm:flex-row gap-3 transition-all duration-500 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`} style={{ transitionDelay: '500ms' }}>
             <button
               onClick={handleResetSecret}
               disabled={loading || !socket?.connected}

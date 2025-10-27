@@ -10,7 +10,13 @@ export default function TeamSelectionPage() {
   const { user, teams, setCurrentTeam, clearTeamContext, isLoading, authError } = useTeam();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   
+  // Mount animation
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Handle redirects based on team data
   useEffect(() => {
     if (!isLoading && !authError) {
@@ -124,18 +130,34 @@ export default function TeamSelectionPage() {
         message="Sélection de l'équipe..."
       />
       
-      <main className="p-6 sm:p-10">
-        <div className="bg-white rounded-lg shadow p-6 mb-8 text-center">
-          <div className="p-4 rounded-full mb-4 mx-auto w-fit" style={{ background: 'rgba(236,77,54,0.08)' }}>
-            <BuildingOffice2Icon className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
+      <main className="p-6 sm:p-10 min-h-screen">
+        {/* Header */}
+        <div className={`relative bg-white rounded-xl shadow-lg p-6 mb-8 overflow-hidden transition-all duration-700 ${
+          mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
+          {/* Decorative gradient */}
+          <div className="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-gradient-to-br from-[rgba(236,77,54,0.12)] to-transparent opacity-80 pointer-events-none blur-3xl" />
+          
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="p-4 rounded-full bg-gradient-to-br from-[rgba(236,77,54,0.12)] to-[rgba(236,77,54,0.05)] transform transition-transform hover:scale-105 duration-300">
+                <BuildingOffice2Icon className="w-7 h-7" style={{ color: 'var(--color-primary)' }} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
+                  Sélectionnez votre équipe
+                </h1>
+                <p className="text-gray-600 mt-1">Choisissez une équipe pour accéder à votre tableau de bord</p>
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold mb-2">Sélectionnez votre équipe</h1>
-          <p className="text-gray-600 mb-4">Choisissez une équipe pour accéder à votre tableau de bord</p>
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className={`bg-red-50 border border-red-200 rounded-lg p-4 mb-6 transition-all duration-500 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`} style={{ transitionDelay: '100ms' }}>
             <div className="flex">
               <div className="text-red-800">
                 <p className="text-sm font-medium">{error}</p>
@@ -144,21 +166,25 @@ export default function TeamSelectionPage() {
           </div>
         )}
 
+        {/* Teams Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {teams.map((team: any) => (
+          {teams.map((team: any, index: number) => (
             <button
               key={`${team.team.id}-${team.role}`}
               onClick={() => handleTeamSelect(team)}
               disabled={loading}
-              className="group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 duration-300 ${
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: `${200 + index * 100}ms` }}
             >
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="p-3 bg-blue-50 rounded-lg group-hover:scale-110 transition-transform duration-300">
                   <BuildingOffice2Icon className="h-6 w-6 text-blue-600" />
                 </div>
                 <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              
+
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">{team.team.name}</h3>
                 {team.team.description && <p className="text-sm text-gray-600 mb-3">{team.team.description}</p>}
@@ -187,7 +213,9 @@ export default function TeamSelectionPage() {
         </div>
 
         {teams.length === 0 && (
-          <div className="text-center py-12">
+          <div className={`text-center py-12 transition-all duration-700 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '200ms' }}>
             <BuildingOffice2Icon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune équipe trouvée</h3>
           </div>
