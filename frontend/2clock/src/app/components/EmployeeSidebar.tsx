@@ -11,6 +11,7 @@ import {
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
   BuildingOffice2Icon,
+  ShieldCheckIcon
 } from "@heroicons/react/24/outline";
 import { useTeam } from "@/contexts/TeamContext";
 
@@ -99,6 +100,31 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
 
+ {/* TOTP Code page - Only for managers */}
+            {currentTeam?.role === 'manager' && (
+              <li>
+                <Link
+                  href="/dashboard/code"
+                  className={`${
+                    isActive("/dashboard/code")
+                      ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
+                      : "text-white/80 hover:text-white"
+                  } rounded-md py-3 px-4 flex items-center gap-3`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <ShieldCheckIcon 
+                    className="w-6 h-6"
+                    style={{
+                      color: isActive("/dashboard/code")
+                        ? "var(--color-secondary)"
+                        : "var(--color-primary)",
+                    }} 
+                  />
+                  <span className="font-medium">Code TOTP</span>
+                </Link>
+              </li>
+            )}
+            
             <li>
               <Link
                 href="/dashboard/clock"
@@ -142,6 +168,8 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <span className="font-medium">Statistiques</span>
               </Link>
             </li>
+            
+            
 
             <li>
               <Link
