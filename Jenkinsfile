@@ -20,6 +20,7 @@ pipeline {
                             agent {
                                 docker {
                                     image 'node:lts'
+                                    reuseNode true
                                 }
                             }
                             steps {
@@ -63,7 +64,16 @@ pipeline {
                             agent {
                                 docker {
                                     image 'node:lts'
+                                    reuseNode true
                                 }
+                            }
+                            environment {
+                                // Jenkins injecte automatiquement ces credentials
+                                SUPABASE_URL = credentials('supabase-url')
+                                SUPABASE_SERVICE_ROLE_KEY = credentials('supabase-service-key')
+                                NODE_ENV = 'test'
+                                JWT_SECRET = 'test-jwt-secret'
+                                FRONTEND_URL = 'http://localhost:3000'
                             }
                             steps {
                                     dir('backend') {
