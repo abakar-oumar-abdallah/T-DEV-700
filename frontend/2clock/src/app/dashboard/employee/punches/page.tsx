@@ -182,7 +182,7 @@ export default function PunchesPage() {
                     {day.late > 0 ? (
                       <span className="text-red-600">+{day.late} min</span>
                     ) : (
-                      <span className="text-green-600">À l'heure</span>
+                      <span className="text-green-600">À l&apos;heure</span>
                     )}
                   </td>
                 </tr>

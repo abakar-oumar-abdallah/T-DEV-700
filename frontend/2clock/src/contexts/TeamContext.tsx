@@ -22,6 +22,7 @@ interface User {
   first_name: string;
   last_name: string;
   permission: string;
+  phonenumber: string;
 }
 
 interface TeamContextType {

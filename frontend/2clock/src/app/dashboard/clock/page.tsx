@@ -232,7 +232,7 @@ export default function ClockPage() {
             <div className="text-sm text-gray-500 mb-3">{formatTime()}</div>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {history.length === 0 && (
-                <div className="text-sm text-gray-400">Aucun pointage aujourd'hui</div>
+                <div className="text-sm text-gray-400">Aucun pointage aujourd&apos;hui</div>
               )}
               {history.slice(0, 10).map((h) => (
                 <div key={h.id} className="flex items-start gap-3">

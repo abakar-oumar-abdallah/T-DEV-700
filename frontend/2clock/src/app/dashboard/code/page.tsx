@@ -4,7 +4,7 @@ import { useTeam } from '@/contexts/TeamContext'
 import { generateTotp, resetTeamSecret } from '@/totp/totp'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import { io, Socket } from 'socket.io-client'
+import io, { Socket } from 'socket.io-client'
 
 interface TotpData {
   teamId: string;
@@ -21,7 +21,7 @@ export default function TotpManagerPage() {
   const [isActive, setIsActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [socket, setSocket] = useState<Socket | null>(null)
+  const [socket, setSocket] = useState<typeof Socket | null>(null)
 
   // Vérifier si l'utilisateur est manager
   const isManager = currentTeam?.role === 'manager'
@@ -66,7 +66,7 @@ export default function TotpManagerPage() {
       setLoading(false)
     })
 
-    newSocket.on('connect_error', (error) => {
+    newSocket.on('connect_error', (error: any) => {
       console.error('Erreur connexion WebSocket:', error)
       setError('Connexion temps réel indisponible')
       setLoading(false)
@@ -179,7 +179,7 @@ export default function TotpManagerPage() {
               <ExclamationTriangleIcon className="w-8 h-8 text-orange-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Accès Restreint</h1>
-            <p className="text-gray-600">Seuls les responsables d'équipe peuvent accéder aux codes TOTP.</p>
+            <p className="text-gray-600">Seuls les responsables d&apos;équipe peuvent accéder aux codes TOTP.</p>
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function TotpManagerPage() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Code de Validation</h1>
-            <p className="text-gray-600">Affichez ce code pour que les collaborateurs de l'équipe puissent pointer.</p>
+            <p className="text-gray-600">Affichez ce code pour que les collaborateurs de l&apos;équipe puissent pointer.</p>
             
             {/* Team Info */}
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
