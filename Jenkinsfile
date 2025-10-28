@@ -85,6 +85,16 @@ pipeline {
                             }
                         }
 
+                        stage('Couverture codecov') {
+                            steps {
+                                withCredentials([string(credentialsId: 'CODECOV', variable: 'CODECOV_TOKEN')]) {
+                                    dir('backend') {
+                                        sh 'codecov -t ${CODECOV_TOKEN} -f coverage/lcov.info -F backend'
+                                    }
+                                }
+                            }
+                        }
+
                         stage('Construire image Docker Backend') {
                             steps {
                                 script {
