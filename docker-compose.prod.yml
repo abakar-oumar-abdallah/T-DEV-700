@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  node-api:
+    image: abakar98/jenkins-api
+    environment:
+      - NODE_ENV=production
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  frontend:
+    image: abakar98/jenkins-frontend
+    ports:
+      - target: 80
+        published: 80
+    restart: always

@@ -6,6 +6,8 @@ pipeline {
         DOCKERHUB_ACCOUNT = 'abakar98'
         FRONT_REPOSITORY = 'jenkins-frontend'
         BACK_REPOSITORY = 'jenkins-api'
+        SERVER_USER = 'root'
+        SERVER_IP = 46.105.54.27
     }
     
     stages {
@@ -118,6 +120,25 @@ pipeline {
                     }
                 }
 
+            }
+        }
+
+        stage('Déployer sur le serveur de production') {
+
+            environment{
+                DOCKER_HUB = credentials('JENKINS_DOCKERHUB_TOKEN')
+            }
+
+            steps {
+                sshagent(credentials: ['ovh_prod_key']) {
+                    sh '''
+                        [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                        ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+                        ssh -T $SERVER_USER@$SERVER_IP
+                        scp docker-compose.prod.yml $SERVER_USER@$SERVER_IP:/var/www/docker-compose.prod.yml
+                        ssh $SERVER_USER@$SERVER_IP "docker login -u $DOCKER_HUB_USR -p $DOCKER_HUB_PSW && docker compose -f /var/www/docker-compose.prod.yml up -d --force-recreate"
+                    '''
+                }
             }
         }
     }
