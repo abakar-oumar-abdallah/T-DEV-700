@@ -7,7 +7,7 @@ pipeline {
         FRONT_REPOSITORY = 'jenkins-frontend'
         BACK_REPOSITORY = 'jenkins-api'
         SERVER_USER = 'root'
-        SERVER_IP = 46.105.54.27
+        SERVER_IP = '46.105.54.27'
     }
     
     stages {
