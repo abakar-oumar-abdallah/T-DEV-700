@@ -1,10 +1,16 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
-import { generateTotp, resetTeamSecret } from '@/totp/totp'
+import { 
+  generateTotp, 
+  resetTeamSecret, 
+  createTotpSocket, 
+  setupTotpSocketEvents, 
+  disconnectTotpSocket 
+} from '@/totp/totp'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import { io, Socket } from 'socket.io-client'
+import { Socket } from 'socket.io-client'
 
 interface TotpData {
   teamId: string;
@@ -43,48 +49,37 @@ export default function TotpManagerPage() {
   useEffect(() => {
     if (!currentTeam?.team.id || !isManager) return
 
-    const newSocket = io(process.env.NEXT_PUBLIC_BACKENDURL || 'http://localhost:3001', {
-      transports: ['websocket'],
-      forceNew: true,
-    })
-
-    newSocket.on('connect', () => {
-      console.log('WebSocket connecté')
-      newSocket.emit('join-team', currentTeam.team.id)
-      
-      // Demander un code dès que le socket est connecté
-      if (!isActive && !loading) {
-        handleGenerateTotp()
+    const newSocket = createTotpSocket(currentTeam.team.id.toString())
+    
+    setupTotpSocketEvents(
+      newSocket,
+      currentTeam.team.id.toString(),
+      (data: TotpData) => {
+        setTotpData(data)
+        setTimeRemaining(data.expiresIn)
+        setIsActive(true)
+        setError(null)
+        setLoading(false)
+      },
+      () => {
+        // Demander un code dès que le socket est connecté
+        if (!isActive && !loading) {
+          handleGenerateTotp()
+        }
+      },
+      () => {
+        // onDisconnect - pas d'action particulière
+      },
+      (errorMessage: string) => {
+        setError(errorMessage)
+        setLoading(false)
       }
-    })
-
-    newSocket.on('disconnect', () => {
-      console.log('WebSocket déconnecté')
-    })
-
-    // Écouter les mises à jour TOTP pour cette équipe
-    newSocket.on(`totp:${currentTeam.team.id}`, (data: TotpData) => {
-      console.log('Nouveau code TOTP reçu:', data)
-      setTotpData(data)
-      setTimeRemaining(data.expiresIn)
-      setIsActive(true)
-      setError(null)
-      setLoading(false)
-    })
-
-    newSocket.on('connect_error', (error: any) => {
-      console.error('Erreur connexion WebSocket:', error)
-      setError('Connexion temps réel indisponible')
-      setLoading(false)
-    })
+    )
 
     setSocket(newSocket)
 
     return () => {
-      if (newSocket) {
-        newSocket.emit('leave-team', currentTeam.team.id)
-        newSocket.disconnect()
-      }
+      disconnectTotpSocket(newSocket, currentTeam.team.id.toString())
     }
   }, [currentTeam?.team.id, isManager])
 
