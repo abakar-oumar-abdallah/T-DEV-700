@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { CheckAuth } from '@/auth/auth';
 
 interface Team {
@@ -54,10 +54,9 @@ export function TeamProvider({ children }: TeamProviderProps) {
     setUser(null);
     setTeams([]);
     setAuthError(null);
-
   };
 
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     setIsLoading(true);
     setAuthError(null);
     
@@ -79,7 +78,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -107,7 +106,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
     };
 
     loadInitialData();
-  }, []); 
+  }, [refreshAuth]);
 
   const setCurrentTeam = (team: Team) => {
     setCurrentTeamState(team);
