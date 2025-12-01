@@ -81,7 +81,7 @@ class TotpController {
       });
     }
   }
-
+    
   /**
    * Vérifie un code TOTP pour une équipe
    */
@@ -105,13 +105,24 @@ class TotpController {
         });
       }
 
+      // Validate code format
+      if (!/^\d{6}$/.test(code)) {
+        return res.status(400).json({
+          success: false,
+          message: 'TOTP code must be exactly 6 digits'
+        });
+      }
+
+      console.log(`Verifying TOTP code ${code} for team ${teamId}`);
+
       // Récupérer le secret de l'équipe
       const secret = this.teamSecrets.get(teamId);
       
       if (!secret) {
+        console.log(`No TOTP secret found for team ${teamId}`);
         return res.status(404).json({
           success: false,
-          message: `No secret found for team ${teamId}`
+          message: `No TOTP secret found for team ${teamId}. Please generate a TOTP code first.`
         });
       }
 
@@ -121,12 +132,14 @@ class TotpController {
         encoding: 'base32',
         token: code,
         step: 30,
-        window: 1, // Accepte les codes de la période précédente et suivante
+        window: 2, // Accepte les codes de 2 périodes avant/après (±60 secondes)
       });
 
-      // Émettre le résultat de la vérification via WebSocket si disponible
+      console.log(`TOTP verification result for team ${teamId}: ${isValid ? 'VALID' : 'INVALID'}`);
+
+      // Emission résultat si socket disponible
       if (this.io) {
-        this.io.emit(`totp:verify:${teamId}`, {
+        this.io.to(`team:${teamId}`).emit(`totp:verify:${teamId}`, {
           teamId,
           code,
           isValid,
@@ -136,18 +149,20 @@ class TotpController {
 
       res.status(200).json({
         success: true,
-        message: isValid ? 'Code TOTP valide' : 'Code TOTP invalide ou expiré',
+        message: isValid ? 'Valid TOTP' : 'Invalid or expired TOTP code',
         data: {
           teamId,
-          isValid,
+          isValid, 
+          code,
+          timestamp: new Date().toISOString()
         },
       });
 
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('TOTP verification error:', err);
       res.status(500).json({
         success: false,
-        message: 'Internal server error',
+        message: 'Internal server error during TOTP verification',
         error: err.message
       });
     }

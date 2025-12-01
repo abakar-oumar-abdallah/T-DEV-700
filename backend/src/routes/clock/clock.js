@@ -4,7 +4,7 @@ const ClockController = require('../../controllers/clock/ClockController');
 const AuthMiddleware = require('../../middlewares/AuthMiddleware');
 const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
 const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
-
+const TotpMiddleware = require('../../middlewares/TotpMiddleware');
 /**
  * @swagger
  * tags:
@@ -184,12 +184,12 @@ router.delete('/clocks/:id', ClockController.deleteClock);
 
 // ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================
 
-// Clock in/out for current user
+// Clock in/out for current user - Most important route
 /**
  * @swagger
  * /clocks/myTeam/{teamId}/clockInOut:
  *   post:
- *     summary: Clock in/out for current user in specific team
+ *     summary: Clock in/out for current user in specific team (requires TOTP verification)
  *     tags: [Clocks]
  *     security:
  *       - bearerAuth: []
@@ -200,21 +200,76 @@ router.delete('/clocks/:id', ClockController.deleteClock);
  *         schema:
  *           type: integer
  *         description: Team ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: TOTP verification code (6 digits)
+ *                 example: "123456"
+ *                 minLength: 6
+ *                 maxLength: 6
  *     responses:
  *       201:
  *         description: Clock in/out successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Clock in successful"
+ *                 data:
+ *                   type: object
+ *                   description: Clock entry data
+ *                 warnings:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: Optional warnings (late arrival, early departure, etc.)
+ *                 isLate:
+ *                   type: boolean
+ *                   description: Indicates if the clock-in was late
  *       400:
- *         description: Validation error
+ *         description: Validation error or invalid TOTP code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   examples:
+ *                     invalid_totp: "Invalid TOTP code"
+ *                     missing_code: "TOTP code is required"
+ *                     missing_userteam: "User team ID is required"
+ *                     duplicate_clock: "You have already clocked in for this work day"
+ *                 error:
+ *                   type: string
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized or TOTP verification failed
  *       404:
- *         description: User-team association or planning not found
+ *         description: User-team association, planning, or schedule not found
  *       500:
  *         description: Server error
  */
 router.post('/clocks/myTeam/:teamId/clockInOut',
     AuthMiddleware,
     TeamRoleMiddleware(['employee', 'manager'], true),
+    TotpMiddleware,
     ClockController.createClockInOut
 );
 
