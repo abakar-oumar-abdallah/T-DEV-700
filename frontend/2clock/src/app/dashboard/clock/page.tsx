@@ -1,13 +1,99 @@
 "use client"
 import React, { useEffect, useState } from "react"
 import { useTeam } from "@/contexts/TeamContext"
+import { clockInOut, getClockHistory } from "@/clock/clock"
 import { BuildingOffice2Icon, ClockIcon } from "@heroicons/react/24/outline"
 
 type Punch = {
   id: string
   type: "Arrivée" | "Départ"
   time: string
+  isLate?: boolean
+  warnings?: string[]
+  lateBy?: number
+  earlyBy?: number
+  overtimeBy?: number
 }
+
+// Fonction pour filtrer les warnings anglais
+const filterEnglishWarnings = (warnings?: string[]): string[] => {
+  if (!warnings) return [];
+  
+  return warnings.filter(warning => {
+    const englishKeywords = [
+      'late by', 'early by', 'leaving', 'working', 'minutes', 'scheduled',
+      'overtime', 'until', 'start', 'end', 'anomaly detected'
+    ];
+    
+    const warningLower = warning.toLowerCase();
+    const hasEnglishKeywords = englishKeywords.some(keyword => 
+      warningLower.includes(keyword.toLowerCase())
+    );
+    
+    // Garder seulement les warnings qui ne contiennent pas de mots clés anglais
+    return !hasEnglishKeywords;
+  });
+};
+
+// Fonction pour calculer les statistiques de temps
+const calculateTimeStats = async (punch: Punch, currentTeam: any): Promise<Punch> => {
+  if (!currentTeam || !punch.time) return punch;
+
+  try {
+    // Obtenir les horaires programmés pour ce jour
+    const punchDate = new Date(punch.time);
+    const dayOfWeek = punchDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    // Simuler les horaires standards (à remplacer par un appel API si nécessaire)
+    const standardSchedules: { [key: string]: { start: string, end: string } } = {
+      'monday': { start: '09:00', end: '17:00' },
+      'tuesday': { start: '09:00', end: '17:00' },
+      'wednesday': { start: '09:00', end: '17:00' },
+      'thursday': { start: '09:00', end: '17:00' },
+      'friday': { start: '09:00', end: '17:00' }
+    };
+
+    const schedule = standardSchedules[dayOfWeek];
+    if (!schedule) return punch;
+
+    const punchTime = punchDate.toTimeString().substring(0, 5); // HH:MM format
+    const [punchHour, punchMinute] = punchTime.split(':').map(Number);
+    const punchMinutes = punchHour * 60 + punchMinute;
+
+    if (punch.type === "Arrivée") {
+      // Calculer le retard/avance pour l'arrivée
+      const [startHour, startMinute] = schedule.start.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMinute;
+      
+      if (punchMinutes > startMinutes) {
+        // En retard
+        punch.lateBy = punchMinutes - startMinutes;
+        punch.isLate = true;
+      } else if (punchMinutes < startMinutes) {
+        // En avance
+        punch.earlyBy = startMinutes - punchMinutes;
+        punch.isLate = false;
+      }
+    } else if (punch.type === "Départ") {
+      // Calculer les heures supplémentaires/départ anticipé
+      const [endHour, endMinute] = schedule.end.split(':').map(Number);
+      const endMinutes = endHour * 60 + endMinute;
+      
+      if (punchMinutes > endMinutes) {
+        // Heures supplémentaires
+        punch.overtimeBy = punchMinutes - endMinutes;
+      } else if (punchMinutes < endMinutes) {
+        // Départ anticipé
+        punch.earlyBy = endMinutes - punchMinutes;
+      }
+    }
+
+    return punch;
+  } catch (error) {
+    console.error('Error calculating time stats:', error);
+    return punch;
+  }
+};
 
 function formatTime(d = new Date()) {
   return d.toLocaleString('fr-FR', {
@@ -15,14 +101,7 @@ function formatTime(d = new Date()) {
     year: "numeric",
     month: "long",
     day: "numeric",
-    // hour: "2-digit",
-    // minute: "2-digit",
-    // second: "2-digit"
   })
-}
-
-function nowIso() {
-  return new Date().toISOString()
 }
 
 export default function ClockPage() {
@@ -40,49 +119,55 @@ export default function ClockPage() {
     return () => clearInterval(timer)
   }, [])
 
+  // Load clock history from API on component mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("clock_history")
-      if (raw) setHistory(JSON.parse(raw))
-    } catch {}
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem("clock_history", JSON.stringify(history))
-  }, [history])
-
-  //TODO : Délocaliser cette fonction (avec les autres fonctions de clock)
-  // et faire une requête à la route clocks/clockInOut
-  //TODO : Récupérer les infos de retard/avance renvoyées par clockInOut
-  const addPunch = async (type: Punch["type"]) => {
-    const p: Punch = { id: String(Date.now()), type, time: nowIso() }
-    setHistory((s) => [p, ...s])
-    
-    try {
-      const token = localStorage.getItem('session')
-      if (token && currentTeam) {
-        await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}/clocks`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            user_id: user?.id,
-            clock_in: type === "Arrivée" ? p.time : null,
-            clock_out: type === "Départ" ? p.time : null
-          }),
-        })
+    const loadClockHistory = async () => {
+      if (currentTeam?.team.id && user?.id) {
+        const today = new Date().toISOString().split('T')[0]
+        const result = await getClockHistory(currentTeam.team.id.toString(), today)
+        
+        if (result.success && result.data) {
+          // Convert API data to local Punch format with calculated stats
+          const punches: Punch[] = []
+          
+          for (const clockEntry of result.data) {
+            if (clockEntry.arrival_time) {
+              let arrivalPunch: Punch = {
+                id: `${clockEntry.id}-arrival`,
+                type: "Arrivée",
+                time: clockEntry.arrival_time
+              }
+              // Calculer les statistiques pour l'arrivée
+              arrivalPunch = await calculateTimeStats(arrivalPunch, currentTeam);
+              punches.push(arrivalPunch);
+            }
+            if (clockEntry.departure_time) {
+              let departurePunch: Punch = {
+                id: `${clockEntry.id}-departure`,
+                type: "Départ",
+                time: clockEntry.departure_time
+              }
+              // Calculer les statistiques pour le départ
+              departurePunch = await calculateTimeStats(departurePunch, currentTeam);
+              punches.push(departurePunch);
+            }
+          }
+          
+          // Sort by time, most recent first
+          punches.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+          setHistory(punches)
+        }
       }
-    } catch (error) {
-      console.error('Error submitting punch:', error)
     }
-  }
+
+    loadClockHistory()
+  }, [currentTeam?.team.id, user?.id])
 
   const handleSubmit = async () => {
     setMessage(null)
-    if (pin.length < 4) {
-      setMessage("Entrez votre code PIN (minimum 4 chiffres)")
+    
+    if (pin.length !== 6) {
+      setMessage("Le code TOTP doit contenir exactement 6 chiffres")
       return
     }
     
@@ -91,17 +176,99 @@ export default function ClockPage() {
       return
     }
 
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 400))
+    if (!user) {
+      setMessage("Utilisateur non authentifié")
+      return
+    }
 
-    const last = history[0]
-    const nextType: Punch["type"] =
-      last && last.type === "Arrivée" ? "Départ" : "Arrivée"
-    
-    await addPunch(nextType)
-    setMessage(`${nextType} enregistrée avec succès`)
-    setLoading(false)
-    setPin("")
+    const userTeamId = currentTeam.id
+    if (!userTeamId) {
+      setMessage("Association utilisateur-équipe non trouvée")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const result = await clockInOut(currentTeam.team.id.toString(), {
+        userTeamId: userTeamId,
+        code: pin
+      })
+
+      if (result.success && result.data) {
+        const actionType: Punch["type"] = result.data.status === 'clocked_in' ? "Arrivée" : "Départ"
+        const time = result.data.status === 'clocked_in' 
+          ? result.data.arrival_time 
+          : result.data.departure_time
+
+        if (time) {
+          let newPunch: Punch = {
+            id: `${result.data.id}-${actionType.toLowerCase()}`,
+            type: actionType,
+            time: time,
+            isLate: result.isLate,
+            warnings: filterEnglishWarnings(result.warnings), // Filtrer les warnings anglais
+            lateBy: result.lateBy,
+            earlyBy: result.earlyBy,
+            overtimeBy: result.overtimeBy
+          }
+          
+          // Calculer les statistiques si elles ne sont pas déjà présentes
+          if (!newPunch.lateBy && !newPunch.earlyBy && !newPunch.overtimeBy) {
+            newPunch = await calculateTimeStats(newPunch, currentTeam);
+          }
+          
+          setHistory(prev => [newPunch, ...prev])
+        }
+
+        // Messages de succès simplifiés et entièrement en français
+        let successMessage = `${actionType} enregistrée avec succès`
+        
+        if (result.isLate && result.lateBy && result.lateBy > 0) {
+          successMessage += ` - Retard de ${result.lateBy} minute${result.lateBy > 1 ? 's' : ''}`
+        } else if (result.earlyBy && result.earlyBy > 0) {
+          successMessage += ` - En avance de ${result.earlyBy} minute${result.earlyBy > 1 ? 's' : ''}`
+        } else if (result.overtimeBy && result.overtimeBy > 0) {
+          successMessage += ` - Heures supplémentaires: ${result.overtimeBy} minute${result.overtimeBy > 1 ? 's' : ''}`
+        }
+
+        // N'afficher que les warnings français (filtrés)
+        const frenchWarnings = filterEnglishWarnings(result.warnings);
+        if (frenchWarnings.length > 0) {
+          successMessage += ` (${frenchWarnings.join(', ')})`
+        }
+        
+        setMessage(successMessage)
+        setPin("")
+      } else {
+        // Error management with french messages
+        switch (result.errorCode) {
+          case 'ERR_MULTIPLE_CLOCK_SAME_DAY':
+            setMessage('Vous avez déjà pointé aujourd\'hui. Un seul pointage d\'arrivée par jour est autorisé.')
+            break
+          case 'ERR_NO_SCHEDULE_FOR_DAY':
+            setMessage('Aucun horaire programmé pour ce jour. Vous ne pouvez pas pointer.')
+            break
+          case 'ERR_NO_PLANNING_FOUND':
+            setMessage('Aucun planning trouvé pour votre équipe.')
+            break
+          case 'ERR_INCORRECT_TOTP':
+            setMessage('Code de validation incorrect ou expiré. Vérifiez le code affiché.')
+            break
+          case 'ERR_TOTP_REQUIRED':
+            setMessage('Code de validation requis.')
+            break
+          default:
+            // Utiliser le message nettoyé (déjà traduit par clock.tsx)
+            setMessage(`${result.message}`)
+        }
+      }
+    } catch (error) {
+      console.error('Clock in/out error:', error)
+      setMessage('Erreur de connexion. Vérifiez votre réseau et réessayez.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const press = (d: string) => {
@@ -111,9 +278,11 @@ export default function ClockPage() {
     setPin((p) => (p.length >= 6 ? p : p + d))
   }
 
-  const getLastPunchType = () => {
-    const last = history[0]
-    return last && last.type === "Arrivée" ? "Départ" : "Arrivée"
+  const getNextActionType = () => {
+    const today = new Date().toISOString().split('T')[0]
+    const todayPunches = history.filter(h => h.time.startsWith(today))
+    const lastPunch = todayPunches[0]
+    return lastPunch && lastPunch.type === "Arrivée" ? "Départ" : "Arrivée"
   }
 
   return (
@@ -147,7 +316,12 @@ export default function ClockPage() {
               </div>
               <h3 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Pointer</h3>
               <p className="text-sm text-gray-500 text-center">
-                {user ? `Bonjour ${user.first_name}` : 'Entrez votre code PIN à 6 chiffres'}
+                {user ? `Bonjour ${user.first_name}` : 'Entrez votre code TOTP à 6 chiffres'}
+                {currentTeam && (
+                  <span className="block text-xs mt-1">
+                    Équipe: <span className="font-medium">{currentTeam.team.name}</span>
+                  </span>
+                )}
               </p>
             </div>
 
@@ -208,11 +382,11 @@ export default function ClockPage() {
             <div>
               <button
                 onClick={handleSubmit}
-                disabled={loading || !currentTeam}
+                disabled={loading || !currentTeam || pin.length !== 6}
                 className="w-full bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
               >
                 <span className="relative z-10">
-                  {loading ? "Enregistrement..." : `Pointer ${getLastPunchType()}`}
+                  {loading ? "Enregistrement..." : `Pointer ${getNextActionType()}`}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               </button>
@@ -222,8 +396,10 @@ export default function ClockPage() {
             {message && (
               <div className={`mt-4 text-center text-sm font-medium py-3 px-4 rounded-xl ${
                 message.includes('succès') || message.includes('Arrivée') || message.includes('Départ')
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-orange-50 text-orange-700 border border-orange-200'
+                  ? message.includes('Retard') || message.includes('Attention')
+                    ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                    : 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
               } animate-fadeIn`}>
                 {message}
               </div>
@@ -254,7 +430,7 @@ export default function ClockPage() {
             </div>
             
             <div className="text-sm text-gray-500 mb-4 font-medium bg-gray-50 p-3 rounded-lg">
-              📅 {formatTime()}
+              {formatTime()}
             </div>
             
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -278,21 +454,45 @@ export default function ClockPage() {
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md ${
                     h.type === "Arrivée" 
-                      ? "bg-gradient-to-br from-green-400 to-green-600" 
-                      : "bg-gradient-to-br from-orange-400 to-orange-600"
+                      ? h.isLate
+                        ? "bg-gradient-to-br from-orange-400 to-orange-600"
+                        : "bg-gradient-to-br from-green-400 to-green-600"
+                      : "bg-gradient-to-br from-blue-400 to-blue-600"
                   }`}>
                     {h.type === "Arrivée" ? "→" : "←"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-sm">{h.type}</div>
+                    <div className="font-bold text-sm flex items-center gap-2 flex-wrap">
+                      {h.type}
+                      {h.isLate && h.lateBy && h.lateBy > 0 && (
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                          +{h.lateBy} min
+                        </span>
+                      )}
+                      {h.earlyBy && h.earlyBy > 0 && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          -{h.earlyBy} min
+                        </span>
+                      )}
+                      {h.overtimeBy && h.overtimeBy > 0 && (
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                          +{h.overtimeBy} min sup.
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      🕐 {new Date(h.time).toLocaleString('fr-FR', { 
+                      {new Date(h.time).toLocaleString('fr-FR', { 
                         hour: '2-digit', 
                         minute: '2-digit',
                         day: '2-digit',
                         month: 'short'
                       })}
                     </div>
+                    {h.warnings && h.warnings.length > 0 && (
+                      <div className="text-xs text-orange-600 mt-1">
+                        {h.warnings.join(', ')}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
