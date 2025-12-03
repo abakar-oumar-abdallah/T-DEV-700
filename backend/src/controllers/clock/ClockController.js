@@ -415,10 +415,10 @@ class ClockController {
 
         if (currentMinutes < scheduledEndMinutes) {
           earlyBy = scheduledEndMinutes - currentMinutes;
-          // warnings.push(`Leaving ${earlyBy} minutes early (scheduled until ${scheduledEnd})`);
+          warnings.push(`Leaving ${earlyBy} minutes early (scheduled until ${scheduledEnd})`);
         } else if (currentMinutes > scheduledEndMinutes) {
           overtimeBy = currentMinutes - scheduledEndMinutes;
-          // warnings.push(`Working ${overtimeBy} minutes overtime (scheduled until ${scheduledEnd})`);
+          warnings.push(`Working ${overtimeBy} minutes overtime (scheduled until ${scheduledEnd})`);
         }
 
         const { data, error } = await supabase
@@ -513,7 +513,7 @@ class ClockController {
           isLate = true;
         } else if (currentMinutes < scheduledStartMinutes) {
           earlyBy = scheduledStartMinutes - currentMinutes;
-          // warnings.push(`Early by ${earlyBy} minutes (scheduled start: ${scheduledStart})`);
+          warnings.push(`Early by ${earlyBy} minutes (scheduled start: ${scheduledStart})`);
         }
 
         // Always allow clock in, no matter how late or early
