@@ -303,7 +303,11 @@ class ClockController {
     try {
       const userTeamId = req.body.userTeamId;
       if (!userTeamId) {
-        return res.status(400).json({ success: false, message: 'User team ID is required' });
+        return res.status(400).json({
+          success: false,
+          message: 'User team ID is required',
+          errorCode: 'ERR_MISSING_USER_TEAM_ID'
+        });
       }
 
       // Get user team info with timezone
@@ -314,7 +318,11 @@ class ClockController {
         .single();
 
       if (userTeamError || !userTeam) {
-        return res.status(404).json({ success: false, message: 'User team association not found' });
+        return res.status(404).json({
+          success: false,
+          message: 'User team association not found',
+          errorCode: 'ERR_USER_TEAM_NOT_FOUND'
+        });
       }
 
       // Get planning ID
@@ -327,7 +335,11 @@ class ClockController {
       );
 
       if (!planningId) {
-        return res.status(404).json({ success: false, message: 'No planning found for user team' });
+        return res.status(404).json({
+          success: false,
+          message: 'No planning found for user team',
+          errorCode: 'ERR_NO_PLANNING_FOUND'
+        });
       }
 
       // Get current day and schedule
@@ -345,7 +357,9 @@ class ClockController {
       if (scheduleError || !schedule) {
         return res.status(400).json({
           success: false,
-          message: `No schedule found for ${currentDay}. Cannot clock in/out on days without scheduled work.`
+          message: `No schedule found for ${currentDay}. Cannot clock in/out on days without scheduled work.`,
+          errorCode: 'ERR_NO_SCHEDULE_FOR_DAY',
+          dayRequested: currentDay
         });
       }
 
@@ -396,10 +410,15 @@ class ClockController {
         const currentMinutes = currHours * 60 + currMinutes;
 
         let warnings = [...anomalies];
+        let earlyBy = 0;
+        let overtimeBy = 0;
+
         if (currentMinutes < scheduledEndMinutes) {
-          warnings.push(`Leaving ${scheduledEndMinutes - currentMinutes} minutes early (scheduled until ${scheduledEnd})`);
+          earlyBy = scheduledEndMinutes - currentMinutes;
+          warnings.push(`Leaving ${earlyBy} minutes early (scheduled until ${scheduledEnd})`);
         } else if (currentMinutes > scheduledEndMinutes) {
-          warnings.push(`Working ${currentMinutes - scheduledEndMinutes} minutes overtime (scheduled until ${scheduledEnd})`);
+          overtimeBy = currentMinutes - scheduledEndMinutes;
+          warnings.push(`Working ${overtimeBy} minutes overtime (scheduled until ${scheduledEnd})`);
         }
 
         const { data, error } = await supabase
@@ -410,18 +429,25 @@ class ClockController {
           .single();
 
         if (error) {
-          return res.status(500).json({ success: false, message: 'Failed to clock out', error: error.message });
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to clock out',
+            errorCode: 'ERR_DATABASE_ERROR',
+            error: error.message
+          });
         }
 
         return res.status(201).json({
           success: true,
           message: 'Clock out successful',
-          data,
-          warnings: warnings.length > 0 ? warnings : undefined
+          data: { ...data, status: 'clocked_out' },
+          warnings: warnings.length > 0 ? warnings : undefined,
+          earlyBy: earlyBy > 0 ? earlyBy : undefined,
+          overtimeBy: overtimeBy > 0 ? overtimeBy : undefined
         });
 
       } else {
-        // Clock in - Check for duplicates and validate time
+        // Clock in - Check for duplicates first
         const [schedHours] = schedule.time_in.split(':').map(Number);
         const [schedEndHours] = schedule.time_out.split(':').map(Number);
         const isNightShift = schedEndHours < schedHours;
@@ -445,7 +471,12 @@ class ClockController {
           .lt('arrival_time', workDayEndISO);
 
         if (existingError) {
-          return res.status(500).json({ success: false, message: 'Failed to check existing clocks', error: existingError.message });
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to check existing clocks',
+            errorCode: 'ERR_DATABASE_ERROR',
+            error: existingError.message
+          });
         }
 
         // Prevent duplicate clocks
@@ -456,15 +487,16 @@ class ClockController {
           return res.status(400).json({
             success: false,
             message: `You have already clocked in for the work day starting ${workDayFormatted}. Multiple clock-ins per work day are not allowed.`,
+            errorCode: 'ERR_MULTIPLE_CLOCK_SAME_DAY',
+            workDay: workDayFormatted,
             existingClocks: existingClocks.map(clock => ({
               id: clock.id, arrival_time: clock.arrival_time, departure_time: clock.departure_time
             }))
           });
         }
 
-        // Validate arrival time
+        // Calculate lateness/earliness but don't block
         const scheduledStart = schedule.time_in;
-        const latenessLimit = userTeam.team.lateness_limit || 0;
         const [schedHours2, schedMinutes] = scheduledStart.split(':').map(Number);
         const [currHours2, currMinutes2] = currentTime.split(':').map(Number);
         const scheduledStartMinutes = schedHours2 * 60 + schedMinutes;
@@ -472,19 +504,19 @@ class ClockController {
 
         let warnings = [...anomalies];
         let isLate = false;
+        let lateBy = 0;
+        let earlyBy = 0;
 
         if (currentMinutes > scheduledStartMinutes) {
-          const lateMinutes = currentMinutes - scheduledStartMinutes;
-          if (lateMinutes > latenessLimit) {
-            warnings.push(`Warning: You are ${lateMinutes} minutes late (limit: ${latenessLimit} minutes). Scheduled start: ${scheduledStart}`);
-          } else {
-            warnings.push(`Late by ${lateMinutes} minutes (scheduled start: ${scheduledStart})`);
-          }
+          lateBy = currentMinutes - scheduledStartMinutes;
+          warnings.push(`Late by ${lateBy} minutes (scheduled start: ${scheduledStart})`);
           isLate = true;
         } else if (currentMinutes < scheduledStartMinutes) {
-          warnings.push(`Early by ${scheduledStartMinutes - currentMinutes} minutes (scheduled start: ${scheduledStart})`);
+          earlyBy = scheduledStartMinutes - currentMinutes;
+          warnings.push(`Early by ${earlyBy} minutes (scheduled start: ${scheduledStart})`);
         }
 
+        // Always allow clock in, no matter how late or early
         const { data, error } = await supabase
           .from('clock')
           .insert([{ user_team_id: userTeamId, planning_id: planningId, arrival_time: nowISO, departure_time: null }])
@@ -492,20 +524,32 @@ class ClockController {
           .single();
 
         if (error) {
-          return res.status(500).json({ success: false, message: 'Failed to clock in', error: error.message });
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to clock in',
+            errorCode: 'ERR_DATABASE_ERROR',
+            error: error.message
+          });
         }
 
         return res.status(201).json({
           success: true,
           message: 'Clock in successful',
-          data,
+          data: { ...data, status: 'clocked_in' },
           warnings: warnings.length > 0 ? warnings : undefined,
-          isLate
+          isLate,
+          lateBy: lateBy > 0 ? lateBy : undefined,
+          earlyBy: earlyBy > 0 ? earlyBy : undefined
         });
       }
 
     } catch (err) {
-      return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        errorCode: 'ERR_INTERNAL_ERROR',
+        error: err.message
+      });
     }
   }
 
