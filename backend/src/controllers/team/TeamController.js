@@ -47,15 +47,15 @@ class TeamController {
    */
   createTeam = async (req, res) => {
     try {
-      const { name, description, lateness_limit, timezone } = req.body;
-      
+      const { name, description, lateness_limit, timezone, default_planning_id } = req.body;
+
       if (!name || name.trim() === '') {
         return res.status(400).json({
           success: false,
           message: 'Name is required',
         });
       }
-      
+
       if (lateness_limit == null || lateness_limit < 0) {
         return res.status(400).json({
           success: false,
@@ -80,16 +80,21 @@ class TeamController {
         });
       }
 
+      // Create team with optional default_planning_id
+      const teamData = {
+        name: name,
+        description: description,
+        lateness_limit: lateness_limit,
+        timezone: timezone
+      };
+
+      if (default_planning_id) {
+        teamData.default_planning_id = default_planning_id;
+      }
+
       const { data, error } = await supabase
         .from('team')
-        .insert([
-          {
-            name: name,
-            description: description,
-            lateness_limit: lateness_limit,
-            timezone: timezone
-          }
-        ])
+        .insert([teamData])
         .select()
         .single();
 
@@ -102,10 +107,38 @@ class TeamController {
         });
       }
 
+      // Add the creator as a manager in user_team
+      const userId = req.user.userId;
+      console.log('Adding creator to team:', { userId, teamId: data.id, role: 'manager' });
+      const { data: userTeamData, error: userTeamError } = await supabase
+        .from('user_team')
+        .insert([
+          {
+            user_id: userId,
+            team_id: data.id,
+            role: 'manager'
+          }
+        ])
+        .select()
+        .single();
+
+      if (userTeamError) {
+        console.error('Error adding creator to team:', userTeamError);
+        // Note: Team is already created, so we don't rollback
+        // But we log the error and inform the user
+        return res.status(201).json({
+          success: true,
+          message: 'Team created successfully, but failed to add you as manager. Please contact support.',
+          data,
+          warning: 'User-team association failed'
+        });
+      }
+
       res.status(201).json({
         success: true,
-        message: 'Team created successfully',
-        data
+        message: 'Team created successfully and you were added as manager',
+        data,
+        userTeam: userTeamData
       });
 
     } catch (err) {
@@ -316,6 +349,47 @@ class TeamController {
         });
       }
 
+      // Check if there are employees in the team (only manager should remain)
+      const { data: teamMembers, error: membersError } = await supabase
+        .from('user_team')
+        .select('id, role')
+        .eq('team_id', id);
+
+      if (membersError) {
+        console.error('Error checking team members:', membersError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to check team members',
+          error: membersError.message,
+        });
+      }
+
+      // Check if there are any employees (non-managers)
+      const hasEmployees = teamMembers.some(member => member.role === 'employee');
+
+      if (hasEmployees) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot delete team with employees. Please remove all employees first.',
+        });
+      }
+
+      // Delete all user_team associations (managers)
+      const { error: userTeamDeleteError } = await supabase
+        .from('user_team')
+        .delete()
+        .eq('team_id', id);
+
+      if (userTeamDeleteError) {
+        console.error('Error deleting user_team associations:', userTeamDeleteError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to delete team associations',
+          error: userTeamDeleteError.message,
+        });
+      }
+
+      // Delete the team
       const { error } = await supabase
         .from('team')
         .delete()
