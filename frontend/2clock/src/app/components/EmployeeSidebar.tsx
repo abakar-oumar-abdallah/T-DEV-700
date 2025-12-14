@@ -108,7 +108,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
 
- {/* TOTP Code page - Only for managers */}
+            {/* TOTP Code page - Only for managers */}
             {currentTeam?.role === 'manager' && (
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
                 <Link
@@ -157,11 +157,12 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
 
+            {currentTeam?.role === 'manager' && (
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
               <Link
-                href="/dashboard/employee/punches"
+                href="/dashboard/kpi"
                 className={`${
-                  isActive("/dashboard/employee/punches")
+                  isActive("/dashboard/kpi")
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
@@ -171,7 +172,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <ChartBarIcon
                   className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
                   style={{
-                    color: isActive("/dashboard/employee/punches")
+                    color: isActive("/dashboard/kpi")
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }}
@@ -179,6 +180,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <span className="font-medium relative z-10">Statistiques</span>
               </Link>
             </li>
+            )}
 
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
               <Link
