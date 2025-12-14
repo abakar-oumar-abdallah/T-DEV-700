@@ -31,7 +31,7 @@ function addMinutesToTime(timeString, minutes) {
   return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}:00`;
 }
 
-// Helper function to combine date and time
+// Helper function to combine date and time (simple ISO format)
 function combineDateAndTime(date, timeString) {
   const [hours, minutes, seconds] = timeString.split(':').map(Number);
   const combined = new Date(date);
@@ -43,6 +43,10 @@ async function seedDatabase() {
   console.log('Starting comprehensive database seeding...\n');
 
   try {
+    // Generate random team numbers
+    const devTeamNumber = Math.floor(Math.random() * 900) + 100; // 100-999
+    const salesTeamNumber = Math.floor(Math.random() * 900) + 100; // 100-999
+    
     // Step 1: Create Plannings first (teams reference them)
     console.log('Creating plannings...');
     
@@ -79,16 +83,16 @@ async function seedDatabase() {
       schedules.push({
         planning_id: devPlanning.id,
         day: day,
-        time_in: '09:00:00',
-        time_out: '17:00:00'
+        time_in: '07:00:00',
+        time_out: '15:00:00'
       });
 
       // Sales team schedule
       schedules.push({
         planning_id: salesPlanning.id,
         day: day,
-        time_in: '09:00:00',
-        time_out: '17:00:00'
+        time_in: '07:00:00',
+        time_out: '15:00:00'
       });
     }
 
@@ -105,7 +109,7 @@ async function seedDatabase() {
     const { data: devTeam, error: devTeamError } = await supabase
       .from('team')
       .insert([{
-        name: 'Developpers Team 505',
+        name: `Developpers Team ${devTeamNumber}`,
         description: 'Development team for backend and frontend projects',
         lateness_limit: 15,
         timezone: 'Europe/Paris',
@@ -120,7 +124,7 @@ async function seedDatabase() {
     const { data: salesTeam, error: salesTeamError } = await supabase
       .from('team')
       .insert([{
-        name: 'Sales Team 405',
+        name: `Sales Team ${salesTeamNumber}`,
         description: 'Sales and business development team',
         lateness_limit: 10,
         timezone: 'Europe/Paris',
@@ -293,12 +297,15 @@ async function seedDatabase() {
       const primaryUserTeam = userTeams[0];
       if (!primaryUserTeam) continue;
 
+      const teamLatenessLimit = primaryUserTeam.team.lateness_limit || 15;
+
       const clockEntries = [];
       const userBehavior = {
-        lateChance: Math.random() > 0.7 ? 0.3 : 0.1,
-        earlyChance: Math.random() > 0.7 ? 0.2 : 0.05,
-        overtimeChance: Math.random() > 0.6 ? 0.4 : 0.1,
-        leaveEarlyChance: Math.random() > 0.8 ? 0.2 : 0.05
+        lateChance: Math.random() > 0.7 ? 0.3 : 0.15,
+        earlyChance: Math.random() > 0.7 ? 0.2 : 0.1,
+        overtimeChance: Math.random() > 0.6 ? 0.4 : 0.15,
+        leaveEarlyChance: Math.random() > 0.8 ? 0.2 : 0.1,
+        graveLatenessChance: Math.random() > 0.6 ? 0.15 : 0.05
       };
 
       // Create 100 clock entries over the past 150 days
@@ -316,34 +323,43 @@ async function seedDatabase() {
           continue;
         }
 
-        // Standard times
+        // Standard times (9-5 schedule)
         let arrivalTime = '09:00:00';
         let departureTime = '17:00:00';
 
         // Determine behavior for this day
         const rand = Math.random();
         
-        // Arrival time variations
-        if (rand < userBehavior.lateChance) {
-          const lateMinutes = Math.floor(Math.random() * 55) + 5;
+        // Arrival time variations with proper grave lateness
+        if (rand < userBehavior.graveLatenessChance) {
+          // Grave lateness: beyond the team's lateness limit
+          const graveLateMinutes = teamLatenessLimit + Math.floor(Math.random() * 45) + 5;
+          arrivalTime = addMinutesToTime(arrivalTime, graveLateMinutes);
+        } else if (rand < userBehavior.graveLatenessChance + userBehavior.lateChance) {
+          // Warning lateness: within the lateness limit
+          const lateMinutes = Math.floor(Math.random() * teamLatenessLimit) + 1;
           arrivalTime = addMinutesToTime(arrivalTime, lateMinutes);
-        } else if (rand < userBehavior.lateChance + userBehavior.earlyChance) {
-          const earlyMinutes = Math.floor(Math.random() * 25) + 5;
+        } else if (rand < userBehavior.graveLatenessChance + userBehavior.lateChance + userBehavior.earlyChance) {
+          // Early arrival: more than 5 minutes before
+          const earlyMinutes = Math.floor(Math.random() * 25) + 6;
           arrivalTime = addMinutesToTime(arrivalTime, -earlyMinutes);
         }
+        // Otherwise: on time (within -5 to 0 minutes)
 
         // Departure time variations
         const randDepart = Math.random();
         
         if (randDepart < userBehavior.overtimeChance) {
+          // Overtime
           const overtimeMinutes = Math.floor(Math.random() * 105) + 15;
           departureTime = addMinutesToTime(departureTime, overtimeMinutes);
         } else if (randDepart < userBehavior.overtimeChance + userBehavior.leaveEarlyChance) {
+          // Leave early
           const earlyLeaveMinutes = Math.floor(Math.random() * 45) + 15;
           departureTime = addMinutesToTime(departureTime, -earlyLeaveMinutes);
         }
 
-        // Combine date and time
+        // Combine date and time (simple ISO format without timezone conversion)
         const arrivalISO = combineDateAndTime(workDate, arrivalTime);
         const departureISO = combineDateAndTime(workDate, departureTime);
 
@@ -381,8 +397,8 @@ async function seedDatabase() {
     console.log('SEEDING COMPLETED SUCCESSFULLY!');
     console.log('=======================================');
     console.log(`Teams created: 2`);
-    console.log(`   - Developpers Team 505 (ID: ${devTeam.id})`);
-    console.log(`   - Sales Team 405 (ID: ${salesTeam.id})`);
+    console.log(`   - ${devTeam.name} (ID: ${devTeam.id})`);
+    console.log(`   - ${salesTeam.name} (ID: ${salesTeam.id})`);
     console.log(`\nUsers created: ${createdUsers.length}`);
     console.log(`   - Admin users: 2 (Alice Admin, Bob Boss)`);
     console.log(`   - Manager in Dev only: Bob Boss`);
