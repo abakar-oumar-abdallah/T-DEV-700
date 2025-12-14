@@ -8,7 +8,7 @@ class KpiController {
     async getLatenessRateByEmployee(req, res) {
         try {
             const { teamId, userId } = req.params;
-            const days = parseInt(req.query.days) || 30;
+            const days = req.query.days ? parseInt(req.query.days) : null; // null = all time
 
             if (!teamId || !userId) {
                 return res.status(400).json({
@@ -17,10 +17,10 @@ class KpiController {
                 });
             }
 
-            if (days <= 0 || days > 365) {
+            if (days !== null && days <= 0) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Days must be between 1 and 365'
+                    message: 'Days must be greater than 0 or omitted for all-time data'
                 });
             }
 
@@ -58,11 +58,15 @@ class KpiController {
 
             // Calculate date range
             const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
+            let startDate = null;
+            
+            if (days !== null) {
+                startDate = new Date();
+                startDate.setDate(startDate.getDate() - days);
+            }
 
-            // Get all clocks for user-team in the period
-            const { data: clocks, error: clocksError } = await supabase
+            // Build query for clocks
+            let clockQuery = supabase
                 .from('clock')
                 .select(`
                     id,
@@ -78,10 +82,17 @@ class KpiController {
                     )
                 `)
                 .eq('user_team_id', userTeam.id)
-                .gte('arrival_time', startDate.toISOString())
-                .lte('arrival_time', endDate.toISOString())
                 .not('arrival_time', 'is', null)
                 .order('arrival_time', { ascending: false });
+
+            // Apply date filter only if days is specified
+            if (startDate !== null) {
+                clockQuery = clockQuery
+                    .gte('arrival_time', startDate.toISOString())
+                    .lte('arrival_time', endDate.toISOString());
+            }
+
+            const { data: clocks, error: clocksError } = await clockQuery;
 
             if (clocksError) {
                 console.error('Error fetching clocks:', clocksError);
@@ -100,8 +111,8 @@ class KpiController {
                         userId: parseInt(userId),
                         teamId: parseInt(teamId),
                         period: {
-                            days,
-                            startDate: startDate.toISOString().split('T')[0],
+                            days: days || 'all',
+                            startDate: startDate ? startDate.toISOString().split('T')[0] : 'all time',
                             endDate: endDate.toISOString().split('T')[0]
                         },
                         totalClocks: 0,
@@ -173,8 +184,8 @@ class KpiController {
                     userId: parseInt(userId),
                     teamId: parseInt(teamId),
                     period: {
-                        days,
-                        startDate: startDate.toISOString().split('T')[0],
+                        days: days || 'all',
+                        startDate: startDate ? startDate.toISOString().split('T')[0] : 'all time',
                         endDate: endDate.toISOString().split('T')[0]
                     },
                     totalClocks,

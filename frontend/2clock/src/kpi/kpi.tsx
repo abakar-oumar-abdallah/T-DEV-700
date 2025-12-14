@@ -1,7 +1,7 @@
 interface LatenessData {
   userId: number
   teamId: number
-  period: { days: number; startDate: string; endDate: string }
+  period: { days: number | 'all'; startDate: string; endDate: string }
   totalClocks: number
   onTime: { count: number; percentage: number }
   early: { count: number; percentage: number }
@@ -49,8 +49,12 @@ const apiCall = async <T,>(url: string): Promise<ApiResponse<T>> => {
   }
 }
 
-export const getLatenessRateByEmployee = (teamId: number, userId: number, days: number = 30) =>
-  apiCall<LatenessData>(`/kpi/teams/${teamId}/employees/${userId}/lateness?days=${days}`)
+export const getLatenessRateByEmployee = (teamId: number, userId: number, days?: number | null) => {
+  const url = days 
+    ? `/kpi/teams/${teamId}/employees/${userId}/lateness?days=${days}`
+    : `/kpi/teams/${teamId}/employees/${userId}/lateness`
+  return apiCall<LatenessData>(url)
+}
 
 export const getTeamMembers = (teamId: number) =>
   apiCall<UserTeam[]>(`/teams/${teamId}/users`)

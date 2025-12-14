@@ -37,8 +37,9 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *         required: false
  *         schema:
  *           type: integer
- *           default: 30
- *         description: Number of days to analyze (default 30)
+ *           minimum: 1
+ *         description: Number of days to analyze (omit for all-time data)
+ *         example: 30
  *     responses:
  *       200:
  *         description: Lateness rate calculated successfully
@@ -62,9 +63,13 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *                       type: object
  *                       properties:
  *                         days:
- *                           type: integer
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               enum: [all]
  *                         startDate:
  *                           type: string
+ *                           description: Start date or "all time"
  *                         endDate:
  *                           type: string
  *                     totalClocks:

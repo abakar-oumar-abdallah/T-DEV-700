@@ -16,8 +16,8 @@ export default function KpiPage() {
   const [error, setError] = useState<string | null>(null)
   const [teamMembers, setTeamMembers] = useState<UserTeam[]>([])
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  const [days, setDays] = useState(30)
-  const [appliedDays, setAppliedDays] = useState(30) // Jours actuellement appliqués aux données
+  const [days, setDays] = useState<number | null>(30)
+  const [appliedDays, setAppliedDays] = useState<number | null>(30)
   const [customDays, setCustomDays] = useState('30')
   const [pendingDays, setPendingDays] = useState('30')
   const [showCustomInput, setShowCustomInput] = useState(false)
@@ -39,7 +39,6 @@ export default function KpiPage() {
     }).finally(() => setLoading(false))
   }, [currentTeam?.team.id, isManager])
 
-  // Load data only when appliedDays changes (not days)
   useEffect(() => {
     if (!currentTeam?.team.id || !selectedUserId) return
     setLoading(true)
@@ -54,6 +53,11 @@ export default function KpiPage() {
     if (value === 'custom') {
       setShowCustomInput(true)
       setPendingDays(customDays)
+    } else if (value === 'all') {
+      setShowCustomInput(false)
+      setDays(null)
+      setCustomDays('all')
+      setPendingDays('all')
     } else {
       setShowCustomInput(false)
       const daysValue = parseInt(value)
@@ -67,10 +71,10 @@ export default function KpiPage() {
     const v = e.target.value
     if (v === '' || /^\d+$/.test(v)) {
       setPendingDays(v)
-      if (v !== '' && parseInt(v) >= 1 && parseInt(v) <= 365) {
+      if (v !== '' && parseInt(v) >= 1) {
         setError(null)
       } else if (v !== '') {
-        setError('Nombre de jours entre 1 et 365')
+        setError('Le nombre de jours doit être supérieur ou égal à 1')
       }
     }
   }
@@ -81,10 +85,6 @@ export default function KpiPage() {
       setPendingDays('1')
       setDays(1)
       setCustomDays('1')
-    } else if (numValue > 365) {
-      setPendingDays('365')
-      setDays(365)
-      setCustomDays('365')
     } else {
       setDays(numValue)
       setCustomDays(pendingDays)
@@ -103,9 +103,6 @@ export default function KpiPage() {
       if (isNaN(numValue) || numValue < 1) {
         setPendingDays('1')
         setCustomDays('1')
-      } else if (numValue > 365) {
-        setPendingDays('365')
-        setCustomDays('365')
       } else {
         setCustomDays(pendingDays)
       }
@@ -116,7 +113,6 @@ export default function KpiPage() {
     if (e.key === 'Enter') {
       e.preventDefault()
       applyCustomDays()
-      // Apply immediately when pressing Enter
       if (selectedUserId && currentTeam?.team.id) {
         setAppliedDays(days)
       }
@@ -130,18 +126,31 @@ export default function KpiPage() {
     }
   }
 
-  const StatCard = ({ label, value, count, color, icon }: any) => (
-    <div className={`bg-white rounded-xl shadow-md p-6 border-l-4 border-${color}-500 hover:shadow-lg transition-shadow`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{label}</p>
-          <p className={`text-3xl font-bold text-${color}-600 mt-1`}>{value}</p>
-          {count !== undefined && <p className="text-xs text-gray-500 mt-1">{count} pointages</p>}
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, { border: string; text: string; bg: string }> = {
+      blue: { border: 'border-blue-500', text: 'text-blue-600', bg: 'bg-blue-50' },
+      green: { border: 'border-green-500', text: 'text-green-600', bg: 'bg-green-50' },
+      orange: { border: 'border-orange-500', text: 'text-orange-600', bg: 'bg-orange-50' },
+      red: { border: 'border-red-500', text: 'text-red-600', bg: 'bg-red-50' }
+    }
+    return colors[color] || colors.blue
+  }
+
+  const StatCard = ({ label, value, count, color, icon }: any) => {
+    const colorClasses = getColorClasses(color)
+    return (
+      <div className={`bg-white rounded-xl shadow-md p-6 border-l-4 ${colorClasses.border} hover:shadow-lg transition-shadow`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-600">{label}</p>
+            <p className={`text-3xl font-bold ${colorClasses.text} mt-1`}>{value}</p>
+            {count !== undefined && <p className="text-xs text-gray-500 mt-1">{count} pointages</p>}
+          </div>
+          <div className={`p-3 ${colorClasses.bg} rounded-lg`}>{icon}</div>
         </div>
-        <div className={`p-3 bg-${color}-50 rounded-lg`}>{icon}</div>
       </div>
-    </div>
-  )
+    )
+  }
 
   if (!currentTeam || !isManager) return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -183,7 +192,7 @@ export default function KpiPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <ClockIcon className="w-4 h-4 inline mr-2" />
-              Période {showCustomInput && <span className="text-xs text-gray-500">(1-365 jours)</span>}
+              Période {showCustomInput && <span className="text-xs text-gray-500">(min. 1 jour)</span>}
             </label>
             {showCustomInput ? (
               <div className="relative">
@@ -193,7 +202,7 @@ export default function KpiPage() {
                   onChange={handleCustomDaysChange} 
                   onBlur={handleCustomDaysBlur}
                   onKeyDown={handleCustomDaysKeyDown}
-                  placeholder="Entrez un nombre (1-365)" 
+                  placeholder="Entrez un nombre (min. 1)" 
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] pr-20" 
                   disabled={loading} 
                   autoFocus 
@@ -203,6 +212,7 @@ export default function KpiPage() {
             ) : (
               <select value={customDays} onChange={(e) => handlePeriodChange(e.target.value)} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]" disabled={loading}>
                 {[7, 14, 30, 60, 90, 180, 365].map(d => <option key={d} value={d}>{d} derniers jours{d === 365 ? ' (1 an)' : ''}</option>)}
+                <option value="all">Toutes les données</option>
                 <option value="custom">Période personnalisée...</option>
               </select>
             )}
@@ -234,7 +244,12 @@ export default function KpiPage() {
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedUser.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>{selectedUser.role === 'manager' ? 'Manager' : 'Employé'}</span>
             </div>
-            <div className="mt-4 text-sm text-gray-600">Période: {latenessData.period.startDate} au {latenessData.period.endDate} ({latenessData.period.days}j)</div>
+            <div className="mt-4 text-sm text-gray-600">
+              {latenessData.period.days === 'all' 
+                ? `Toutes les données • ${latenessData.totalClocks} pointages au total`
+                : `Période: ${latenessData.period.startDate} au ${latenessData.period.endDate} (${latenessData.period.days} jours)`
+              }
+            </div>
           </div>
 
           {/* Stats */}
