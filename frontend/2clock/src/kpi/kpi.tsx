@@ -1,7 +1,7 @@
 interface LatenessData {
   userId: number
   teamId: number
-  period: { days: number | 'all'; startDate: string; endDate: string }
+  period: { days: number | 'all' | 'custom'; startDate: string; endDate: string }
   totalClocks: number
   onTime: { count: number; percentage: number }
   early: { count: number; percentage: number }
@@ -49,10 +49,25 @@ const apiCall = async <T,>(url: string): Promise<ApiResponse<T>> => {
   }
 }
 
-export const getLatenessRateByEmployee = (teamId: number, userId: number, days?: number | null) => {
-  const url = days 
-    ? `/kpi/teams/${teamId}/employees/${userId}/lateness?days=${days}`
-    : `/kpi/teams/${teamId}/employees/${userId}/lateness`
+export const getLatenessRateByEmployee = (
+  teamId: number, 
+  userId: number, 
+  options?: { days?: number | null; startDate?: string; endDate?: string }
+) => {
+  let url = `/kpi/teams/${teamId}/employees/${userId}/lateness`
+  const params = new URLSearchParams()
+  
+  if (options?.days !== undefined && options.days !== null) {
+    params.append('days', options.days.toString())
+  } else if (options?.startDate && options?.endDate) {
+    params.append('startDate', options.startDate)
+    params.append('endDate', options.endDate)
+  }
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`
+  }
+  
   return apiCall<LatenessData>(url)
 }
 
