@@ -5,17 +5,14 @@ services:
     image: abakar98/jenkins-api:latest
     container_name: backend  
     env_file:
-      - .env  # Charge les variables Supabase
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
+      - /var/www/.env
     ports:
-      - "3000:3000"
+      - "3001:3001"  # ← CHANGÉ : backend sur 3001
     networks:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -23,10 +20,12 @@ services:
   frontend:
     image: abakar98/jenkins-frontend:latest
     container_name: frontend
+    env_file:
+      - /var/www/.env  # ← AJOUTÉ : pour que le frontend ait accès aux variables
     ports:
-      - "80:80"
+      - "80:3000"  # ← CHANGÉ : frontend Next.js tourne sur 3000 dans le container
     depends_on:
-      - backend  # Attend que le backend soit démarré
+      - backend
     networks:
       - app-network
     restart: unless-stopped
