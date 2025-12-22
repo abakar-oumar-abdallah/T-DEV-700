@@ -23,6 +23,7 @@ pipeline {
                                 docker {
                                     image 'node:lts'
                                     reuseNode true
+                                    args '--dns 8.8.8.8 --dns 8.8.4.4'
                                 }
                             }
                             steps {
@@ -67,6 +68,7 @@ pipeline {
                                 docker {
                                     image 'node:lts'
                                     reuseNode true
+                                    args '--dns 8.8.8.8 --dns 8.8.4.4'
                                 }
                             }
                             environment {
