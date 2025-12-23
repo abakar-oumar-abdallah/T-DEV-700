@@ -2,7 +2,8 @@ version: '3.9'
 
 services:
   backend:
-    image: abakar98/jenkins-api:latest
+    image: abakar98/jenkins-api
+    pull_policy: always
     container_name: backend  
     env_file:
       - /var/www/.env
@@ -18,7 +19,8 @@ services:
       retries: 3
 
   frontend:
-    image: abakar98/jenkins-frontend:latest
+    image: abakar98/jenkins-frontend
+    pull_policy: always
     container_name: frontend
     env_file:
       - /var/www/.env  # ← AJOUTÉ : pour que le frontend ait accès aux variables
