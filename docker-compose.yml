@@ -42,6 +42,11 @@ services:
     networks:
       - jenkins
     restart: unless-stopped
+    dns:  # ← AJOUTÉ
+      - 8.8.8.8
+      - 8.8.4.4
+    environment:  # ← AJOUTÉ
+      - DOCKER_HOST=unix:///var/run/docker.sock
 
 volumes:
   jenkins_home:
