@@ -2,16 +2,15 @@ version: '3.9'
 
 services:
   backend:
-    image: abakar98/jenkins-api
-    pull_policy: always
+    image: abakar98/jenkins-api:latest
     container_name: backend  
     env_file:
       - .env  # Charge les variables Supabase
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=3000
     ports:
-      - "3001:3001"
+      - "3000:3000"
     networks:
       - app-network
     restart: unless-stopped
@@ -22,8 +21,7 @@ services:
       retries: 3
 
   frontend:
-    image: abakar98/jenkins-frontend
-    pull_policy: always
+    image: abakar98/jenkins-frontend:latest
     container_name: frontend
     ports:
       - "80:80"
