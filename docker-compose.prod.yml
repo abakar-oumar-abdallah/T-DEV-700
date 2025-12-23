@@ -26,7 +26,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend  # Attend que le backend soit démarré
+      - backend  # Attend que le backend soit démarré à voir
     networks:
       - app-network
     restart: unless-stopped
