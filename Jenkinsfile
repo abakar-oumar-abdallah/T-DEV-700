@@ -7,7 +7,7 @@ pipeline {
         FRONT_REPOSITORY = 'jenkins-frontend'
         BACK_REPOSITORY = 'jenkins-api'
         SERVER_USER = 'root'
-        SERVER_IP = '46.105.54.27'
+        SERVER_IP = '46.105.54.141'
     }
     
     stages {
@@ -23,6 +23,7 @@ pipeline {
                                 docker {
                                     image 'node:lts'
                                     reuseNode true
+                                    args '--dns 8.8.8.8 --dns 8.8.4.4'
                                 }
                             }
                             steps {
@@ -67,6 +68,7 @@ pipeline {
                                 docker {
                                     image 'node:lts'
                                     reuseNode true
+                                    args '--dns 8.8.8.8 --dns 8.8.4.4'
                                 }
                             }
                             environment {
