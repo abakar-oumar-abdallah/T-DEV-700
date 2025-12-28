@@ -93,7 +93,7 @@ export const clockInOut = async (teamId: string, request: ClockInOutRequest): Pr
       const errorData = await response.json().catch(() => ({ error: 'Network error' }));
       
       // Translate error message if errorCode exists, otherwise translate common English errors
-      let translatedMessage = errorData.errorCode && ERROR_MESSAGES[errorData.errorCode] 
+      const translatedMessage = errorData.errorCode && ERROR_MESSAGES[errorData.errorCode] 
         ? ERROR_MESSAGES[errorData.errorCode]
         : translateErrorMessage(errorData.message || 'Clock in/out failed');
 
@@ -120,7 +120,7 @@ export const clockInOut = async (teamId: string, request: ClockInOutRequest): Pr
       };
     } else {
       // Translate error message if errorCode exists, otherwise translate common English errors
-      let translatedMessage = data.errorCode && ERROR_MESSAGES[data.errorCode] 
+      const translatedMessage = data.errorCode && ERROR_MESSAGES[data.errorCode] 
         ? ERROR_MESSAGES[data.errorCode]
         : translateErrorMessage(data.message || 'Clock in/out failed');
 
