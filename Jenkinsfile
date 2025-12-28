@@ -26,11 +26,11 @@ pipeline {
                                 }
                             }
                             steps {
-                                    dir('frontend/2clock') {
-                                        sh 'npm ci'
-                                        sh 'npm run lint || true'
-                                        sh 'npm audit || true'
-                                    }
+                                dir('frontend/2clock') {
+                                    sh 'npm ci'
+                                    sh 'npm run lint || true'
+                                    sh 'npm audit || true'
+                                }
                             }
                         }
 
@@ -77,11 +77,12 @@ pipeline {
                                 FRONTEND_URL = 'http://localhost:3000'
                             }
                             steps {
-                                    dir('backend') {
-                                        sh 'npm ci'
-                                        sh 'npm run lint || true'
-                                        sh 'npm audit || true'
-                                    }
+                                dir('backend') {
+                                    sh 'npm ci'
+                                    sh 'npm run lint || true'
+                                    sh 'npm audit || true'
+                                    sh 'npm run test:ci || true'
+                                }
                             }
                         }
 
@@ -113,7 +114,7 @@ pipeline {
 
         stage('Déployer sur le serveur de production') {
 
-            environment{
+            environment {
                 DOCKER_HUB = credentials('JENKINS_DOCKERHUB_TOKEN')
             }
 
@@ -145,9 +146,6 @@ pipeline {
         }
     }
 }
-
-
-
 
 // pipeline {
 //     agent any
