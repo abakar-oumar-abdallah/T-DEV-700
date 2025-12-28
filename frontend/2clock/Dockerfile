@@ -1,34 +1,57 @@
-# Etape 1: Build
-FROM node:20-alpine AS build
+# Étape 1 : Dépendances
+FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Copier les fichiers de dépendances
 COPY package*.json ./
 
 # Installer les dépendances
-RUN npm install
+RUN npm ci
 
-# Copier tous les fichiers
+# Étape 2 : Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copier les node_modules depuis deps
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copier tous les fichiers du projet
 COPY . .
 
 # Variables d'environnement pour le build
-ENV NEXT_SKIP_NATIVE_SWC_BINARY=1
-ENV BUILD_MODE=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# Build de l'application en mode statique
+# Build de l'application en mode standalone
 RUN npm run build
 
-# Etape 2: Production avec Nginx
-FROM nginx:stable-alpine
+# Étape 3 : Production Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
 
-# Copier les fichiers statiques générés
-COPY --from=build /app/out /usr/share/nginx/html
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copier la configuration Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Créer un utilisateur non-root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copier les fichiers publics
+COPY --from=builder /app/public ./public
+
+# Copier les fichiers standalone
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Passer à l'utilisateur non-root
+USER nextjs
 
 # Exposer le port
-EXPOSE 80
+EXPOSE 3000
 
-# Démarrer Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Variables d'environnement
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Démarrer l'application
+CMD ["node", "server.js"]
