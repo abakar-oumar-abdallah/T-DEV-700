@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: process.env.BUILD_MODE === 'production' ? 'export' : undefined,
-  distDir: process.env.BUILD_MODE === 'production' ? 'out' : '.next',
+  output: 'standalone',
+  
+  // Désactiver l'optimisation des images pour la compatibilité
   images: {
     unoptimized: true,
   },

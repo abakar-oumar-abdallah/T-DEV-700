@@ -8,7 +8,11 @@ interface LoginResponse {
   message: string;
   error?: string;
   session?: string;
-  data?: any;
+  data?: {
+    token: string;
+    loginTime: string;
+    user?: any;
+  };
 }
 
 interface CheckAuthResponse {
@@ -23,7 +27,8 @@ interface CheckAuthResponse {
 
 export const LoginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL
+    // Utiliser l'URL du backend depuis les variables d'environnement
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL || 'http://localhost:3001';
 
     const response = await fetch(`${backendUrl}/login`, {
       method: 'POST',
@@ -38,15 +43,16 @@ export const LoginUser = async (credentials: LoginCredentials): Promise<LoginRes
       return {
         success: false,
         message: 'Login failed',
-        error: errorData.error || 'Invalid credentials'
+        error: errorData.message || errorData.error || 'Invalid credentials'
       };
     }
 
     const data = await response.json();
+    
     return {
       success: true,
       message: data.message || 'Login successful',
-      session: data.session,
+      session: data.data?.token,
       data: data.data
     };
   } catch (error) {
@@ -70,7 +76,9 @@ export const CheckAuth = async (): Promise<CheckAuthResponse> => {
       };
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}/checkAuth`, {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL || 'http://localhost:3001';
+
+    const response = await fetch(`${backendUrl}/checkAuth`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
