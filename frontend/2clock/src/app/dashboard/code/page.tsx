@@ -10,7 +10,7 @@ import {
 } from '@/totp/totp'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import { Socket } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
 
 interface TotpData {
   teamId: string;
