@@ -5,27 +5,50 @@ import type { LatenessData } from '@/kpi/kpi'
 interface KpiGraphsProps {
   latenessData: LatenessData
   mounted: boolean
+  kpiType: 'lateness' | 'departure'
 }
 
-const COLORS = { onTime: '#10b981', early: '#3b82f6', warning: '#f59e0b', graveLateness: '#ef4444' }
+const COLORS_LATE = { onTime: '#10b981', early: '#3b82f6', warning: '#f59e0b', graveLateness: '#ef4444' }
+const LABELS_LATE = { onTime: 'À l\'heure', early: 'En avance', warning: 'Retard léger', graveLateness: 'Retard grave' }
 
-const LABELS = { onTime: 'À l\'heure', early: 'En avance', warning: 'Retard léger', graveLateness: 'Retard grave' }
+const COLORS_DEPART = { onTime: '#10b981', early: '#f59e0b', overtime: '#3b82f6' }
+const LABELS_DEPART = { onTime: 'À l\'heure', early: 'Départ en avance', overtime: 'Heures supplémentaires' }
 
-export default function KpiGraphs({ latenessData, mounted }: KpiGraphsProps) {
-  const createChartData = () => [
-    { name: LABELS.onTime, value: latenessData.onTime.count || 0, percentage: latenessData.onTime.percentage || 0, color: COLORS.onTime },
-    { name: LABELS.early, value: latenessData.early.count || 0, percentage: latenessData.early.percentage || 0, color: COLORS.early },
-    { name: LABELS.warning, value: latenessData.warning.count || 0, percentage: latenessData.warning.percentage || 0, color: COLORS.warning },
-    { name: LABELS.graveLateness, value: latenessData.graveLateness.count || 0, percentage: latenessData.graveLateness.percentage || 0, color: COLORS.graveLateness }
-  ]
+export default function KpiGraphs({ latenessData, mounted, kpiType }: KpiGraphsProps) {
+  const formatMinutes = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return `${hours}h ${mins}min`
+    }
+    return `${minutes} min`
+  }
 
-  const pieData = React.useMemo(() => createChartData().filter(item => item.value > 0), [latenessData])
-  const barData = React.useMemo(() => createChartData().map(({ name, value, color }) => ({ name, count: value, fill: color })), [latenessData])
+  const createChartData = () => {
+    if (kpiType === 'lateness') {
+      return [
+        { name: LABELS_LATE.onTime, value: latenessData.onTime.count || 0, percentage: latenessData.onTime.percentage || 0, color: COLORS_LATE.onTime },
+        { name: LABELS_LATE.early, value: latenessData.early.count || 0, percentage: latenessData.early.percentage || 0, color: COLORS_LATE.early, totalMinutes: latenessData.early.totalMinutes || 0 },
+        { name: LABELS_LATE.warning, value: latenessData.warning?.count || 0, percentage: latenessData.warning?.percentage || 0, color: COLORS_LATE.warning, totalMinutes: latenessData.warning?.totalMinutes || 0 },
+        { name: LABELS_LATE.graveLateness, value: latenessData.graveLateness?.count || 0, percentage: latenessData.graveLateness?.percentage || 0, color: COLORS_LATE.graveLateness, totalMinutes: latenessData.graveLateness?.totalMinutes || 0 }
+      ]
+    } else {
+      return [
+        { name: LABELS_DEPART.onTime, value: latenessData.onTime.count || 0, percentage: latenessData.onTime.percentage || 0, color: COLORS_DEPART.onTime },
+        { name: LABELS_DEPART.early, value: latenessData.early.count || 0, percentage: latenessData.early.percentage || 0, color: COLORS_DEPART.early, totalMinutes: latenessData.early.totalMinutes || 0 },
+        { name: LABELS_DEPART.overtime, value: latenessData.overtime?.count || 0, percentage: latenessData.overtime?.percentage || 0, color: COLORS_DEPART.overtime, totalMinutes: latenessData.overtime?.totalMinutes || 0 }
+      ]
+    }
+  }
+
+  const pieData = React.useMemo(() => createChartData().filter(item => item.value > 0), [latenessData, kpiType])
+  const barData = React.useMemo(() => createChartData().map(({ name, value, color }) => ({ name, count: value, fill: color })), [latenessData, kpiType])
 
   const CustomTooltip = ({ active, payload }: any) => active && payload?.[0] && (
     <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
       <p className="font-semibold text-gray-900">{payload[0].payload.name}</p>
-      <p className="text-sm text-gray-600">{payload[0].payload.value} pointages ({payload[0].payload.percentage.toFixed(1)}%)</p>
+      <p className="text-sm text-gray-600">{payload[0].payload.value} pointages ({payload[0].payload.percentage?.toFixed(1) ?? 0}%)</p>
+      {payload[0].payload.totalMinutes !== undefined && <p className="text-sm text-gray-600">Durée: {formatMinutes(payload[0].payload.totalMinutes)}</p>}
     </div>
   )
 
@@ -56,7 +79,7 @@ export default function KpiGraphs({ latenessData, mounted }: KpiGraphsProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-      <ChartCard title="Répartition de la ponctualité" delay="400ms">
+      <ChartCard title={kpiType === 'lateness' ? "Répartition de la ponctualité" : "Répartition des départs"} delay="400ms">
         {pieData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -64,7 +87,7 @@ export default function KpiGraphs({ latenessData, mounted }: KpiGraphsProps) {
                 {pieData.map((entry, i) => <Cell key={`cell-${i}`} fill={entry.color} />)}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="bottom" height={36} formatter={(value, entry: any) => <span className="text-sm">{value} ({entry.payload.percentage.toFixed(1)}%)</span>} />
+              <Legend verticalAlign="bottom" height={36} formatter={(value, entry: any) => <span className="text-sm">{value} ({entry.payload.percentage?.toFixed(1) ?? 0}%)</span>} />
             </PieChart>
           </ResponsiveContainer>
         ) : <div className="h-[300px] flex items-center justify-center text-gray-500">Aucune donnée disponible</div>}

@@ -1,15 +1,16 @@
-interface LatenessData {
+export interface LatenessData {
   userId: number
   teamId: number
   period: { days: number | 'all' | 'custom'; startDate: string; endDate: string }
   totalClocks: number
   onTime: { count: number; percentage: number }
-  early: { count: number; percentage: number }
-  warning: { count: number; percentage: number }
-  graveLateness: { count: number; percentage: number }
+  early: { count: number; percentage: number; totalMinutes: number }
+  warning?: { count: number; percentage: number; totalMinutes: number }
+  graveLateness?: { count: number; percentage: number; totalMinutes: number }
+  overtime?: { count: number; percentage: number; totalMinutes: number }
 }
 
-interface UserTeam {
+export interface UserTeam {
   id: number
   user_id: number
   team_id: number
@@ -17,7 +18,7 @@ interface UserTeam {
   user: { id: number; first_name: string; last_name: string; email: string }
 }
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   success: boolean
   message?: string
   data?: T
@@ -71,7 +72,29 @@ export const getLatenessRateByEmployee = (
   return apiCall<LatenessData>(url)
 }
 
+export const getDepartureRateByEmployee = (
+  teamId: number, 
+  userId: number, 
+  options?: { days?: number | null; startDate?: string; endDate?: string }
+) => {
+  let url = `/kpi/teams/${teamId}/employees/${userId}/departures`
+  const params = new URLSearchParams()
+  
+  if (options?.days !== undefined && options.days !== null) {
+    params.append('days', options.days.toString())
+  } else if (options?.startDate && options?.endDate) {
+    params.append('startDate', options.startDate)
+    params.append('endDate', options.endDate)
+  }
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`
+  }
+  
+  return apiCall<LatenessData>(url)
+}
+
 export const getTeamMembers = (teamId: number) =>
   apiCall<UserTeam[]>(`/teams/${teamId}/users`)
 
-export type { LatenessData, UserTeam, ApiResponse as LatenessRateResponse, ApiResponse as TeamMembersResponse }
+export type { LatenessData as LatenessDataType, UserTeam, ApiResponse as LatenessRateResponse, ApiResponse as TeamMembersResponse }

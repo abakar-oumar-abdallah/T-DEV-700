@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ChartBarIcon, ClockIcon, UserIcon, ExclamationTriangleIcon, ArrowPathIcon, CalendarIcon } from '@heroicons/react/24/outline'
-import { getLatenessRateByEmployee, getTeamMembers } from '@/kpi/kpi'
+import { ChartBarIcon, ClockIcon, UserIcon, ExclamationTriangleIcon, ArrowPathIcon, CalendarIcon, ArrowLeftIcon, PlusIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { getLatenessRateByEmployee, getDepartureRateByEmployee, getTeamMembers } from '@/kpi/kpi'
 import type { LatenessData, UserTeam } from '@/kpi/kpi'
 import KpiGraphs from '@/app/components/KpiGraphs'
+
+type KpiType = 'lateness' | 'departure'
 
 export default function KpiPage() {
   const { currentTeam, user } = useTeam()
@@ -16,25 +18,26 @@ export default function KpiPage() {
   const [error, setError] = useState<string | null>(null)
   const [teamMembers, setTeamMembers] = useState<UserTeam[]>([])
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
-  
+  const [kpiType, setKpiType] = useState<KpiType>('lateness')
+
   // Period mode: 'days' | 'all' | 'range'
   const [periodMode, setPeriodMode] = useState<'days' | 'all' | 'range'>('days')
-  
   // Days mode
   const [customDays, setCustomDays] = useState('30')
   const [appliedDays, setAppliedDays] = useState(30)
-  
   // Date range mode
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [appliedStartDate, setAppliedStartDate] = useState('')
   const [appliedEndDate, setAppliedEndDate] = useState('')
-  
+
   const [latenessData, setLatenessData] = useState<LatenessData | null>(null)
 
   const isManager = currentTeam?.role === 'manager'
   const selectedUser = teamMembers.find(m => m.user.id === selectedUserId)
-  const overallScore = latenessData ? latenessData.onTime.percentage + latenessData.early.percentage : 0
+  const overallScore = latenessData
+    ? latenessData.onTime.percentage + latenessData.early.percentage
+    : 0
 
   useEffect(() => { setMounted(true) }, [])
   useEffect(() => { if (currentTeam && !isManager) router.push('/dashboard/employee') }, [currentTeam, isManager, router])
@@ -52,9 +55,7 @@ export default function KpiPage() {
     if (!currentTeam?.team.id || !selectedUserId) return
     setLoading(true)
     setError(null)
-    
     let options: { days?: number | null; startDate?: string; endDate?: string } = {}
-    
     if (periodMode === 'all') {
       options = { days: null }
     } else if (periodMode === 'days') {
@@ -66,17 +67,19 @@ export default function KpiPage() {
       }
       options = { startDate: appliedStartDate, endDate: appliedEndDate }
     }
-    
-    getLatenessRateByEmployee(currentTeam.team.id, selectedUserId, options).then(r => {
+    const fetcher =
+      kpiType === 'lateness'
+        ? getLatenessRateByEmployee
+        : getDepartureRateByEmployee
+    fetcher(currentTeam.team.id, selectedUserId, options).then(r => {
       if (r.success && r.data) setLatenessData(r.data)
       else setError(r.error || 'Erreur chargement données')
     }).finally(() => setLoading(false))
-  }, [currentTeam?.team.id, selectedUserId, appliedDays, appliedStartDate, appliedEndDate, periodMode])
+  }, [currentTeam?.team.id, selectedUserId, appliedDays, appliedStartDate, appliedEndDate, periodMode, kpiType])
 
   const handlePeriodModeChange = (value: 'days' | 'all' | 'range') => {
     setPeriodMode(value)
     setError(null)
-    
     if (value === 'range') {
       // Set default dates (last 30 days)
       const end = new Date()
@@ -115,7 +118,6 @@ export default function KpiPage() {
   const handleRefresh = () => {
     if (!selectedUserId || !currentTeam?.team.id) return
     setError(null)
-    
     if (periodMode === 'days') {
       const numValue = parseInt(customDays)
       if (isNaN(numValue) || numValue < 1) {
@@ -135,10 +137,18 @@ export default function KpiPage() {
       setAppliedStartDate(startDate)
       setAppliedEndDate(endDate)
     } else if (periodMode === 'all') {
-      // Trigger refresh for "all" mode
-      setAppliedDays(0) // Just to trigger the useEffect
+      setAppliedDays(0)
       setTimeout(() => setAppliedDays(appliedDays), 0)
     }
+  }
+
+  const formatMinutes = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return `${hours}h ${mins}min`
+    }
+    return `${minutes} min`
   }
 
   const getColorClasses = (color: string) => {
@@ -186,17 +196,39 @@ export default function KpiPage() {
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-full bg-gradient-to-br from-[rgba(236,77,54,0.12)] to-[rgba(236,77,54,0.05)] hover:scale-105 duration-300"><ChartBarIcon className="w-7 h-7" style={{ color: 'var(--color-primary)' }} /></div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">KPI de Ponctualité</h1>
-              <p className="text-gray-600 mt-1">Analysez les statistiques de ponctualité</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
+                {kpiType === 'lateness' ? 'KPI de Ponctualité' : 'KPI de Départ'}
+              </h1>
+              <p className="text-gray-600 mt-1">
+                {kpiType === 'lateness'
+                  ? 'Analysez les statistiques de ponctualité'
+                  : 'Analysez les statistiques de départ (heures de sortie)'}
+              </p>
             </div>
           </div>
           {currentTeam && <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full"><div className="w-2 h-2 rounded-full bg-green-500"></div><span className="text-sm font-medium text-gray-700">Équipe: {currentTeam.team.name}</span></div>}
         </div>
       </div>
 
-      {/* Filters */}
+            {/* Filters */}
       <div className={`bg-white rounded-xl shadow-md p-6 mb-8 transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* KPI Type Selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <ChartBarIcon className="w-4 h-4 inline mr-2" />
+              Type de KPI
+            </label>
+            <select
+              value={kpiType}
+              onChange={e => setKpiType(e.target.value as KpiType)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm hover:shadow-md transition-shadow"
+              disabled={loading}
+            >
+              <option value="lateness">Ponctualité (arrivées)</option>
+              <option value="departure">Départ (heures de sortie)</option>
+            </select>
+          </div>
           {/* Employee Selector */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -206,7 +238,7 @@ export default function KpiPage() {
             <select 
               value={selectedUserId || ''} 
               onChange={(e) => setSelectedUserId(parseInt(e.target.value))} 
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]" 
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm hover:shadow-md transition-shadow" 
               disabled={loading}
             >
               <option value="">Sélectionner un employé</option>
@@ -217,7 +249,6 @@ export default function KpiPage() {
               ))}
             </select>
           </div>
-
           {/* Period Mode Selector */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -227,7 +258,7 @@ export default function KpiPage() {
             <select 
               value={periodMode} 
               onChange={(e) => handlePeriodModeChange(e.target.value as 'days' | 'all' | 'range')} 
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]" 
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm hover:shadow-md transition-shadow" 
               disabled={loading}
             >
               <option value="days">Nombre de jours</option>
@@ -235,56 +266,51 @@ export default function KpiPage() {
               <option value="range">Plage de dates</option>
             </select>
           </div>
-
           {/* Period Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <CalendarIcon className="w-4 h-4 inline mr-2" />
-              {periodMode === 'days' ? 'Nombre de jours' : periodMode === 'all' ? 'Période' : 'Dates'}
-            </label>
-            
-            {periodMode === 'days' ? (
-              <div className="relative">
-                <input 
-                  type="text" 
-                  value={customDays} 
-                  onChange={handleCustomDaysChange} 
-                  onBlur={handleCustomDaysBlur}
-                  onKeyDown={handleCustomDaysKeyDown}
-                  placeholder="Entrez un nombre (min. 1)" 
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] pr-20" 
-                  disabled={loading} 
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">jours</span>
-              </div>
-            ) : periodMode === 'all' ? (
-              <div className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-700 flex items-center justify-center">
-                Toutes les données disponibles
-              </div>
-            ) : (
-              <div className="flex gap-2 items-center">
-                <input 
-                  type="date" 
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  max={endDate || undefined}
-                  className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
-                  disabled={loading}
-                />
-                <span className="text-gray-400">→</span>
-                <input 
-                  type="date" 
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || undefined}
-                  className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
-                  disabled={loading}
-                />
-              </div>
-            )}
-          </div>
+          {periodMode !== 'all' && (
+            <div className={periodMode === 'range' ? 'col-span-full' : ''}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <CalendarIcon className="w-4 h-4 inline mr-2" />
+                {periodMode === 'days' ? 'Nombre de jours' : 'Dates'}
+              </label>
+              {periodMode === 'days' ? (
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={customDays} 
+                    onChange={handleCustomDaysChange} 
+                    onBlur={handleCustomDaysBlur}
+                    onKeyDown={handleCustomDaysKeyDown}
+                    placeholder="Entrez un nombre (min. 1)" 
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm hover:shadow-md transition-shadow pr-20" 
+                    disabled={loading} 
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">jours</span>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    max={endDate || undefined}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm hover:shadow-md transition-shadow text-sm"
+                    disabled={loading}
+                  />
+                  <span className="text-gray-400">→</span>
+                  <input 
+                    type="date" 
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || undefined}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm hover:shadow-md transition-shadow text-sm"
+                    disabled={loading}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
-
         {/* Refresh Button */}
         <div className="mt-4 flex justify-end">
           <button 
@@ -334,17 +360,52 @@ export default function KpiPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard label="Total pointages" value={latenessData.totalClocks} color="blue" icon={<ClockIcon className="w-6 h-6 text-blue-600" />} />
-            <StatCard label="À l'heure" value={`${latenessData.onTime.percentage.toFixed(1)}%`} count={latenessData.onTime.count} color="green" icon={<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>} />
-            <StatCard label="Retards légers" value={`${latenessData.warning.percentage.toFixed(1)}%`} count={latenessData.warning.count} color="orange" icon={<ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />} />
-            <StatCard label="Retards graves" value={`${latenessData.graveLateness.percentage.toFixed(1)}%`} count={latenessData.graveLateness.count} color="red" icon={<svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+          <div className={`p-6 mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '500ms' }}>
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></div>
+              Statistiques générales
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard label="Total pointages" value={latenessData.totalClocks} color="blue" icon={<ClockIcon className="w-6 h-6 text-blue-600" />} />
+              <StatCard label="À l'heure" value={`${latenessData.onTime.percentage.toFixed(1)}%`} count={latenessData.onTime.count} color="green" icon={<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>} />
+              <StatCard label={kpiType === 'lateness' ? 'En avance' : 'Départ en avance'} value={`${latenessData.early.percentage.toFixed(1)}%`} count={latenessData.early.count} color={kpiType === 'lateness' ? 'blue' : 'orange'} icon={<ArrowLeftIcon className={`w-6 h-6 ${kpiType === 'lateness' ? 'text-blue-600' : 'text-orange-600'}`} />} />
+              {kpiType === 'lateness' ? (
+                <>
+                  <StatCard label="Retards légers" value={`${(latenessData.warning?.percentage ?? 0).toFixed(1)}%`} count={latenessData.warning?.count ?? 0} color="orange" icon={<ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />} />
+                  <StatCard label="Retards graves" value={`${(latenessData.graveLateness?.percentage ?? 0).toFixed(1)}%`} count={latenessData.graveLateness?.count ?? 0} color="red" icon={<ExclamationCircleIcon className="w-6 h-6 text-red-600" />} />
+                </>
+              ) : (
+                <StatCard label="Heures supplémentaires" value={`${(latenessData.overtime?.percentage ?? 0).toFixed(1)}%`} count={latenessData.overtime?.count ?? 0} color="blue" icon={<PlusIcon className="w-6 h-6 text-blue-600" />} />
+              )}
+            </div>
           </div>
 
-          <KpiGraphs latenessData={latenessData} mounted={mounted} />
+          {/* Minutes Details Section */}
+          <div className={`p-6 mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '600ms' }}>
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></div>
+              Détails des durées
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {kpiType === 'lateness' ? (
+                <>
+                  <StatCard label="Durée en avance" value={formatMinutes(latenessData.early.totalMinutes)} color="blue" icon={<ArrowLeftIcon className="w-6 h-6 text-blue-600" />} />
+                  <StatCard label="Durée retard léger" value={formatMinutes(latenessData.warning?.totalMinutes ?? 0)} color="orange" icon={<ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />} />
+                  <StatCard label="Durée retard grave" value={formatMinutes(latenessData.graveLateness?.totalMinutes ?? 0)} color="red" icon={<ExclamationCircleIcon className="w-6 h-6 text-red-600" />} />
+                </>
+              ) : (
+                <>
+                  <StatCard label="Durée départ en avance" value={formatMinutes(latenessData.early.totalMinutes)} color="orange" icon={<ArrowLeftIcon className="w-6 h-6 text-orange-600" />} />
+                  <StatCard label="Durée heures supplémentaires" value={formatMinutes(latenessData.overtime?.totalMinutes ?? 0)} color="blue" icon={<PlusIcon className="w-6 h-6 text-blue-600" />} />
+                </>
+              )}
+            </div>
+          </div>
 
-          {/* Summary */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <KpiGraphs latenessData={latenessData} mounted={mounted} kpiType={kpiType} />
+
+          {/* Summary - peu pertinent TODO voir la pertinence */}
+          {/* <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Résumé</h3>
             <div className="space-y-4">
               <div>
@@ -366,11 +427,15 @@ export default function KpiPage() {
                 </div>
                 <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                   <p className="text-sm font-medium text-red-800">Points d'attention</p>
-                  <p className="text-xs text-red-700">{latenessData.warning.count + latenessData.graveLateness.count} retards</p>
+                  <p className="text-xs text-red-700">
+                    {kpiType === 'lateness'
+                      ? ((latenessData.warning?.count ?? 0) + (latenessData.graveLateness?.count ?? 0)) + ' retards'
+                      : (latenessData.overtime?.count ?? 0) + ' heures supplémentaires'}
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </>
       )}
 
