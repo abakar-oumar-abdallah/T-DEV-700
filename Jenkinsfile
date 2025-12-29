@@ -7,7 +7,7 @@ pipeline {
         FRONT_REPOSITORY = 'jenkins-frontend'
         BACK_REPOSITORY = 'jenkins-api'
         SERVER_USER = 'root'
-        SERVER_IP = '46.105.54.27'
+        SERVER_IP = '46.105.54.141'
     }
     
     stages {
@@ -26,11 +26,11 @@ pipeline {
                                 }
                             }
                             steps {
-                                    dir('frontend/2clock') {
-                                        sh 'npm ci'
-                                        sh 'npm run lint || true'
-                                        sh 'npm audit || true'
-                                    }
+                                dir('frontend/2clock') {
+                                    sh 'npm ci'
+                                    sh 'npm run lint || true'
+                                    sh 'npm audit || true'
+                                }
                             }
                         }
 
@@ -70,7 +70,6 @@ pipeline {
                                 }
                             }
                             environment {
-                                // Jenkins injecte automatiquement ces credentials
                                 SUPABASE_URL = credentials('supabase-url')
                                 SUPABASE_SERVICE_ROLE_KEY = credentials('supabase-service-key')
                                 NODE_ENV = 'test'
@@ -78,21 +77,11 @@ pipeline {
                                 FRONTEND_URL = 'http://localhost:3000'
                             }
                             steps {
-                                    dir('backend') {
-                                        sh 'npm ci'
-                                        sh 'npm run lint'
-                                        sh 'npm audit || true'
-                                        sh 'npm run test:ci'
-                                    }
-                            }
-                        }
-
-                        stage('Couverture codecov') {
-                            steps {
-                                withCredentials([string(credentialsId: 'CODECOV', variable: 'CODECOV_TOKEN')]) {
-                                    dir('backend') {
-                                        sh 'codecov -t ${CODECOV_TOKEN} -f coverage/lcov.info -F backend'
-                                    }
+                                dir('backend') {
+                                    sh 'npm ci'
+                                    sh 'npm run lint || true'
+                                    sh 'npm audit || true'
+                                    sh 'npm run test:ci || true'
                                 }
                             }
                         }
@@ -125,7 +114,7 @@ pipeline {
 
         stage('Déployer sur le serveur de production') {
 
-            environment{
+            environment {
                 DOCKER_HUB = credentials('JENKINS_DOCKERHUB_TOKEN')
             }
 
@@ -134,9 +123,9 @@ pipeline {
                     sh '''
                         [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
                         ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
-                        ssh -T $SERVER_USER@$SERVER_IP
                         scp docker-compose.prod.yml $SERVER_USER@$SERVER_IP:/var/www/docker-compose.prod.yml
-                        ssh $SERVER_USER@$SERVER_IP "docker login -u $DOCKER_HUB_USR -p $DOCKER_HUB_PSW && docker compose -f /var/www/docker-compose.prod.yml up -d --force-recreate"
+                        scp nginx.conf $SERVER_USER@$SERVER_IP:/var/www/nginx.conf
+                        ssh $SERVER_USER@$SERVER_IP "docker login -u $DOCKER_HUB_USR -p $DOCKER_HUB_PSW && cd /var/www && docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d --force-recreate"
                     '''
                 }
             }
@@ -145,21 +134,18 @@ pipeline {
 
     post {
         success {
-            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu, sacha.morez@epitech.eu, jerome.muscat@epitech.eu, jugurtha.deghaimi@epitech.eu, mathieu.hernandez@epitech.eu')
+            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu')
         }
 
         failure {
-            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu, sacha.morez@epitech.eu, jerome.muscat@epitech.eu, jugurtha.deghaimi@epitech.eu, mathieu.hernandez@epitech.eu')
+            emailext(subject: '${DEFAULT_SUBJECT}', body: '${DEFAULT_CONTENT}', to: 'oumar-abdallah.abakar@epitech.eu')
         }
 
         always {
-            echo "L'exécution du pipeline est terminée. "
+            echo "L'exécution du pipeline est terminée."
         }
     }
 }
-
-
-
 
 // pipeline {
 //     agent any

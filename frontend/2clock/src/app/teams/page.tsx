@@ -172,7 +172,7 @@ export default function TeamSelectionPage() {
           window.location.reload();
         }, 1500);
       } else {
-        setCreateError(result.error || 'Erreur lors de la création de l\'équipe');
+        setCreateError(result.error || "Erreur lors de la création de l&apos;équipe");
       }
     } catch (error) {
       console.error('Error creating team:', error);
@@ -201,7 +201,7 @@ export default function TeamSelectionPage() {
           window.location.reload();
         }, 1500);
       } else {
-        setCreateError(result.error || 'Erreur lors de la modification de l\'équipe');
+        setCreateError(result.error || "Erreur lors de la modification de l&apos;équipe");
       }
     } catch (error) {
       console.error('Error updating team:', error);
@@ -224,7 +224,7 @@ export default function TeamSelectionPage() {
         setDeleteConfirmTeam(null);
         window.location.reload();
       } else {
-        setCreateError(result.error || 'Erreur lors de la suppression de l\'équipe');
+        setCreateError(result.error || "Erreur lors de la suppression de l&apos;équipe");
       }
     } catch (error) {
       console.error('Error deleting team:', error);
@@ -275,10 +275,10 @@ export default function TeamSelectionPage() {
           router.push('/login');
           return;
         } else if (response.status === 404) {
-          setError('Vous n\'avez pas accès à cette équipe.');
+          setError("Vous n&apos;avez pas accès à cette équipe.");
           return;
         } else {
-          setError('Erreur lors de la vérification de l\'équipe.');
+          setError("Erreur lors de la vérification de l&apos;équipe.");
           return;
         }
       }
@@ -291,12 +291,12 @@ export default function TeamSelectionPage() {
           setCurrentTeam(team);
           router.push('/dashboard/employee');
         } else {
-          setError('Données d\'équipe incohérentes. Veuillez vous reconnecter.');
+          setError("Données d&apos;équipe incohérentes. Veuillez vous reconnecter.");
           clearTeamContext();
           router.push('/login');
         }
       } else {
-        setError(result.message || 'Erreur lors de la sélection de l\'équipe.');
+        setError(result.message || "Erreur lors de la sélection de l&apos;équipe.");
       }
     } catch (error) {
       console.error('Error selecting team:', error);
@@ -316,7 +316,7 @@ export default function TeamSelectionPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">{"Erreur d'authentification"}</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur d&apos;authentification</h3>
           <p className="text-gray-600 mb-4">{authError}</p>
           <button onClick={() => (clearTeamContext(), router.push('/login'))} className="px-4 py-2 bg-blue-600 text-white rounded-lg">Retour à la connexion</button>
         </div>
@@ -333,7 +333,7 @@ export default function TeamSelectionPage() {
       {/* Local loader for team selection */}
       <Loader 
         isLoading={loading} 
-        message="Sélection de l'équipe..."
+        message="Sélection de l&apos;équipe..."
       />
       
       <main className="p-6 sm:p-10 min-h-screen">
@@ -403,7 +403,7 @@ export default function TeamSelectionPage() {
                         openEditModal(team);
                       }}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Modifier l'équipe"
+                      title="Modifier l&apos;équipe"
                     >
                       <PencilIcon className="w-4 h-4" />
                     </button>
@@ -413,7 +413,7 @@ export default function TeamSelectionPage() {
                         setDeleteConfirmTeam(team);
                       }}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Supprimer l'équipe"
+                      title="Supprimer l&apos;équipe"
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
@@ -486,7 +486,7 @@ export default function TeamSelectionPage() {
               {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom de l'équipe *
+                  Nom de l&apos;équipe *
                 </label>
                 <input
                   type="text"
@@ -509,7 +509,7 @@ export default function TeamSelectionPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Description de l'équipe"
+                  placeholder="Description de l&apos;équipe"
                   rows={3}
                 />
               </div>
@@ -714,7 +714,7 @@ export default function TeamSelectionPage() {
         <div className="fixed inset-0 backdrop-blur-sm bg-gradient-to-br from-black/30 via-gray-900/20 to-black/30 flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-slideUp border border-gray-100">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Modifier l'équipe</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Modifier l&apos;équipe</h2>
               <button
                 onClick={() => {
                   setEditingTeam(null);
@@ -730,7 +730,7 @@ export default function TeamSelectionPage() {
             <form onSubmit={handleEditTeam} className="space-y-4">
               <div>
                 <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom de l'équipe *
+                  Nom de l&apos;équipe *
                 </label>
                 <input
                   type="text"
@@ -834,7 +834,7 @@ export default function TeamSelectionPage() {
         <div className="fixed inset-0 backdrop-blur-sm bg-gradient-to-br from-black/30 via-gray-900/20 to-black/30 flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-slideUp border border-gray-100">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Supprimer l'équipe</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Supprimer l&apos;équipe</h2>
               <button
                 onClick={() => {
                   setDeleteConfirmTeam(null);
@@ -848,7 +848,7 @@ export default function TeamSelectionPage() {
 
             <div className="mb-6">
               <p className="text-gray-600 mb-4">
-                Êtes-vous sûr de vouloir supprimer l'équipe <strong>{deleteConfirmTeam.team.name}</strong> ?
+                Êtes-vous sûr de vouloir supprimer l&apos;équipe <strong>{deleteConfirmTeam.team.name}</strong> ?
               </p>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-sm text-yellow-800">
