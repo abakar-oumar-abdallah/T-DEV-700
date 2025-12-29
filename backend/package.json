@@ -10,7 +10,8 @@
         "test:ci": "jest --ci --coverage --maxWorkers=2",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "lint": "eslint src/"
+        "lint": "eslint src/",
+        "seed": "node seeders/kpi-testing-seeder.js"
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.38.5",
