@@ -22,6 +22,10 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Variable d'environnement pour l'URL du backend (utilisée par Next.js au build)
+ARG NEXT_PUBLIC_BACKENDURL
+ENV NEXT_PUBLIC_BACKENDURL=$NEXT_PUBLIC_BACKENDURL
+
 # Build de l'application en mode standalone
 RUN npm run build
 
