@@ -38,7 +38,10 @@ pipeline {
                             steps {
                                 script {
                                     dir('frontend/2clock') {
-                                        dockerFrontendImage = docker.build("${DOCKERHUB_ACCOUNT}/${FRONT_REPOSITORY}:latest")
+                                        dockerFrontendImage = docker.build(
+                                            "${DOCKERHUB_ACCOUNT}/${FRONT_REPOSITORY}:latest",
+                                            "--build-arg NEXT_PUBLIC_BACKENDURL=http://46.105.54.141/api ."
+                                        )
                                     }
                                 }
                             }
