@@ -12,8 +12,8 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
         });
       }
 
-      // Get team context from multiple sources
-      const teamId = req.params.teamId || req.body.teamId || req.query.teamId || req.headers['x-team-id'];
+      // Get team context from multiple sources (including 'id' param for routes like /teams/:id)
+      const teamId = req.params.teamId || req.params.id || req.body.teamId || req.query.teamId || req.headers['x-team-id'];
       
       // Check if team context is required
       if (requireTeamContext && !teamId) {

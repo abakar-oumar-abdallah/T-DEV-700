@@ -38,6 +38,8 @@ const clockRoute = require('./routes/clock/clock.js');
 const planningRoute = require('./routes/planning/planning.js');
 const scheduleRoute = require('./routes/schedule/schedule.js');
 const totpRoute = require('./routes/totp/totp.js');
+const kpiRoute = require('./routes/kpi/kpi.js');
+
 
 // Import du contrôleur TOTP pour initialiser Socket.IO
 const totpController = require('./controllers/totp/TotpController.js');
@@ -74,6 +76,8 @@ app.use('', userTeamRoute);
 app.use('', planningRoute);
 app.use('', scheduleRoute);
 app.use('', totpRoute);
+app.use('', kpiRoute);
+
 
 // Documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
