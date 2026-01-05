@@ -1,3 +1,7 @@
+interface ClockInOutRequest {
+  totp?: string;
+}
+
 interface ClockInOutResponse {
   success: boolean;
   message: string;
@@ -142,7 +146,7 @@ export const clockInOut = async (teamId: string, request: ClockInOutRequest): Pr
 };
 
 // Les autres fonctions restent identiques...
-export const getClockHistory = async (teamId: string, date?: string): Promise<ClockHistoryResponse> => {
+export const getClockHistory = async (teamId: string, date?: string): Promise<ClockInOutResponse> => {
   try {
     const token = localStorage.getItem('session');
     if (!token) {
@@ -199,7 +203,7 @@ export const getClockHistory = async (teamId: string, date?: string): Promise<Cl
   }
 };
 
-export const getClocksByDateRange = async (teamId: string, startDate: string, endDate: string): Promise<ClockHistoryResponse> => {
+export const getClocksByDateRange = async (teamId: string, startDate: string, endDate: string): Promise<ClockInOutResponse> => {
   try {
     const token = localStorage.getItem('session');
     if (!token) {

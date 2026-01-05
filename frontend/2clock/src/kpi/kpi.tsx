@@ -97,4 +97,4 @@ export const getDepartureRateByEmployee = (
 export const getTeamMembers = (teamId: number) =>
   apiCall<UserTeam[]>(`/teams/${teamId}/users`)
 
-export type { LatenessData as LatenessDataType, UserTeam, ApiResponse as LatenessRateResponse, ApiResponse as TeamMembersResponse }
+export type { LatenessData as LatenessDataType, ApiResponse as LatenessRateResponse, ApiResponse as TeamMembersResponse }
