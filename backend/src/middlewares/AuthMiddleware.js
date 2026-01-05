@@ -3,15 +3,21 @@ const jwt = require('jsonwebtoken');
 
 const AuthMiddleware = async (req, res, next) => {
   try {
-    // Get token from Authorization header or cookies
-    let token = req.headers.authorization?.startsWith('Bearer ') 
-      ? req.headers.authorization.substring(7) 
-      : req.headers.authorization;
+    // Get token from secure httpOnly cookie first (preferred method)
+    // Fallback to Authorization header for backward compatibility
+    let token = req.cookies.jwt;
 
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Unauthorized - No token provided' 
+      // Fallback: check Authorization header
+      token = req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.substring(7)
+        : req.headers.authorization;
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized - No token provided'
       });
     }
 
