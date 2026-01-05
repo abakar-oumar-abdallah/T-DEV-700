@@ -12,6 +12,26 @@ const PermissionMiddleware = require('../src/middlewares/PermissionMiddleware');
 const TeamRoleMiddleware = require('../src/middlewares/TeamRoleMiddleware');
 const totpRoutes = require('../src/routes/totp/totp.js');
 
+// Mock cookie-parser
+jest.mock('cookie-parser', () => {
+  return jest.fn(() => (req, res, next) => {
+    req.cookies = req.cookies || {};
+    next();
+  });
+});
+
+// Mock CSRF middleware
+jest.mock('../src/middlewares/CsrfMiddleware', () => ({
+  csrfProtection: jest.fn((req, res, next) => next()),
+  getCsrfToken: jest.fn((req, res) => res.json({ csrfToken: 'mock-csrf-token' }))
+}));
+
+// Mock rate limiters
+jest.mock('../src/middlewares/RateLimiters', () => ({
+  authLimiter: jest.fn((req, res, next) => next()),
+  apiLimiter: jest.fn((req, res, next) => next())
+}));
+
 
 
 // Mock des contrôleurs

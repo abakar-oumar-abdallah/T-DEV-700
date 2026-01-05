@@ -14,11 +14,14 @@ describe('AuthController', () => {
   beforeEach(() => {
     req = {
       body: {},
-      headers: {}
+      headers: {},
+      cookies: {}
     };
     res = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      json: jest.fn().mockReturnThis(),
+      cookie: jest.fn().mockReturnThis(),
+      clearCookie: jest.fn().mockReturnThis()
     };
     jest.clearAllMocks();
   });
