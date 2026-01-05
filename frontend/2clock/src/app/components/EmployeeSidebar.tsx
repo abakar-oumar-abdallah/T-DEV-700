@@ -11,7 +11,8 @@ import {
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
   BuildingOffice2Icon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  UserGroupIcon
 } from "@heroicons/react/24/outline";
 import { useTeam } from "@/contexts/TeamContext";
 
@@ -132,7 +133,31 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 </Link>
               </li>
             )}
-            
+            {currentTeam?.role === 'manager' && (
+  <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '350ms' }}>
+    <Link
+      href="/dashboard/manager/team"
+      className={`${
+        isActive("/dashboard/manager/team")
+          ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
+          : "text-white/80 hover:text-white hover:bg-white/10"
+      } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
+      onClick={() => setMobileOpen(false)}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <UserGroupIcon
+        className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
+        style={{
+          color: isActive("/dashboard/manager/team")
+            ? "var(--color-secondary)"
+            : "var(--color-primary)",
+        }}
+      />
+      <span className="font-medium relative z-10">Mon Équipe</span>
+    </Link>
+  </li>
+)}
+
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
 
               <Link

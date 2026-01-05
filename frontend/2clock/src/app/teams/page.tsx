@@ -39,66 +39,67 @@ export default function TeamSelectionPage() {
     }
   }, [isLoading, user, teams, authError, setCurrentTeam, clearTeamContext, router]);
 
-  const handleTeamSelect = async (team: any) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Verify user has access to this team
-      const token = localStorage.getItem('session');
-      if (!token) {
+const handleTeamSelect = async (team: any) => {
+  setLoading(true);
+  setError(null);
+  
+  try {
+    const token = localStorage.getItem('session');
+    if (!token) {
+      setError('Session expirée. Veuillez vous reconnecter.');
+      clearTeamContext();
+      router.push('/login');
+      return;
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/myAssociation/${team.team.id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
         setError('Session expirée. Veuillez vous reconnecter.');
         clearTeamContext();
         router.push('/login');
         return;
-      }
-
-      // Check user-team association exists
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/myAssociation/${team.team.id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          setError('Session expirée. Veuillez vous reconnecter.');
-          clearTeamContext();
-          router.push('/login');
-          return;
-        } else if (response.status === 404) {
-          setError('Vous n\'avez pas accès à cette équipe.');
-          return;
-        } else {
-          setError('Erreur lors de la vérification de l\'équipe.');
-          return;
-        }
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // Verify the team data matches what we expect
-        if (result.data.team_id === team.team.id && result.data.user_id === user?.id) {
-          setCurrentTeam(team);
-          router.push('/dashboard/employee');
-        } else {
-          setError('Données d\'équipe incohérentes. Veuillez vous reconnecter.');
-          clearTeamContext();
-          router.push('/login');
-        }
+      } else if (response.status === 404) {
+        setError('Vous n\'avez pas accès à cette équipe.');
+        return;
       } else {
-        setError(result.message || 'Erreur lors de la sélection de l\'équipe.');
+        setError('Erreur lors de la vérification de l\'équipe.');
+        return;
       }
-    } catch (error) {
-      console.error('Error selecting team:', error);
-      setError('Erreur de connexion. Veuillez réessayer.');
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const result = await response.json();
+    
+    if (result.success) {
+      if (result.data.team_id === team.team.id && result.data.user_id === user?.id) {
+        setCurrentTeam(team);
+        
+        // Redirection vers le dashboard (PAS vers /dashboard/code)
+        router.push('/dashboard/employee');
+      } else {
+        setError('Données d\'équipe incohérentes. Veuillez vous reconnecter.');
+        clearTeamContext();
+        router.push('/login');
+      }
+    } else {
+      setError(result.message || 'Erreur lors de la sélection de l\'équipe.');
+    }
+  } catch (error) {
+    console.error('Error selecting team:', error);
+    setError('Erreur de connexion. Veuillez réessayer.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ...existing code...
 
   const getRoleColor = (role: string) => role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
 
@@ -167,50 +168,76 @@ export default function TeamSelectionPage() {
         )}
 
         {/* Teams Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {teams.map((team: any, index: number) => (
-            <button
-              key={`${team.team.id}-${team.role}`}
-              onClick={() => handleTeamSelect(team)}
-              disabled={loading}
-              className={`group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 duration-300 ${
-                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{ transitionDelay: `${200 + index * 100}ms` }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-50 rounded-lg group-hover:scale-110 transition-transform duration-300">
-                  <BuildingOffice2Icon className="h-6 w-6 text-blue-600" />
-                </div>
-                <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{team.team.name}</h3>
-                {team.team.description && <p className="text-sm text-gray-600 mb-3">{team.team.description}</p>}
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(team.role)}`}>
-                  {team.role === 'manager' ? 'Responsable' : 'Employé'}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-sm text-gray-500">
-                <div className="flex items-center space-x-2">
-                  <ClockIcon className="h-4 w-4" />
-                  <span>{team.team.timezone}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <UserGroupIcon className="h-4 w-4" />
-                  <span>Limite retard: {team.team.lateness_limit} min</span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-xs text-gray-500">Planning {team.planning_id ? 'personnalisé' : 'par défaut'}</span>
-                <div className={`w-2 h-2 rounded-full ${team.planning_id ? 'bg-green-400' : 'bg-blue-400'}`}></div>
-              </div>
-            </button>
-          ))}
+<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+  {teams.map((team: any, index: number) => (
+    <div
+      key={`${team.team.id}-${team.role}`}
+      className={`group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all ${
+        mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}
+      style={{ transitionDelay: `${200 + index * 100}ms` }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-3 bg-blue-50 rounded-lg group-hover:scale-110 transition-transform duration-300">
+          <BuildingOffice2Icon className="h-6 w-6 text-blue-600" />
         </div>
+        <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+      </div>
+
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">{team.team.name}</h3>
+        {team.team.description && <p className="text-sm text-gray-600 mb-3">{team.team.description}</p>}
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(team.role)}`}>
+          {team.role === 'manager' ? 'Responsable' : 'Employé'}
+        </span>
+      </div>
+
+      <div className="space-y-2 text-sm text-gray-500 mb-4">
+        <div className="flex items-center space-x-2">
+          <ClockIcon className="h-4 w-4" />
+          <span>{team.team.timezone}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <UserGroupIcon className="h-4 w-4" />
+          <span>Limite retard: {team.team.lateness_limit} min</span>
+        </div>
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+        <span className="text-xs text-gray-500">Planning {team.planning_id ? 'personnalisé' : 'par défaut'}</span>
+        <div className={`w-2 h-2 rounded-full ${team.planning_id ? 'bg-green-400' : 'bg-blue-400'}`}></div>
+      </div>
+
+
+{/* BOUTONS D'ACTION */}
+<div className={`mt-4 flex gap-2 ${team.role === 'manager' ? 'flex-col' : ''}`}>
+  {team.role === 'manager' && (
+    <button
+      onClick={() => {
+        setCurrentTeam(team);
+        router.push('/dashboard/manager/team');
+      }}
+      disabled={loading}
+      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <UserGroupIcon className="w-4 h-4" />
+      <span className="text-sm font-medium">Voir membres</span>
+    </button>
+  )}
+
+  {/* Bouton Sélectionner l'équipe - Pour tous */}
+  <button
+    onClick={() => handleTeamSelect(team)}
+    disabled={loading}
+    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <span className="text-sm font-medium">Sélectionner</span>
+    <ChevronRightIcon className="w-4 h-4" />
+  </button>
+</div>
+</div>
+  ))}
+</div>
 
         {teams.length === 0 && (
           <div className={`text-center py-12 transition-all duration-700 ${
