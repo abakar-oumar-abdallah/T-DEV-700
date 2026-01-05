@@ -110,100 +110,52 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
             </li>
 
  {/* TOTP Code page - Only for managers */}
-            {currentTeam?.role === 'manager' && (
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
-                <Link
-                  href="/dashboard/code"
-                  className={`${
-                    isActive("/dashboard/code")
-                      ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                      : "text-white/80 hover:text-white"
-                  } rounded-md py-3 px-4 flex items-center gap-3`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <ShieldCheckIcon 
-                    className="w-6 h-6"
-                    style={{
-                      color: isActive("/dashboard/code")
-                        ? "var(--color-secondary)"
-                        : "var(--color-primary)",
-                    }} 
-                  />
-                  <span className="font-medium">Code TOTP</span>
-                </Link>
-              </li>
-            )}
-            {currentTeam?.role === 'manager' && (
-  <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '350ms' }}>
+{currentTeam?.role === 'manager' && (
+  <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
     <Link
-      href="/dashboard/manager/team"
+      href="/dashboard/code"
       className={`${
-        isActive("/dashboard/manager/team")
-          ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
-          : "text-white/80 hover:text-white hover:bg-white/10"
-      } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
+        isActive("/dashboard/code")
+          ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
+          : "text-white/80 hover:text-white"
+      } rounded-md py-3 px-4 flex items-center gap-3`}
       onClick={() => setMobileOpen(false)}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <UserGroupIcon
-        className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
+      <ShieldCheckIcon 
+        className="w-6 h-6"
         style={{
-          color: isActive("/dashboard/manager/team")
+          color: isActive("/dashboard/code")
             ? "var(--color-secondary)"
             : "var(--color-primary)",
-        }}
+        }} 
       />
-      <span className="font-medium relative z-10">Mon Équipe</span>
+      <span className="font-medium">Code TOTP</span>
     </Link>
   </li>
 )}
 
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
-
-              <Link
-                href="/dashboard/clock"
-                className={`${
-                  isActive("/dashboard/clock")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <ClockIcon
-                  className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
-                  style={{
-                    color: isActive("/dashboard/clock")
-                      ? "var(--color-secondary)"
-                      : "var(--color-primary)",
-                  }}
-                />
-                <span className="relative z-10">Pointage</span>
-              </Link>
-            </li>
-
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
-              <Link
-                href="/dashboard/employee/punches"
-                className={`${
-                  isActive("/dashboard/employee/punches")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <ChartBarIcon
-                  className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    color: isActive("/dashboard/employee/punches")
-                      ? "var(--color-secondary)"
-                      : "var(--color-primary)",
-                  }}
-                />
-                <span className="font-medium relative z-10">Statistiques</span>
-              </Link>
-            </li>
+<li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
+  <Link
+    href="/dashboard/clock"
+    className={`${
+      isActive("/dashboard/clock")
+        ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
+        : "text-white/80 hover:text-white hover:bg-white/10"
+    } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
+    onClick={() => setMobileOpen(false)}
+  >
+    <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <ClockIcon
+      className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
+      style={{
+        color: isActive("/dashboard/clock")
+          ? "var(--color-secondary)"
+          : "var(--color-primary)",
+      }}
+    />
+    <span className="relative z-10">Pointage</span>
+  </Link>
+</li>
 
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
               <Link
