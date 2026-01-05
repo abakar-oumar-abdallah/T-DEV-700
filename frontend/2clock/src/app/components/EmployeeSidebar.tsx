@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   HomeIcon,
   ClockIcon,
@@ -22,6 +22,7 @@ interface SidebarProps {
 
 export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const pathname = usePathname() || "";
+  const router = useRouter();
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
   const { currentTeam, user } = useTeam();
   const [mounted, setMounted] = useState(false);
@@ -36,6 +37,11 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
   }, [mobileOpen]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('session');
+    window.location.href = '/login'; // Forcer le rechargement complet pour réinitialiser le contexte
+  };
 
   return (
     <>
@@ -74,7 +80,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </div>
               <div className="font-bold text-lg">{currentTeam.team.name}</div>
               <div className="text-sm text-white/70 mt-1 capitalize">
-                {currentTeam.role === 'manager' ? 'Responsable' : '👤 Employé'}
+                {currentTeam.role === 'manager' ? 'Responsable' : 'Employé'}
               </div>
             </>
           ) : (
@@ -110,31 +116,31 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
             {/* TOTP Code page - Only for managers */}
             {currentTeam?.role === 'manager' && (
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
+            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
                 <Link
                   href="/dashboard/code"
                   className={`${
                     isActive("/dashboard/code")
-                      ? "bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                      : "text-white/80 hover:text-white"
-                  } rounded-md py-3 px-4 flex items-center gap-3`}
+                      ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
                   onClick={() => setMobileOpen(false)}
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <ShieldCheckIcon 
-                    className="w-6 h-6"
+                    className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
                     style={{
                       color: isActive("/dashboard/code")
                         ? "var(--color-secondary)"
                         : "var(--color-primary)",
                     }} 
                   />
-                  <span className="font-medium">Code TOTP</span>
+                  <span className="font-medium relative z-10">Code TOTP</span>
                 </Link>
               </li>
             )}
             
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
-
               <Link
                 href="/dashboard/clock"
                 className={`${
@@ -153,12 +159,12 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                       : "var(--color-primary)",
                   }}
                 />
-                <span className="relative z-10">Pointage</span>
+                <span className="font-medium relative z-10">Pointage</span>
               </Link>
             </li>
 
             {currentTeam?.role === 'manager' && (
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
+            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
               <Link
                 href="/dashboard/kpi"
                 className={`${
@@ -181,26 +187,6 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
             )}
-
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
-              <Link
-                href="/dashboard/employee/profile"
-                className={`${
-                  isActive("/dashboard/employee/profile")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <UserIcon className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" style={{ 
-                  color: isActive("/dashboard/employee/profile")
-                    ? "var(--color-secondary)"
-                    : "var(--color-primary)" 
-                }} />
-                <span className="relative z-10">Profil</span>
-              </Link>
-            </li>
 
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '500ms' }}>
               <Link
@@ -225,11 +211,24 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           </ul>
         </nav>
 
+        {/* Profil en bas - Lien cliquable avec déconnexion */}
         <div className={`mt-auto px-6 pb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '600ms' }}>
-          <div className="rounded-xl p-3 bg-white/5 hover:bg-white/10 transition-all duration-300 backdrop-blur-sm group">
+          <Link 
+            href="/dashboard/employee/profile"
+            onClick={() => setMobileOpen(false)}
+            className={`block rounded-xl p-3 mb-3 ${
+              isActive("/dashboard/employee/profile")
+                ? "bg-[var(--color-primary)] shadow-lg"
+                : "bg-white/5 hover:bg-white/10"
+            } transition-all duration-300 backdrop-blur-sm group`}
+          >
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-[var(--color-primary)] rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
+                <div className={`absolute inset-0 ${
+                  isActive("/dashboard/employee/profile")
+                    ? "bg-white"
+                    : "bg-[var(--color-primary)]"
+                } rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300`} />
                 <Image 
                   src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} 
                   alt='Image de profile' 
@@ -239,13 +238,32 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-white truncate group-hover:text-[var(--color-primary)] transition-colors duration-300">
+                <div className={`font-semibold truncate transition-colors duration-300 ${
+                  isActive("/dashboard/employee/profile")
+                    ? "text-[var(--color-secondary)]"
+                    : "text-white group-hover:text-[var(--color-primary)]"
+                }`}>
                   {userPrenomStr || "Inconnu"} {userNomStr || ""}
                 </div>
-                <div className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-300">Voir le profil</div>
+                <div className={`text-xs transition-colors duration-300 ${
+                  isActive("/dashboard/employee/profile")
+                    ? "text-[var(--color-secondary)]/70"
+                    : "text-white/60 group-hover:text-white/80"
+                }`}>
+                  Voir le profil
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
+
+          {/* Bouton de déconnexion */}
+          <button
+            onClick={handleLogout}
+            className="w-full rounded-xl p-3 bg-red-500/10 hover:bg-red-500/20 transition-all duration-300 backdrop-blur-sm group flex items-center justify-center gap-2"
+          >
+            <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400 group-hover:text-red-300 transition-colors duration-300" />
+            <span className="font-medium text-red-400 group-hover:text-red-300 transition-colors duration-300">Déconnexion</span>
+          </button>
         </div>
       </aside>
 

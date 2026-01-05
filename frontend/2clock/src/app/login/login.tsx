@@ -28,7 +28,7 @@ export default function LoginForm() {
         
         // TODO : Sélectionner automatiquement l'équipe si une seule équipe est disponible
         // TODO : Rediriger vers la page de la dernière équipe sélectionnée
-        router.push('/teams');
+        window.location.href = '/teams'; // Forcer le rechargement complet pour initialiser le contexte
       } else {
         setError(result.error || 'Login failed');
       }
