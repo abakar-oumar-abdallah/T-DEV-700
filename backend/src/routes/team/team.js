@@ -205,4 +205,37 @@ router.delete('/teams/:id',
     TeamController.deleteTeam
 );
 
+// Get all valid timezones
+/**
+ * @swagger
+ * /timezones:
+ *   get:
+ *     summary: Get all valid timezones
+ *     tags: [Teams]
+ *     responses:
+ *       200:
+ *         description: List of all valid timezones
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Valid timezones retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Africa/Abidjan", "Africa/Accra", "Europe/Paris", "America/New_York"]
+ *                 count:
+ *                   type: integer
+ *                   example: 424
+ */
+router.get('/timezones', TeamController.getAllValidTimezones);
+
+
 module.exports = router;
