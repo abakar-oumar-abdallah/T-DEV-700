@@ -265,3 +265,140 @@ export const createEmployeeInTeam = async (
     };
   }
 };
+
+/**
+ * Met à jour un utilisateur
+ */
+export const updateUser = async (
+  userId: string,
+  userData: Partial<Omit<CreateUserData, 'password' | 'permission'>>
+): Promise<ApiResponse<void>> => {
+  try {
+    const token = localStorage.getItem('session');
+    if (!token) {
+      return {
+        success: false,
+        message: 'Session expirée',
+        error: 'No authentication token found'
+      };
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKENDURL}/users/${userId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      return {
+        success: false,
+        message: translateErrorMessage(
+          errorData.message || 'Erreur lors de la mise à jour de l\'utilisateur',
+          errorData.errorCode
+        ),
+        error: errorData.error || errorData.message
+      };
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      return {
+        success: true,
+        message: result.message || 'Utilisateur mis à jour avec succès',
+        data: result.data
+      };
+    } else {
+      return {
+        success: false,
+        message: translateErrorMessage(
+          result.message || 'Erreur lors de la mise à jour',
+          result.errorCode
+        ),
+        error: result.error
+      };
+    }
+  } catch (error) {
+    console.error('Erreur updateUser:', error);
+    return {
+      success: false,
+      message: 'Erreur de connexion au serveur',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
+
+/**
+ * Supprime un utilisateur d'une équipe
+ */
+export const removeUserFromTeam = async (
+  userId: string,
+  teamId: string
+): Promise<ApiResponse<void>> => {
+  try {
+    const token = localStorage.getItem('session');
+    if (!token) {
+      return {
+        success: false,
+        message: 'Session expirée',
+        error: 'No authentication token found'
+      };
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/${userId}/${teamId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      return {
+        success: false,
+        message: translateErrorMessage(
+          errorData.message || 'Erreur lors de la suppression de l\'utilisateur',
+          errorData.errorCode
+        ),
+        error: errorData.error || errorData.message
+      };
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      return {
+        success: true,
+        message: result.message || 'Utilisateur retiré de l\'équipe avec succès',
+        data: result.data
+      };
+    } else {
+      return {
+        success: false,
+        message: translateErrorMessage(
+          result.message || 'Erreur lors de la suppression',
+          result.errorCode
+        ),
+        error: result.error
+      };
+    }
+  } catch (error) {
+    console.error('Erreur removeUserFromTeam:', error);
+    return {
+      success: false,
+      message: 'Erreur de connexion au serveur',
+      error: 'Network error. Please try again.'
+    };
+  }
+};

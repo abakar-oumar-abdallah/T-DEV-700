@@ -11,9 +11,11 @@ import {
   BuildingOffice2Icon,
   ChevronRightIcon,
   PlusIcon,
-  XMarkIcon
+  XMarkIcon,
+  PencilIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
-import { createEmployeeInTeam } from '@/user/user'
+import { createEmployeeInTeam, updateUser, removeUserFromTeam } from '@/user/user'
 
 interface TeamMember {
   role: string
@@ -48,6 +50,24 @@ export default function ManagerTeamPage() {
     password: '',
     confirmPassword: ''
   })
+
+  // États pour le modal de modification
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editSuccess, setEditSuccess] = useState<string | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    email: '',
+    first_name: '',
+    last_name: ''
+  })
+
+  // États pour le modal de suppression
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
 
   useEffect(() => {
@@ -177,6 +197,109 @@ export default function ManagerTeamPage() {
       setAddError('Erreur lors de l\'ajout de l\'employé')
     } finally {
       setAddLoading(false)
+    }
+  }
+
+  // Ouvrir modal de modification
+  const openEditModal = (member: TeamMember) => {
+    setEditingMember(member)
+    setEditFormData({
+      email: member.user.email,
+      first_name: member.user.first_name,
+      last_name: member.user.last_name
+    })
+    setEditError(null)
+    setEditSuccess(null)
+    setShowEditModal(true)
+  }
+
+  // Modifier un employé
+  const handleEditEmployee = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingMember) return
+
+    setEditLoading(true)
+    setEditError(null)
+    setEditSuccess(null)
+
+    try {
+      const result = await updateUser(editingMember.user.id, {
+        email: editFormData.email,
+        first_name: editFormData.first_name,
+        last_name: editFormData.last_name
+      })
+
+      if (result.success) {
+        setTeamMembers(prev => prev.map(m => 
+          m.user.id === editingMember.user.id
+            ? {
+                ...m,
+                user: {
+                  ...m.user,
+                  email: editFormData.email,
+                  first_name: editFormData.first_name,
+                  last_name: editFormData.last_name
+                }
+              }
+            : m
+        ))
+        setEditSuccess(result.message || 'Employé modifié avec succès')
+        
+        setTimeout(() => {
+          setShowEditModal(false)
+          setEditSuccess(null)
+          setEditingMember(null)
+        }, 1500)
+      } else {
+        setEditError(result.message || 'Erreur lors de la modification')
+        if (result.error?.includes('Session')) {
+          setTimeout(() => router.push('/login'), 1500)
+        }
+      }
+    } catch (err: any) {
+      console.error('Erreur:', err)
+      setEditError('Erreur lors de la modification de l\'employé')
+    } finally {
+      setEditLoading(false)
+    }
+  }
+
+  // Ouvrir modal de suppression
+  const openDeleteModal = (member: TeamMember) => {
+    setDeletingMember(member)
+    setDeleteError(null)
+    setShowDeleteModal(true)
+  }
+
+  // Supprimer un employé
+  const handleDeleteEmployee = async () => {
+    if (!deletingMember || !currentTeam?.team.id) return
+
+    setDeleteLoading(true)
+    setDeleteError(null)
+
+    try {
+      const result = await removeUserFromTeam(
+        deletingMember.user.id,
+        String(currentTeam.team.id)
+      )
+
+      if (result.success) {
+        setTeamMembers(prev => prev.filter(m => m.user.id !== deletingMember.user.id))
+        setShowDeleteModal(false)
+        setDeletingMember(null)
+      } else {
+        setDeleteError(result.message || 'Erreur lors de la suppression')
+        if (result.error?.includes('Session')) {
+          setTimeout(() => router.push('/login'), 1500)
+        }
+      }
+    } catch (err: any) {
+      console.error('Erreur:', err)
+      setDeleteError('Erreur lors de la suppression de l\'employé')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -376,10 +499,28 @@ const filteredMembers = teamMembers.filter(member => {
                     </div>
 
                     {/* Role Badge */}
-                    <div className="flex-shrink-0">
+                    <div className="flex items-center gap-3 flex-shrink-0">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getRoleColor(member.role)} shadow-sm`}>
                         {getRoleLabel(member.role)}
                       </span>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openEditModal(member)}
+                          className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                          title="Modifier"
+                        >
+                          <PencilIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(member)}
+                          className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                          title="Supprimer"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -536,6 +677,166 @@ const filteredMembers = teamMembers.filter(member => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de modification */}
+      {showEditModal && editingMember && (
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={() => setShowEditModal(false)} />
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-5 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-white">Modifier l'utilisateur</h2>
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                    >
+                      <XMarkIcon className="w-6 h-6 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleEditEmployee} className="p-6 space-y-4">
+                  {editError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-red-800 text-sm">{editError}</p>
+                    </div>
+                  )}
+                  {editSuccess && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-green-800 text-sm">{editSuccess}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={editFormData.email}
+                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="employe@example.com"
+                      disabled={editLoading}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editFormData.first_name}
+                        onChange={(e) => setEditFormData({ ...editFormData, first_name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Jean"
+                        disabled={editLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editFormData.last_name}
+                        onChange={(e) => setEditFormData({ ...editFormData, last_name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Dupont"
+                        disabled={editLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={editLoading}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editLoading}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-medium"
+                    >
+                      {editLoading ? 'Modification...' : 'Modifier'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de suppression */}
+      {showDeleteModal && deletingMember && (
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={() => setShowDeleteModal(false)} />
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+                <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-5 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-white">Supprimer l'employé</h2>
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                    >
+                      <XMarkIcon className="w-6 h-6 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {deleteError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                      <p className="text-red-800 text-sm">{deleteError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                      <TrashIcon className="w-8 h-8 text-red-600" />
+                    </div>
+                  </div>
+
+                  <p className="text-center text-gray-700 mb-2">
+                    Êtes-vous sûr de vouloir retirer cet employé de l'équipe ?
+                  </p>
+                  <p className="text-center text-sm text-gray-500 mb-6">
+                    <strong>{deletingMember.user.first_name} {deletingMember.user.last_name}</strong>
+                    <br />
+                    ({deletingMember.user.email})
+                  </p>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteModal(false)}
+                      disabled={deleteLoading}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleDeleteEmployee}
+                      disabled={deleteLoading}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-medium"
+                    >
+                      {deleteLoading ? 'Suppression...' : 'Supprimer'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
