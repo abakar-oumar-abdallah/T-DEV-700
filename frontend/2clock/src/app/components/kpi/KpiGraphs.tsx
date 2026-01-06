@@ -14,6 +14,7 @@ const LABELS_LATE = { onTime: 'À l\'heure', early: 'En avance', warning: 'Retar
 const COLORS_DEPART = { onTime: '#10b981', early: '#f59e0b', overtime: '#3b82f6' }
 const LABELS_DEPART = { onTime: 'À l\'heure', early: 'Départ en avance', overtime: 'Heures supplémentaires' }
 
+//Composant de graphiques utilisé pour les kpis
 export default function KpiGraphs({ latenessData, mounted, kpiType }: KpiGraphsProps) {
   const formatMinutes = (minutes: number): string => {
     if (minutes >= 60) {

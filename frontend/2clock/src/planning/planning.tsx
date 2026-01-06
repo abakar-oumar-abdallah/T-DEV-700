@@ -8,7 +8,7 @@ interface Planning {
   id: number;
   is_default: boolean;
   created_at: string;
-  schedules?: Array<{
+  schedule?: Array<{
     id: number;
     planning_id: number;
     day: string;
@@ -35,6 +35,124 @@ interface CreatePlanningResponse {
   message?: string;
   error?: string;
 }
+
+interface ModifyTeamPlanningData {
+  schedules: Schedule[];
+}
+
+interface ModifyTeamPlanningResponse {
+  success: boolean;
+  data?: {
+    team: any;
+    newPlanning: Planning;
+  };
+  message?: string;
+  error?: string;
+}
+
+interface GetTeamPlanningResponse {
+  success: boolean;
+  data?: {
+    team: any;
+    planning: Planning;
+  };
+  message?: string;
+  error?: string;
+}
+
+
+export const GetTeamPlanning = async (teamId: number): Promise<GetTeamPlanningResponse> => {
+  try {
+    const token = localStorage.getItem('session');
+
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication required',
+        error: 'No authentication token found'
+      };
+    }
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
+
+    const response = await fetch(`${backendUrl}/plannings/teams/${teamId}/default`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      return {
+        success: false,
+        message: 'Failed to get team planning',
+        error: errorData.message || errorData.error || 'Failed to get team planning'
+      };
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      data: result.data
+    };
+  } catch (error) {
+    console.error('GetTeamPlanning error:', error);
+    return {
+      success: false,
+      message: 'Failed to get team planning',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
+
+export const ModifyTeamPlanning = async (teamId: number, planningData: ModifyTeamPlanningData): Promise<ModifyTeamPlanningResponse> => {
+  try {
+    const token = localStorage.getItem('session');
+
+    if (!token) {
+      return {
+        success: false,
+        message: 'Authentication required',
+        error: 'No authentication token found'
+      };
+    }
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
+
+    const response = await fetch(`${backendUrl}/plannings/teams/${teamId}/modify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(planningData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      return {
+        success: false,
+        message: 'Failed to modify team planning',
+        error: errorData.message || errorData.error || 'Failed to modify team planning'
+      };
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      data: result.data
+    };
+  } catch (error) {
+    console.error('ModifyTeamPlanning error:', error);
+    return {
+      success: false,
+      message: 'Failed to modify team planning',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
 
 export const GetDefaultPlannings = async (): Promise<GetDefaultPlanningsResponse> => {
   try {

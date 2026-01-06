@@ -419,6 +419,27 @@ class TeamController {
       });
     }
   }
+
+  getAllValidTimezones = async(req, res) => {
+    try {
+      const timezones = this.getValidTimezones();
+
+      res.status(200).json({
+        success: true,
+        message: 'Valid timezones retrieved successfully',
+        data: timezones,
+        count: timezones.length
+      });
+
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: err.message
+      });
+    }
+  }
 }
 
 module.exports = new TeamController();

@@ -41,7 +41,7 @@ export default function TotpManagerPage() {
   // Rediriger si pas manager
   useEffect(() => {
     if (currentTeam && !isManager) {
-      router.push('/dashboard/employee')
+      router.push('/dashboard')
     }
   }, [currentTeam, isManager, router])
 
