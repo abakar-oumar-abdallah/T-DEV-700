@@ -1,6 +1,7 @@
 const supabase = require('../../../config/supabaseClient.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { validateAndSanitizeEmail } = require('../../middlewares/InputSanitizer');
 
 class AuthController {
   
@@ -21,20 +22,22 @@ class AuthController {
         });
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
+      // Validate and sanitize email (protection XSS)
+      const emailValidation = validateAndSanitizeEmail(email);
+      if (!emailValidation.valid) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid email format'
+          message: emailValidation.error
         });
       }
 
-      // Find user by email
+      const sanitizedEmail = emailValidation.sanitized;
+
+      // Find user by email (using sanitized email)
       const { data: user, error } = await supabase
         .from('user')
         .select('*')
-        .eq('email', email)
+        .eq('email', sanitizedEmail)
         .single();
 
       if (error) {
@@ -68,13 +71,21 @@ class AuthController {
       
       // Generate JWT token
       const token = jwt.sign(
-        { 
+        {
           userId: user.id,
-          email: user.email 
+          email: user.email
         },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
+
+      // Store JWT in secure httpOnly cookie (protection against XSS)
+      res.cookie('jwt', token, {
+        httpOnly: true, // Cannot be accessed by JavaScript (protection XSS)
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict', // Protection against CSRF
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      });
 
       // Send success response
       res.status(200).json({
@@ -82,7 +93,7 @@ class AuthController {
         message: 'Login successful',
         data: {
           user: userWithoutPassword,
-          token: token,
+          token: token, // Still send in response for backward compatibility
           loginTime: new Date().toISOString()
         }
       });
@@ -142,6 +153,13 @@ class AuthController {
             error: error.message
           });
         }
+
+        // Clear JWT cookie
+        res.clearCookie('jwt', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict'
+        });
 
         // Successful logout
         res.status(200).json({

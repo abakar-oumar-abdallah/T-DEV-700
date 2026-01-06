@@ -4,6 +4,11 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const hpp = require('hpp');
+const { limiter } = require('./middlewares/RateLimiters');
+const { sanitizeInput } = require('./middlewares/InputSanitizer');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
@@ -19,6 +24,24 @@ const io = socketIo(server, {
   }
 });
 
+// Security Middlewares
+// Helmet: Protège contre les attaques XSS, clickjacking, etc.
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Pour Socket.IO
+}));
+
+// Rate limiting: Protection contre les attaques brute force
+app.use('/api/', limiter); // Appliqué sur toutes les routes API
+app.set('trust proxy', 1); // Pour obtenir la vraie IP derrière un proxy
+
 // Middleware CORS pour Express
 app.use(
   cors({
@@ -26,8 +49,18 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+
+app.use(express.json({ limit: '10kb' })); // Limite la taille du body
 app.use(cookieParser());
+
+// Data sanitization contre les injections NoSQL
+app.use(mongoSanitize());
+
+// Sanitization des inputs contre les attaques XSS
+app.use(sanitizeInput({ strict: true }));
+
+// Protection contre HTTP Parameter Pollution
+app.use(hpp());
 
 // Import des routes
 const userRoute = require('./routes/user/user.js');
