@@ -11,7 +11,8 @@ import {
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
   BuildingOffice2Icon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  UserGroupIcon
 } from "@heroicons/react/24/outline";
 import { useTeam } from "@/contexts/TeamContext";
 
@@ -114,32 +115,32 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
 
-            {/* TOTP Code page - Only for managers */}
-            {currentTeam?.role === 'manager' && (
+          {/* TOTP Code page - Only for managers */}
+          {currentTeam?.role === 'manager' && (
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
-                <Link
-                  href="/dashboard/code"
-                  className={`${
-                    isActive("/dashboard/code")
-                      ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
-                      : "text-white/80 hover:text-white hover:bg-white/10"
-                  } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
-                  onClick={() => setMobileOpen(false)}
-                >
+              <Link
+                href="/dashboard/code"
+                className={`${
+                  isActive("/dashboard/code")
+                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
+                onClick={() => setMobileOpen(false)}
+              >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <ShieldCheckIcon 
-                    className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      color: isActive("/dashboard/code")
-                        ? "var(--color-secondary)"
-                        : "var(--color-primary)",
-                    }} 
-                  />
-                  <span className="font-medium relative z-10">Code TOTP</span>
-                </Link>
-              </li>
-            )}
-            
+                <ShieldCheckIcon 
+                  className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    color: isActive("/dashboard/code")
+                      ? "var(--color-secondary)"
+                      : "var(--color-primary)",
+                  }} 
+                />
+                <span className="font-medium relative z-10">Code TOTP</span>
+              </Link>
+            </li>
+          )}
+
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
               <Link
                 href="/dashboard/clock"
@@ -162,8 +163,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <span className="font-medium relative z-10">Pointage</span>
               </Link>
             </li>
+            
+          {currentTeam?.role === 'manager' && (
 
-            {currentTeam?.role === 'manager' && (
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
               <Link
                 href="/dashboard/kpi"
@@ -186,7 +188,26 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 <span className="font-medium relative z-10">Statistiques</span>
               </Link>
             </li>
-            )}
+          )}
+            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
+              <Link
+                href="/dashboard/employee/profile"
+                className={`${
+                  isActive("/dashboard/employee/profile")
+                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <UserIcon className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" style={{ 
+                  color: isActive("/dashboard/employee/profile")
+                    ? "var(--color-secondary)"
+                    : "var(--color-primary)" 
+                }} />
+                <span className="relative z-10">Profil</span>
+              </Link>
+            </li>
 
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '500ms' }}>
               <Link

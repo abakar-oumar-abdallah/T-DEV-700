@@ -40,7 +40,7 @@ export default function TeamSelectionPage() {
   const [editingTeam, setEditingTeam] = useState<any | null>(null);
   const [deleteConfirmTeam, setDeleteConfirmTeam] = useState<any | null>(null);
   
-  // Mount animation
+  // Handle mount animation
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -58,7 +58,7 @@ export default function TeamSelectionPage() {
       }
     };
     loadDefaultPlannings();
-  }, [showCreateModal]);
+  }, [showCreateModal, defaultPlannings.length]);
 
   // Handle redirects based on team data
   useEffect(() => {
@@ -91,20 +91,18 @@ export default function TeamSelectionPage() {
     try {
       let planningId = formData.default_planning_id;
 
-      // Validate that a planning is selected or will be created
       if (planningMode === 'existing' && !planningId) {
         setCreateError('Vous devez sélectionner un planning existant ou créer un planning personnalisé');
         setCreateLoading(false);
         return;
       }
 
-      // If custom planning mode, create the planning first
       if (planningMode === 'custom') {
         const enabledSchedules = customSchedules
           .filter(schedule => schedule.enabled)
           .map(schedule => ({
             day: schedule.day,
-            time_in: schedule.time_in + ':00', // Add seconds
+            time_in: schedule.time_in + ':00',
             time_out: schedule.time_out + ':00'
           }));
 
@@ -128,14 +126,12 @@ export default function TeamSelectionPage() {
         planningId = planningResult.data?.id || null;
       }
 
-      // Validate that we have a planningId
       if (!planningId) {
         setCreateError('Un planning est obligatoire pour créer une équipe');
         setCreateLoading(false);
         return;
       }
 
-      // Create the team with the planning
       const teamData = {
         ...formData,
         default_planning_id: planningId
@@ -164,15 +160,13 @@ export default function TeamSelectionPage() {
           { day: 'sunday', time_in: '09:00', time_out: '17:00', enabled: false }
         ]);
 
-        // Close modal and refresh after 1.5 seconds
         setTimeout(() => {
           setShowCreateModal(false);
           setCreateSuccess(null);
-          // Refresh the page to show the new team
           window.location.reload();
         }, 1500);
       } else {
-        setCreateError(result.error || "Erreur lors de la création de l&apos;équipe");
+        setCreateError(result.error || "Erreur lors de la création de l'équipe");
       }
     } catch (error) {
       console.error('Error creating team:', error);
@@ -201,7 +195,7 @@ export default function TeamSelectionPage() {
           window.location.reload();
         }, 1500);
       } else {
-        setCreateError(result.error || "Erreur lors de la modification de l&apos;équipe");
+        setCreateError(result.error || "Erreur lors de la modification de l'équipe");
       }
     } catch (error) {
       console.error('Error updating team:', error);
@@ -224,7 +218,7 @@ export default function TeamSelectionPage() {
         setDeleteConfirmTeam(null);
         window.location.reload();
       } else {
-        setCreateError(result.error || "Erreur lors de la suppression de l&apos;équipe");
+        setCreateError(result.error || "Erreur lors de la suppression de l'équipe");
       }
     } catch (error) {
       console.error('Error deleting team:', error);
@@ -244,13 +238,12 @@ export default function TeamSelectionPage() {
       default_planning_id: team.team.default_planning_id || null
     });
   };
-
+  
   const handleTeamSelect = async (team: any) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Verify user has access to this team
       const token = localStorage.getItem('session');
       if (!token) {
         setError('Session expirée. Veuillez vous reconnecter.');
@@ -259,7 +252,6 @@ export default function TeamSelectionPage() {
         return;
       }
 
-      // Check user-team association exists
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/myAssociation/${team.team.id}`, {
         method: 'GET',
         headers: {
@@ -275,10 +267,10 @@ export default function TeamSelectionPage() {
           router.push('/login');
           return;
         } else if (response.status === 404) {
-          setError("Vous n&apos;avez pas accès à cette équipe.");
+          setError('Vous n\'avez pas accès à cette équipe.');
           return;
         } else {
-          setError("Erreur lors de la vérification de l&apos;équipe.");
+          setError('Erreur lors de la vérification de l\'équipe.');
           return;
         }
       }
@@ -286,17 +278,16 @@ export default function TeamSelectionPage() {
       const result = await response.json();
       
       if (result.success) {
-        // Verify the team data matches what we expect
         if (result.data.team_id === team.team.id && result.data.user_id === user?.id) {
           setCurrentTeam(team);
           router.push('/dashboard/employee');
         } else {
-          setError("Données d&apos;équipe incohérentes. Veuillez vous reconnecter.");
+          setError('Données d\'équipe incohérentes. Veuillez vous reconnecter.');
           clearTeamContext();
           router.push('/login');
         }
       } else {
-        setError(result.message || "Erreur lors de la sélection de l&apos;équipe.");
+        setError(result.message || 'Erreur lors de la sélection de l\'équipe.');
       }
     } catch (error) {
       console.error('Error selecting team:', error);
@@ -309,7 +300,7 @@ export default function TeamSelectionPage() {
   const getRoleColor = (role: string) => role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
 
   if (isLoading) {
-    return null; // Loader handled by LayoutWrapper
+    return null;
   }
 
   if (authError) {
@@ -325,15 +316,14 @@ export default function TeamSelectionPage() {
   }
 
   if (!user || !teams) {
-    return null; // Loader handled by LayoutWrapper
+    return null;
   }
 
   return (
     <>
-      {/* Local loader for team selection */}
       <Loader 
         isLoading={loading} 
-        message="Sélection de l&apos;équipe..."
+        message="Sélection de l'équipe..."
       />
       
       <main className="p-6 sm:p-10 min-h-screen">
@@ -341,7 +331,6 @@ export default function TeamSelectionPage() {
         <div className={`relative bg-white rounded-xl shadow-lg p-6 mb-8 overflow-hidden transition-all duration-700 ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
-          {/* Decorative gradient */}
           <div className="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-gradient-to-br from-[rgba(236,77,54,0.12)] to-transparent opacity-80 pointer-events-none blur-3xl" />
           
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
@@ -386,7 +375,7 @@ export default function TeamSelectionPage() {
           {teams.map((team: any, index: number) => (
             <div
               key={`${team.team.id}-${team.role}`}
-              className={`group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all hover:-translate-y-1 duration-300 ${
+              className={`group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 ${
                 mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${200 + index * 100}ms` }}
@@ -403,7 +392,7 @@ export default function TeamSelectionPage() {
                         openEditModal(team);
                       }}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Modifier l&apos;équipe"
+                      title="Modifier l'équipe"
                     >
                       <PencilIcon className="w-4 h-4" />
                     </button>
@@ -413,7 +402,7 @@ export default function TeamSelectionPage() {
                         setDeleteConfirmTeam(team);
                       }}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Supprimer l&apos;équipe"
+                      title="Supprimer l'équipe"
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
@@ -421,20 +410,15 @@ export default function TeamSelectionPage() {
                 )}
               </div>
 
-              <button
-                onClick={() => handleTeamSelect(team)}
-                disabled={loading}
-                className="w-full text-left"
-              >
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{team.team.name}</h3>
-                  {team.team.description && <p className="text-sm text-gray-600 mb-3">{team.team.description}</p>}
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(team.role)}`}>
-                    {team.role === 'manager' ? 'Responsable' : 'Employé'}
-                  </span>
-                </div>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{team.team.name}</h3>
+                {team.team.description && <p className="text-sm text-gray-600 mb-3">{team.team.description}</p>}
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(team.role)}`}>
+                  {team.role === 'manager' ? 'Responsable' : 'Employé'}
+                </span>
+              </div>
 
-              <div className="space-y-2 text-sm text-gray-500">
+              <div className="space-y-2 text-sm text-gray-500 mb-4">
                 <div className="flex items-center space-x-2">
                   <ClockIcon className="h-4 w-4" />
                   <span>{team.team.timezone}</span>
@@ -445,11 +429,36 @@ export default function TeamSelectionPage() {
                 </div>
               </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Planning {team.planning_id ? 'personnalisé' : 'par défaut'}</span>
-                  <div className={`w-2 h-2 rounded-full ${team.planning_id ? 'bg-green-400' : 'bg-blue-400'}`}></div>
-                </div>
-              </button>
+              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-xs text-gray-500">Planning {team.planning_id ? 'personnalisé' : 'par défaut'}</span>
+                <div className={`w-2 h-2 rounded-full ${team.planning_id ? 'bg-green-400' : 'bg-blue-400'}`}></div>
+              </div>
+
+              {/* Action buttons */}
+              <div className={`mt-4 flex gap-2 ${team.role === 'manager' ? 'flex-col' : ''}`}>
+                {team.role === 'manager' && (
+                  <button
+                    onClick={() => {
+                      setCurrentTeam(team);
+                      router.push('/dashboard/manager/team');
+                    }}
+                    disabled={loading}
+                    className="w-full flex cursor-pointer items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <UserGroupIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">Voir membres</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => handleTeamSelect(team)}
+                  disabled={loading}
+                  className="w-full flex cursor-pointer items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="text-sm font-medium">Sélectionner</span>
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -467,7 +476,7 @@ export default function TeamSelectionPage() {
       {/* Create Team Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-gradient-to-br from-black/30 via-gray-900/20 to-black/30 flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-slideUp border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-slideUp border border-gray-100 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Créer une équipe</h2>
               <button
@@ -483,7 +492,6 @@ export default function TeamSelectionPage() {
             </div>
 
             <form onSubmit={handleCreateTeam} className="space-y-4">
-              {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Nom de l&apos;équipe *
@@ -499,7 +507,6 @@ export default function TeamSelectionPage() {
                 />
               </div>
 
-              {/* Description */}
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -509,12 +516,11 @@ export default function TeamSelectionPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Description de l&apos;équipe"
+                  placeholder="Description de l'équipe"
                   rows={3}
                 />
               </div>
 
-              {/* Lateness Limit */}
               <div>
                 <label htmlFor="lateness_limit" className="block text-sm font-medium text-gray-700 mb-1">
                   Limite de retard (minutes) *
@@ -530,7 +536,6 @@ export default function TeamSelectionPage() {
                 />
               </div>
 
-              {/* Timezone */}
               <div>
                 <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1">
                   Fuseau horaire *
@@ -552,13 +557,11 @@ export default function TeamSelectionPage() {
                 </select>
               </div>
 
-              {/* Default Planning */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Planning par défaut *
                 </label>
 
-                {/* Toggle between existing and custom */}
                 <div className="flex gap-2 mb-3">
                   <button
                     type="button"
@@ -607,7 +610,6 @@ export default function TeamSelectionPage() {
                   )
                 ) : (
                   <div className="space-y-3">
-                    {/* Checkbox for is_default */}
                     <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <input
                         type="checkbox"
@@ -624,65 +626,62 @@ export default function TeamSelectionPage() {
                     <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-gray-50">
                       <p className="text-xs text-gray-600 mb-2">Configurez les horaires pour chaque jour :</p>
                       {customSchedules.map((schedule, index) => (
-                      <div key={schedule.day} className="flex items-center gap-2 bg-white p-2 rounded border border-gray-200">
-                        <input
-                          type="checkbox"
-                          checked={schedule.enabled}
-                          onChange={(e) => {
-                            const newSchedules = [...customSchedules];
-                            newSchedules[index].enabled = e.target.checked;
-                            setCustomSchedules(newSchedules);
-                          }}
-                          className="w-4 h-4 text-blue-600"
-                        />
-                        <span className="text-sm font-medium w-20 capitalize">{schedule.day}</span>
-                        {schedule.enabled && (
-                          <>
-                            <input
-                              type="time"
-                              value={schedule.time_in}
-                              onChange={(e) => {
-                                const newSchedules = [...customSchedules];
-                                newSchedules[index].time_in = e.target.value;
-                                setCustomSchedules(newSchedules);
-                              }}
-                              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                            />
-                            <span className="text-gray-500">-</span>
-                            <input
-                              type="time"
-                              value={schedule.time_out}
-                              onChange={(e) => {
-                                const newSchedules = [...customSchedules];
-                                newSchedules[index].time_out = e.target.value;
-                                setCustomSchedules(newSchedules);
-                              }}
-                              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                            />
-                          </>
-                        )}
-                      </div>
-                    ))}
+                        <div key={schedule.day} className="flex items-center gap-2 bg-white p-2 rounded border border-gray-200">
+                          <input
+                            type="checkbox"
+                            checked={schedule.enabled}
+                            onChange={(e) => {
+                              const newSchedules = [...customSchedules];
+                              newSchedules[index].enabled = e.target.checked;
+                              setCustomSchedules(newSchedules);
+                            }}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <span className="text-sm font-medium w-20 capitalize">{schedule.day}</span>
+                          {schedule.enabled && (
+                            <>
+                              <input
+                                type="time"
+                                value={schedule.time_in}
+                                onChange={(e) => {
+                                  const newSchedules = [...customSchedules];
+                                  newSchedules[index].time_in = e.target.value;
+                                  setCustomSchedules(newSchedules);
+                                }}
+                                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                              />
+                              <span className="text-gray-500">-</span>
+                              <input
+                                type="time"
+                                value={schedule.time_out}
+                                onChange={(e) => {
+                                  const newSchedules = [...customSchedules];
+                                  newSchedules[index].time_out = e.target.value;
+                                  setCustomSchedules(newSchedules);
+                                }}
+                                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                              />
+                            </>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Error Message */}
               {createError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-800">{createError}</p>
                 </div>
               )}
 
-              {/* Success Message */}
               {createSuccess && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <p className="text-sm text-green-800">{createSuccess}</p>
                 </div>
               )}
 
-              {/* Buttons */}
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"

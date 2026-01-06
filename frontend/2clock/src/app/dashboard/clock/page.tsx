@@ -95,12 +95,13 @@ const calculateTimeStats = async (punch: Punch, currentTeam: any): Promise<Punch
   }
 };
 
-function formatTime(d = new Date()) {
+function formatTime(d = new Date(), timezone = 'Europe/Paris') {
   return d.toLocaleString('fr-FR', {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: timezone
   })
 }
 
@@ -112,6 +113,8 @@ export default function ClockPage() {
   const [mounted, setMounted] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const { currentTeam, user } = useTeam()
+
+  const teamTimezone = currentTeam?.team.timezone || 'Europe/Paris'
 
   useEffect(() => {
     setMounted(true)
@@ -181,9 +184,9 @@ export default function ClockPage() {
       return
     }
 
-    const userTeamId = currentTeam.id
-    if (!userTeamId) {
-      setMessage("Association utilisateur-équipe non trouvée")
+    const teamId = currentTeam.id
+    if (!teamId) {
+      setMessage("Equipe non trouvée")
       return
     }
 
@@ -191,7 +194,7 @@ export default function ClockPage() {
 
     try {
       const result = await clockInOut(currentTeam.team.id.toString(), {
-        userTeamId: userTeamId,
+        teamId: teamId,
         code: pin
       })
 
@@ -296,12 +299,22 @@ export default function ClockPage() {
           }`}>
             <div className="inline-block bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
               <h2 className="text-5xl sm:text-6xl font-bold tabular-nums tracking-tight">
-                {currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                {currentTime.toLocaleTimeString('fr-FR', { 
+                  hour: '2-digit', 
+                  minute: '2-digit', 
+                  second: '2-digit',
+                  timeZone: teamTimezone
+                })}
               </h2>
             </div>
             <p className="text-sm text-gray-500 mt-2 font-medium">
-              {formatTime(currentTime)}
+              {formatTime(currentTime, teamTimezone)}
             </p>
+            {currentTeam && (
+              <p className="text-xs text-gray-400 mt-1">
+                Fuseau horaire: {teamTimezone}
+              </p>
+            )}
           </div>
 
           {/* Card de pointage */}
