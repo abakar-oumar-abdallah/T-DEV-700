@@ -1,52 +1,52 @@
 services:
-  frontend:
-    build:
-      context: ./frontend/2clock
-      dockerfile: Dockerfile.dev
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-prod
     ports:
-      - "3000:3000" 
-    env_file:
-      - ./frontend/2clock/.env
+      - '80:80'
+      - '443:443'
     volumes:
-      - ./frontend/2clock:/app
-      - /app/node_modules
-      - /app/.next
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - frontend
+      - backend
     networks:
-      - jenkins
-    environment:
-      - WATCHPACK_POLLING=true
+      - app-network
+    restart: unless-stopped
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
+    image: abakar98/jenkins-api:latest
+    container_name: backend
     env_file:
-      - ./backend/.env
-    restart: unless-stopped
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=https://2clock-mar-8.fr
+    expose:
+      - "3001"
     networks:
-      - jenkins
-
-  jenkins:
-    image: jenkins/jenkins:jdk17
-    container_name: jenkins
-    privileged: true
-    user: root
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - jenkins
+      - app-network
     restart: unless-stopped
 
-volumes:
-  jenkins_home:
-    driver: local
+  frontend:
+    image: abakar98/jenkins-frontend:latest
+    container_name: frontend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_BACKENDURL=https://2clock-mar-8.fr/api
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
 
 networks:
-  jenkins:
-    driver: bridge
+  app-network:
