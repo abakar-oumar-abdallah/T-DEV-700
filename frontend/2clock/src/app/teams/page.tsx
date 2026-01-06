@@ -71,12 +71,12 @@ export default function TeamSelectionPage() {
       
       if (teams.length === 1) {
         setCurrentTeam(teams[0]);
-        router.push('/dashboard/employee');
+        router.push('/dashboard');
         return;
       }
       
       if (teams.length === 0) {
-        router.push('/dashboard/employee');
+        router.push('/dashboard');
         return;
       }
     }
@@ -280,7 +280,7 @@ export default function TeamSelectionPage() {
       if (result.success) {
         if (result.data.team_id === team.team.id && result.data.user_id === user?.id) {
           setCurrentTeam(team);
-          router.push('/dashboard/employee');
+          router.push('/dashboard');
         } else {
           setError('Données d\'équipe incohérentes. Veuillez vous reconnecter.');
           clearTeamContext();

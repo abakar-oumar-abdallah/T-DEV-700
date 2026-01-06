@@ -152,9 +152,9 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           <ul className="space-y-2">
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '100ms' }}>
               <Link
-                href="/dashboard/employee"
+                href="/dashboard"
                 className={`${
-                  isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches") && !isActive("/dashboard/employee/profile")
+                  pathname === "/dashboard"
                     ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
@@ -162,7 +162,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <HomeIcon className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:scale-110" style={{
-                    color: isActive("/dashboard/employee") && !isActive("/dashboard/employee/punches") && !isActive("/dashboard/employee/profile")
+                    color: pathname === "/dashboard"
                       ? "var(--color-secondary)"
                       : "var(--color-primary)",
                   }} />
