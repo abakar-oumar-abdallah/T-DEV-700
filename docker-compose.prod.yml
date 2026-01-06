@@ -1,13 +1,14 @@
-version: '3.9'
-
 services:
   nginx:
     image: nginx:stable-alpine
     container_name: nginx-prod
     ports:
       - '80:80'
+      - '443:443'
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
     depends_on:
       - frontend
       - backend
@@ -26,7 +27,7 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - JWT_SECRET=${JWT_SECRET}
-      - FRONTEND_URL=http://46.105.54.141
+      - FRONTEND_URL=https://2clock-mar-8.fr
     expose:
       - "3001"
     networks:
@@ -38,7 +39,7 @@ services:
     container_name: frontend
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_BACKENDURL=http://46.105.54.141/api
+      - NEXT_PUBLIC_BACKENDURL=https://2clock-mar-8.fr/api
     expose:
       - "3000"
     depends_on:
