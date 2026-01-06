@@ -28,6 +28,22 @@ services:
     networks:
       - jenkins
 
+  postgres:
+    image: postgres:15
+    container_name: postgres_local
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: time_manager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - jenkins
+    restart: unless-stopped
+
   jenkins:
     image: jenkins/jenkins:jdk17
     container_name: jenkins
@@ -44,6 +60,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres_data:
+    driver: local
   jenkins_home:
     driver: local
 

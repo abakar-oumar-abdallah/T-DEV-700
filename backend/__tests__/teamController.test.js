@@ -110,6 +110,7 @@ describe('TeamController', () => {
         lateness_limit: 20,
         timezone: 'Europe/Paris'
       };
+      req.user = { userId: 1 }; // Add user context
 
       const mockTeam = {
         id: 1,
@@ -119,11 +120,30 @@ describe('TeamController', () => {
         timezone: 'Europe/Paris'
       };
 
-      supabase.from.mockReturnValue({
+      const mockUserTeam = {
+        id: 1,
+        user_id: 1,
+        team_id: 1,
+        role: 'manager'
+      };
+
+      // Mock team creation
+      supabase.from.mockReturnValueOnce({
         insert: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
               data: mockTeam,
+              error: null
+            })
+          })
+        })
+      })
+      // Mock user_team creation
+      .mockReturnValueOnce({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockUserTeam,
               error: null
             })
           })
@@ -136,8 +156,9 @@ describe('TeamController', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'Team created successfully',
-        data: mockTeam
+        message: 'Team created successfully and you were added as manager',
+        data: mockTeam,
+        userTeam: mockUserTeam
       });
     });
 
@@ -611,7 +632,7 @@ describe('TeamController', () => {
         name: 'Team Alpha',
         description: 'First team',
         lateness_limit: 15,
-        timezone: 'UTC' 
+        timezone: 'UTC'
 
       };
 
@@ -627,7 +648,26 @@ describe('TeamController', () => {
         })
       });
 
-      // Mock pour la suppression
+      // Mock pour vérifier les membres de l'équipe
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            data: [{ id: 1, role: 'manager' }], // Only manager, no employees
+            error: null
+          })
+        })
+      });
+
+      // Mock pour supprimer les associations user_team
+      supabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            error: null
+          })
+        })
+      });
+
+      // Mock pour la suppression de l'équipe
       supabase.from.mockReturnValueOnce({
         delete: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
@@ -701,7 +741,7 @@ describe('TeamController', () => {
         name: 'Team Alpha',
         description: 'First team',
         lateness_limit: 15,
-        timezone: 'UTC' 
+        timezone: 'UTC'
 
       };
 
@@ -717,7 +757,26 @@ describe('TeamController', () => {
         })
       });
 
-      // Mock pour la suppression avec erreur
+      // Mock pour vérifier les membres de l'équipe
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            data: [{ id: 1, role: 'manager' }],
+            error: null
+          })
+        })
+      });
+
+      // Mock pour supprimer les associations user_team
+      supabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({
+            error: null
+          })
+        })
+      });
+
+      // Mock pour la suppression de l'équipe avec erreur
       supabase.from.mockReturnValueOnce({
         delete: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({

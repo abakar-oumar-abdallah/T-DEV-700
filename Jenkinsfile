@@ -40,7 +40,7 @@ pipeline {
                                     dir('frontend/2clock') {
                                         dockerFrontendImage = docker.build(
                                             "${DOCKERHUB_ACCOUNT}/${FRONT_REPOSITORY}:latest",
-                                            "--build-arg NEXT_PUBLIC_BACKENDURL=http://46.105.54.141/api ."
+                                            "--build-arg NEXT_PUBLIC_BACKENDURL=https://2clock-mar-8.fr/api ."
                                         )
                                     }
                                 }

@@ -44,6 +44,13 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
     window.location.href = '/login'; // Forcer le rechargement complet pour réinitialiser le contexte
   };
 
+  const handleTeamClick = () => {
+    if (currentTeam?.role === 'manager') {
+      router.push('/dashboard/manager/team');
+      setMobileOpen(false);
+    }
+  };
+
   return (
     <>
       <aside
@@ -68,21 +75,69 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           <Image src="/2clocktitle.svg" alt="2Clock" width={160} height={44} className="drop-shadow-lg" />
         </div>
 
-        <div
-          className={`rounded-xl p-4 mb-6 text-center mx-6 backdrop-blur-sm transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
-          style={{ backgroundColor: "rgba(255,255,255,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+       <div
+          onClick={handleTeamClick}
+          className={`rounded-xl p-4 mb-6 text-center mx-6 backdrop-blur-sm transition-all duration-300 group relative overflow-hidden ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+          } ${
+            currentTeam?.role === 'manager' 
+              ? isActive("/dashboard/manager/team")
+                ? 'bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105 cursor-pointer'
+                : 'cursor-pointer hover:bg-white/15 active:scale-95'
+              : ''
+          }`}
+          style={{ 
+            backgroundColor: currentTeam?.role === 'manager' && isActive("/dashboard/manager/team") 
+              ? 'var(--color-primary)' 
+              : "rgba(255,255,255,0.08)", 
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)" 
+          }}
         >
+          {currentTeam?.role === 'manager' && (
+            <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          )}
           {currentTeam ? (
             <>
               <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="p-2 rounded-lg bg-white/10">
-                  <BuildingOffice2Icon className="w-5 h-5 text-[var(--color-primary)]" />
+                <div className={`p-2 rounded-lg transition-all duration-300 ${
+                  currentTeam.role === 'manager' ? 'group-hover:scale-110' : ''
+                } ${
+                  isActive("/dashboard/manager/team") ? 'bg-white/20' : 'bg-white/10'
+                }`}>
+                  <BuildingOffice2Icon 
+                    className="w-5 h-5 relative z-10 transition-transform duration-300" 
+                    style={{
+                      color: isActive("/dashboard/manager/team") && currentTeam.role === 'manager'
+                        ? "var(--color-secondary)"
+                        : "var(--color-primary)"
+                    }}
+                  />
                 </div>
               </div>
-              <div className="font-bold text-lg">{currentTeam.team.name}</div>
-              <div className="text-sm text-white/70 mt-1 capitalize">
+              <div className={`font-bold text-lg relative z-10 ${
+                isActive("/dashboard/manager/team") && currentTeam.role === 'manager' 
+                  ? 'text-[var(--color-secondary)]' 
+                  : ''
+              }`}>{currentTeam.team.name}</div>
+              <div className={`text-sm mt-1 capitalize relative z-10 ${
+                isActive("/dashboard/manager/team") && currentTeam.role === 'manager'
+                  ? 'text-[var(--color-secondary)]/80'
+                  : 'text-white/70'
+              }`}>
                 {currentTeam.role === 'manager' ? 'Responsable' : 'Employé'}
               </div>
+              {currentTeam.role === 'manager' && (
+                <div className={`text-xs mt-2 flex items-center justify-center gap-1 relative z-10 transition-all duration-300 ${
+                  isActive("/dashboard/manager/team")
+                    ? 'text-[var(--color-secondary)]/60'
+                    : 'text-white/50 group-hover:text-white/70'
+                }`}>
+                  <span>Gérer l'équipe</span>
+                  <svg className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -189,25 +244,6 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
           )}
-            <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
-              <Link
-                href="/dashboard/employee/profile"
-                className={`${
-                  isActive("/dashboard/employee/profile")
-                    ? "bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                } rounded-xl py-3 px-4 flex items-center gap-3 transition-all duration-300 group relative overflow-hidden`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <UserIcon className="w-6 h-6 relative z-10 transition-transform duration-300 group-hover:scale-110" style={{ 
-                  color: isActive("/dashboard/employee/profile")
-                    ? "var(--color-secondary)"
-                    : "var(--color-primary)" 
-                }} />
-                <span className="relative z-10">Profil</span>
-              </Link>
-            </li>
 
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '500ms' }}>
               <Link

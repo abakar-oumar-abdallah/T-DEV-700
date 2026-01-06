@@ -23,6 +23,7 @@ describe('Middleware Tests', () => {
       body: {},
       params: {},
       query: {},
+      cookies: {}, // Add cookies object for cookie-based auth
       user: null
     };
     
