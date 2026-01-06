@@ -25,16 +25,41 @@ interface CheckAuthResponse {
   error?: string;
 }
 
+// Helper function to get CSRF token from cookies
+const getCsrfTokenFromCookie = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+  return match ? match[1] : null;
+};
+
 export const LoginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    // Utiliser l'URL du backend depuis les variables d'environnement
     const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL || 'http://localhost:3001';
+
+    // First, fetch the CSRF token
+    await fetch(`${backendUrl}/csrf-token`, {
+      method: 'GET',
+      credentials: 'include', // Important: to receive and send cookies
+    });
+
+    // Get the CSRF token from the cookie
+    const csrfToken = getCsrfTokenFromCookie();
+
+    if (!csrfToken) {
+      return {
+        success: false,
+        message: 'Login failed',
+        error: 'Could not obtain CSRF token'
+      };
+    }
 
     const response = await fetch(`${backendUrl}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken, // Include CSRF token in header
       },
+      credentials: 'include', // Important: to send cookies
       body: JSON.stringify(credentials),
     });
 
@@ -48,7 +73,7 @@ export const LoginUser = async (credentials: LoginCredentials): Promise<LoginRes
     }
 
     const data = await response.json();
-    
+
     return {
       success: true,
       message: data.message || 'Login successful',
