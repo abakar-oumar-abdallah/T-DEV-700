@@ -10,6 +10,7 @@ import {
   CheckCircleIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline'
+import AnimatedWave from './components/AnimatedWave'
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
@@ -68,7 +69,6 @@ export default function HomePage() {
               plannings personnalisés et sécurité maximale
             </p>
 
-
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
@@ -90,12 +90,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="white"/>
-          </svg>
-        </div>
+        <AnimatedWave fillColor="white" animationDuration={12} />
       </section>
 
       {/* Features Section */}
@@ -139,24 +134,19 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,64C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="#f9fafb"/>
-          </svg>
-        </div>
+        <AnimatedWave fillColor="var(--color-primary-hover)" animationDuration={14} />
       </section>
 
       {/* Screenshots Section - Pointage & Code TOTP */}
-      <section className="relative py-20 bg-gray-50 pb-32">
+      <section className="relative py-20 bg-[var(--color-primary-hover)] pb-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className={`text-center mb-16 transition-all duration-1000 ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`} style={{ transitionDelay: '400ms' }}>
-            <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-secondary)] mb-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
               Pointage sécurisé et intuitif
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-white/90 max-w-2xl mx-auto">
               Un système de pointage moderne avec codes TOTP pour une sécurité maximale
             </p>
           </div>
@@ -200,16 +190,11 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M0,64L48,58.7C96,53,192,43,288,48C384,53,480,75,576,80C672,85,768,75,864,64C960,53,1056,43,1152,48C1248,53,1344,75,1392,85.3L1440,96L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="var(--color-primary-hover)"/>
-          </svg>
-        </div>
+        <AnimatedWave fillColor="#F9FAFB" animationDuration={16} />
       </section>
 
       {/* Team Management Section */}
-      <section className="relative py-20 bg-[var(--color-primary-hover)] pb-32">
+      <section className="relative py-20 bg-gray-50 pb-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className={`text-center mb-16 transition-all duration-1000 ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -240,12 +225,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M0,96L48,85.3C96,75,192,53,288,48C384,43,480,53,576,58.7C672,64,768,64,864,58.7C960,53,1056,43,1152,37.3C1248,32,1344,32,1392,32L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="var(--color-secondary)"/>
-          </svg>
-        </div>
+        <AnimatedWave fillColor="var(--color-secondary)" animationDuration={13} />
       </section>
 
       {/* KPI Section */}
@@ -280,12 +260,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M0,32L48,37.3C96,43,192,53,288,58.7C384,64,480,64,576,58.7C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="white"/>
-          </svg>
-        </div>
+        <AnimatedWave fillColor="white" animationDuration={15} />
       </section>
 
       {/* Benefits Section */}
@@ -322,12 +297,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="var(--color-primary)"/>
-          </svg>
-        </div>
+        <AnimatedWave fillColor="var(--color-primary)" animationDuration={17} />
       </section>
 
       {/* CTA Section */}
@@ -337,10 +307,10 @@ export default function HomePage() {
             mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`} style={{ transitionDelay: '1300ms' }}>
             <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-              Prêt à transformer la gestion du temps ?
+              Prêt à transformer votre gestion du temps ?
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Rejoignez les entreprises qui ont déjà optimisé la gestion du temps de travail de leurs équipes avec 2Clock
+              Rejoignez les entreprises qui ont déjà optimisé leur gestion du temps de travail de leurs équipes avec 2Clock
             </p>
             
             <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md mx-auto">
@@ -375,7 +345,7 @@ export default function HomePage() {
             </div>
             <div className="text-center md:text-right">
               <p className="text-white/80">
-                © 2024 2Clock. Gestion intelligente du temps de travail.
+                © {new Date().getFullYear()} 2Clock. Gestion intelligente du temps de travail.
               </p>
             </div>
           </div>
