@@ -61,7 +61,7 @@ export default function HomePage() {
 
             {/* Slogan */}
             <h1 className="text-5xl sm:text-7xl font-bold mb-6 text-white leading-tight">
-              <text className="text-[var(--color-primary)]">Deux</text> <text className="text-[var(--color-primary-hover)]">pointages</text>, et c'est tout.
+              <span className="text-[var(--color-primary)]">Deux</span> <span className="text-[var(--color-primary-hover)]">pointages</span>, et c&apos;est tout.
             </h1>
             <p className="text-xl sm:text-2xl text-white/90 mb-4 max-w-3xl mx-auto">
               Solution complète de gestion des pointages avec statistiques en temps réel, 
@@ -75,11 +75,13 @@ export default function HomePage() {
                 href="/login"
                 className="group px-8 py-4 bg-[var(--color-primary)] text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-2 hover:scale-105"
               >
-                Commencer maintenant
+                Accéder à l'application
                 <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
               <a
-                href="#demo"
+                href="https://tally.so/r/ZjEK65"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-8 py-4 bg-white text-[var(--color-secondary)] rounded-xl font-semibold text-lg border-2 border-white hover:bg-transparent hover:text-white transition-all duration-300 hover:scale-105"
               >
                 Demander une démo
@@ -159,7 +161,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
             {/* Clock Screenshot */}
             <div className={`transition-all duration-1000 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -213,7 +215,7 @@ export default function HomePage() {
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`} style={{ transitionDelay: '700ms' }}>
             <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-secondary)] mb-4">
-              Gestion d'équipes simplifiée
+              Gestion d&apos;équipes simplifiée
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Organisez vos équipes, gérez les membres et leurs rôles en quelques clics
@@ -345,29 +347,17 @@ export default function HomePage() {
               <h3 className="text-2xl font-bold text-[var(--color-secondary)] mb-6">
                 Demander une démo
               </h3>
-              <form className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Nom de votre entreprise"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-300 outline-none"
-                />
-                <input
-                  type="email"
-                  placeholder="Email professionnel"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-300 outline-none"
-                />
-                <input
-                  type="tel"
-                  placeholder="Téléphone"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-300 outline-none"
-                />
-                <button
-                  type="submit"
-                  className="w-full px-8 py-4 bg-[var(--color-secondary)] text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  Demander un accès
-                </button>
-              </form>
+              <p className="text-gray-600 mb-6">
+                Remplissez notre formulaire pour obtenir un accès à 2Clock
+              </p>
+              <a
+                href="https://tally.so/r/ZjEK65"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full px-8 py-4 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                Accéder au formulaire
+              </a>
               <p className="text-sm text-gray-500 mt-4">
                 Ou <Link href="/login" className="text-[var(--color-primary)] font-semibold hover:underline">connectez-vous</Link> si vous avez déjà un compte
               </p>
@@ -385,7 +375,7 @@ export default function HomePage() {
             </div>
             <div className="text-center md:text-right">
               <p className="text-white/80">
-                © {new Date().getFullYear()} 2Clock - Deux Pointages, et c'est tout.
+                © 2024 2Clock. Gestion intelligente du temps de travail.
               </p>
             </div>
           </div>
