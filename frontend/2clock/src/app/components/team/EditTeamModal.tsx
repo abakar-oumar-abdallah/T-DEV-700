@@ -213,36 +213,8 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
         return;
       }
 
-      const planningResult = await CreatePlanning({
-        is_default: false,
-        schedules: enabledSchedules
-      });
-
-      if (!planningResult.success) {
-        setPlanningError(planningResult.error || 'Erreur lors de la création du planning');
-        setPlanningLoading(false);
-        return;
-      }
-
-      const planningId = planningResult.data?.id || null;
-
-      if (!planningId) {
-        setPlanningError('Erreur lors de la création du planning');
-        setPlanningLoading(false);
-        return;
-      }
-
-      // Call modify team planning endpoint
       const token = localStorage.getItem('session');
       const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
-
-      const schedules = customSchedules
-        .filter(s => s.enabled)
-        .map(s => ({
-          day: s.day,
-          time_in: s.time_in + ':00',
-          time_out: s.time_out + ':00'
-        }));
 
       const response = await fetch(`${backendUrl}/plannings/teams/${team.team.id}/modify`, {
         method: 'POST',
@@ -250,7 +222,7 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ schedules })
+        body: JSON.stringify({ schedules: enabledSchedules })
       });
 
       if (response.ok) {
