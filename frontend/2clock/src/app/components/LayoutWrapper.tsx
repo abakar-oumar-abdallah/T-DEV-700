@@ -1,11 +1,11 @@
 'use client';
+import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useTeam } from '@/contexts/TeamContext';
 import EmployeeSidebar from './EmployeeSidebar';
 import Loader from './Loader';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import { useTeam } from '@/contexts/TeamContext';
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isLoading: teamLoading } = useTeam();
   
-  // Pages that should not show the sidebar
+  // Pages that should not show the sidebar or check auth
   const noSidebarPages = ['/login', '/'];
   const showSidebar = !noSidebarPages.includes(pathname);
 
@@ -33,15 +33,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   }, [mobileOpen]);
 
   if (!showSidebar) {
-    return (
-      <>
-        <Loader 
-          isLoading={teamLoading} 
-          message="Vérification de l'authentification..."
-        />
-        {children}
-      </>
-    );
+    return <>{children}</>;
   }
 
   return (
@@ -65,8 +57,8 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             >
               <Bars3Icon className="w-6 h-6" />
             </button>
-            <Image src="/2clocktitle.svg" alt="2Clock" width={120} height={34} />
-            <div />
+            <Image src="/2clocktitle.svg" alt="2Clock" width={100} height={28} />
+            <div className="w-10" />
           </header>
           
           {children}
