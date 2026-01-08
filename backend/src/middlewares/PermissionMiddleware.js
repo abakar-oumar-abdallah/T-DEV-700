@@ -35,4 +35,27 @@ const checkUserPermission = (userRole, requiredPermission) => {
   return userLevel >= requiredLevel;
 };
 
-module.exports = PermissionMiddleware;
+// Specific middleware for superadmin only
+const requireSuperadmin = (req, res, next) => {
+  if (!req.user || !req.user.permission) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Unauthorized - User authentication required' 
+    });
+  }
+
+  if (req.user.permission !== 'superadmin') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Forbidden - Superadmin access required' 
+    });
+  }
+
+  next();
+};
+
+// Export both as properties of an object
+module.exports = {
+  check: PermissionMiddleware,
+  requireSuperadmin: requireSuperadmin
+};

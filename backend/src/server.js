@@ -72,6 +72,7 @@ const planningRoute = require('./routes/planning/planning.js');
 const scheduleRoute = require('./routes/schedule/schedule.js');
 const totpRoute = require('./routes/totp/totp.js');
 const kpiRoute = require('./routes/kpi/kpi.js');
+const superadminRoute = require('./routes/superadmin/superadmin.js');
 
 
 // Import du contrôleur TOTP pour initialiser Socket.IO
@@ -110,6 +111,7 @@ app.use('', planningRoute);
 app.use('', scheduleRoute);
 app.use('', totpRoute);
 app.use('', kpiRoute);
+app.use('', superadminRoute);
 
 
 // Documentation Swagger

@@ -73,7 +73,7 @@ router.get('/teams',
 router.post(
     '/teams',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
+    PermissionMiddleware.check('admin'),
     TeamController.createTeam
 );
 
@@ -171,7 +171,7 @@ router.get('/teams/:name/name', TeamController.getTeamByName);
  */
 router.patch('/teams/:id',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
+    PermissionMiddleware.check('admin'),
     TeamRoleMiddleware(['manager']),
     TeamController.updateTeam
 );
@@ -200,7 +200,7 @@ router.patch('/teams/:id',
  */
 router.delete('/teams/:id',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
+    PermissionMiddleware.check('admin'),
     TeamRoleMiddleware(['manager']),
     TeamController.deleteTeam
 );
