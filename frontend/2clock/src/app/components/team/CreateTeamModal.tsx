@@ -71,6 +71,7 @@ export default function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTe
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
+          margin: 16px 0;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: #cbd5e1;

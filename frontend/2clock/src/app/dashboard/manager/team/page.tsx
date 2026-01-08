@@ -175,7 +175,7 @@ export default function ManagerTeamPage() {
           <div className="px-6 py-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-800">
-                Membres de l'équipe ({teamMembers.length})
+                Membres de l&apos;équipe ({teamMembers.length})
               </h2>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -243,56 +243,54 @@ export default function ManagerTeamPage() {
                   }`}
                   style={{ transitionDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      {/* Avatar */}
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[#ff6b4a] flex items-center justify-center text-white font-semibold text-lg shadow-lg">
-                          {getInitials(member.user.first_name, member.user.last_name)}
-                        </div>
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[#ff6b4a] flex items-center justify-center text-white font-semibold text-lg shadow-lg">
+                        {getInitials(member.user.first_name, member.user.last_name)}
                       </div>
+                    </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-base font-semibold text-gray-900 truncate">
-                            {member.user.first_name} {member.user.last_name}
-                          </h3>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor(member.role)}`}>
-                            {getRoleLabel(member.role)}
-                          </span>
+                    {/* Info - flex-1 with min-width 0 for proper text truncation */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="text-base font-semibold text-gray-900 truncate">
+                          {member.user.first_name} {member.user.last_name}
+                        </h3>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(member.role)}`}>
+                          {getRoleLabel(member.role)}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <EnvelopeIcon className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{member.user.email}</span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <EnvelopeIcon className="w-4 h-4" />
-                            <span className="truncate">{member.user.email}</span>
+                        {member.user.phonenumber && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <PhoneIcon className="w-4 h-4" />
+                            <span>{member.user.phonenumber}</span>
                           </div>
-                          {member.user.phonenumber && (
-                            <div className="flex items-center gap-1">
-                              <PhoneIcon className="w-4 h-4" />
-                              <span>{member.user.phonenumber}</span>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEditModal(member)}
-                          className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
-                          title="Modifier"
-                        >
-                          <PencilIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => openDeleteModal(member)}
-                          className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
-                          title="Supprimer"
-                        >
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => openEditModal(member)}
+                        className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                        title="Modifier"
+                      >
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(member)}
+                        className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                        title="Supprimer"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
                 </div>
