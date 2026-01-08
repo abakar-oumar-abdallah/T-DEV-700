@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { createEmployeeInTeam } from '@/user/user';
 import { ModifyUserTeamPlanning } from '@/planning/planning';
-
+import Modal from '../Modal';
 interface AddMemberModalProps {
   teamId: string;
   isOpen: boolean;
@@ -367,37 +367,13 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-gradient-to-br from-black/30 via-gray-900/20 to-black/30 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-          margin: 16px 0;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-      `}</style>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-slideUp max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-[var(--color-primary)] px-8 pt-8 pb-6 flex-shrink-0 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Ajouter un employé</h2>
-            <button
-              onClick={handleClose}
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto custom-scrollbar flex-1 px-8 pb-8 pt-8">
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Ajouter un employé"
+        mode="creation"
+        maxWidth="md"
+      >
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Existing User Checkbox */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -646,8 +622,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
             </button>
           </div>
         </form>
-        </div>
-      </div>
-    </div>
+      </Modal>
   );
 }

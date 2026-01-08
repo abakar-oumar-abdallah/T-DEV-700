@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 import { UpdateTeam } from '@/team/team';
 import PlanningForm from '../PlanningForm';
+import Modal from '../Modal';
 
 interface EditTeamModalProps {
   team: {
@@ -112,135 +112,108 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
   if (!isOpen || !team) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-gradient-to-br from-black/30 via-gray-900/20 to-black/30 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-          margin: 16px 0;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-      `}</style>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-slideUp max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-[var(--color-secondary)] px-8 pt-8 pb-6 flex-shrink-0 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">{"Modifier l'équipe"}</h2>
-            <button
-              onClick={handleClose}
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              <XMarkIcon className="w-6 h-6" />
-            </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Modifier l'équipe"
+      mode="update"
+      maxWidth="md"
+    >
+      <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-green-800 text-sm">{success}</p>
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Nom de l&apos;équipe *
+            </label>
+            <input
+              type="text"
+              id="name"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Ex: Équipe Dev"
+              disabled={loading}
+            />
           </div>
-        </div>
-        
-        <div className="overflow-y-auto custom-scrollbar flex-1 px-8 pb-8 pt-8">
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Team Information Form */}
-          <div className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-800 text-sm">{error}</p>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Description de l'équipe"
+              rows={3}
+              disabled={loading}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="lateness_limit" className="block text-sm font-medium text-gray-700 mb-1">
+              Limite de retard (minutes) *
+            </label>
+            <input
+              type="number"
+              id="lateness_limit"
+              required
+              min="0"
+              value={formData.lateness_limit}
+              onChange={(e) => setFormData({ ...formData, lateness_limit: parseInt(e.target.value) })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1">
+              Fuseau horaire *
+            </label>
+            {timezonesLoading ? (
+              <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+                Chargement des fuseaux horaires...
               </div>
-            )}
-            {success && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-green-800 text-sm">{success}</p>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nom de l&apos;équipe *
-              </label>
-              <input
-                type="text"
-                id="name"
+            ) : timezones.length > 0 ? (
+              <select
+                id="timezone"
                 required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.timezone}
+                onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ex: Équipe Dev"
                 disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Description de l'équipe"
-                rows={3}
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="lateness_limit" className="block text-sm font-medium text-gray-700 mb-1">
-                Limite de retard (minutes) *
-              </label>
-              <input
-                type="number"
-                id="lateness_limit"
+              >
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            ) : (
+              <select
+                id="timezone"
                 required
-                min="0"
-                value={formData.lateness_limit}
-                onChange={(e) => setFormData({ ...formData, lateness_limit: parseInt(e.target.value) })}
+                value={formData.timezone}
+                onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1">
-                Fuseau horaire *
-              </label>
-              {timezonesLoading ? (
-                <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
-                  Chargement des fuseaux horaires...
-                </div>
-              ) : timezones.length > 0 ? (
-                <select
-                  id="timezone"
-                  required
-                  value={formData.timezone}
-                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={loading}
-                >
-                  {timezones.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
-                  ))}
-                </select>
-              ) : (
-                <select
-                  id="timezone"
-                  required
-                  value={formData.timezone}
-                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={loading}
-                >
-                  <option value="Europe/Paris">Europe/Paris</option>
-                  <option value="Europe/London">Europe/London</option>
-                  <option value="America/New_York">America/New_York</option>
-                </select>
-              )}
-            </div>
+              >
+                <option value="Europe/Paris">Europe/Paris</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="America/New_York">America/New_York</option>
+              </select>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -263,7 +236,7 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
         </form>
 
         {/* Planning Section */}
-        <div className="border-t border-gray-200 pt-6 mt-6">
+        <div className="border-t border-gray-200 pt-6">
           <PlanningForm
             teamId={team.team.id}
             currentPlanningId={team.team.default_planning_id ? parseInt(team.team.default_planning_id) : null}
@@ -273,7 +246,6 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
           />
         </div>
       </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
