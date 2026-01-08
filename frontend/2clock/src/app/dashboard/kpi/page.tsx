@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
@@ -12,7 +12,8 @@ import KpiStats from '@/app/components/kpi/KpiStats'
 
 type KpiType = 'lateness' | 'departure'
 
-export default function KpiPage() {
+// Composant qui utilise useSearchParams (doit être dans Suspense)
+function KpiContent() {
   const { currentTeam, user } = useTeam()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -244,5 +245,26 @@ export default function KpiPage() {
         </div>
       )}
     </main>
+  )
+}
+
+// Composant Loading pour le Suspense
+function KpiLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto mb-4"></div>
+        <p className="text-gray-600">Chargement des KPI...</p>
+      </div>
+    </div>
+  )
+}
+
+// Export par défaut avec Suspense
+export default function KpiPage() {
+  return (
+    <Suspense fallback={<KpiLoading />}>
+      <KpiContent />
+    </Suspense>
   )
 }
