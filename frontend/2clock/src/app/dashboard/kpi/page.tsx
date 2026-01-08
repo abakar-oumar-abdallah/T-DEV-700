@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { getLatenessRateByEmployee, getDepartureRateByEmployee, getTeamMembers } from '@/kpi/kpi'
 import type { LatenessData, UserTeam } from '@/kpi/kpi'
@@ -15,6 +15,7 @@ type KpiType = 'lateness' | 'departure'
 export default function KpiPage() {
   const { currentTeam, user } = useTeam()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +48,17 @@ export default function KpiPage() {
     }).finally(() => setLoading(false))
   }, [currentTeam?.team.id, isManager])
 
+  useEffect(() => {
+    const userIdParam = searchParams.get('userId')
+    if (userIdParam && teamMembers.length > 0) {
+      const userId = parseInt(userIdParam)
+      const memberExists = teamMembers.some(m => m.user.id === userId)
+      if (memberExists) {
+        setSelectedUserId(userId)
+      }
+    }
+  }, [searchParams, teamMembers])
+  
   useEffect(() => {
     if (!currentTeam?.team.id || !selectedUserId) return
     setLoading(true)
