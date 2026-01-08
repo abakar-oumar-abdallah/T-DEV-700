@@ -129,16 +129,20 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
           background: #94a3b8;
         }
       `}</style>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-slideUp border border-gray-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Modifier l&apos;équipe</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-slideUp max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-[var(--color-secondary)] px-8 pt-8 pb-6 flex-shrink-0 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">{"Modifier l'équipe"}</h2>
+            <button
+              onClick={handleClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
         </div>
+        
+        <div className="overflow-y-auto custom-scrollbar flex-1 px-8 pb-8 pt-8">
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Team Information Form */}
@@ -268,6 +272,7 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
             onSuccess={() => {}}
           />
         </div>
+      </div>
       </div>
     </div>
   );

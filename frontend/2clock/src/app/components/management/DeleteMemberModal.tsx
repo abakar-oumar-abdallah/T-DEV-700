@@ -55,17 +55,17 @@ export default function DeleteMemberModal({ member, teamId, isOpen, onClose, onS
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-gradient-to-br from-black/30 via-gray-900/20 to-black/30 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-slideUp border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Supprimer l&apos;employé</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-slideUp max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-red-600 px-8 pt-8 pb-6 flex-shrink-0 rounded-t-2xl">
+            <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">Supprimer le membre</h2>
+            <button onClick={handleClose} className="text-white/80 hover:text-white transition-colors">
+                <XMarkIcon className="w-6 h-6" />
+            </button>
+            </div>
         </div>
 
+        <div className="overflow-y-auto custom-scrollbar flex-1 px-8 pb-8 pt-8">
         <div className="mb-6">
           <p className="text-gray-600 mb-4">
             Êtes-vous sûr de vouloir supprimer{' '}
@@ -101,6 +101,7 @@ export default function DeleteMemberModal({ member, teamId, isOpen, onClose, onS
             {loading ? 'Suppression...' : 'Supprimer'}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
