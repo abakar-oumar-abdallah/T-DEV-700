@@ -1,6 +1,8 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { CheckAuth } from '@/auth/auth';
+import { useRouter } from 'next/navigation';
+
 
 interface Team {
   id: string;
@@ -48,6 +50,8 @@ export function TeamProvider({ children }: TeamProviderProps) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const router = useRouter();
+  
 
   const clearTeamContext = () => {
     setCurrentTeamState(null);
@@ -66,6 +70,15 @@ export function TeamProvider({ children }: TeamProviderProps) {
       if (result.success && result.data) {
         setUser(result.data.user);
         setTeams(result.data.teams);
+
+        if (result.data.teams.length === 1) {
+          const team = result.data.teams[0];
+          setCurrentTeam(team);
+          const isEmployee = team.role === 'employee' && result.data.user.permission === 'user';
+          const redirectPath = isEmployee ? '/dashboard/clock' : '/dashboard';
+          router.push(redirectPath);
+          return;
+        }
 
       } else {
         setAuthError(result.error || 'Authentication failed');
