@@ -13,12 +13,16 @@ import {
   PlusIcon,
   XMarkIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline'
 import { createEmployeeInTeam, updateUser, removeUserFromTeam } from '@/user/user'
+import { GetUserTeamPlanning, ModifyUserTeamPlanning } from '@/planning/planning'
 
 interface TeamMember {
+  id: number
   role: string
+  planning_id: number | null
   user: {
     id: string
     email: string
@@ -26,6 +30,12 @@ interface TeamMember {
     last_name: string
     phonenumber?: string
   }
+}
+
+interface PlanningSchedule {
+  day: string
+  time_in: string
+  time_out: string
 }
 
 export default function ManagerTeamPage() {
@@ -68,6 +78,24 @@ export default function ManagerTeamPage() {
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  // États pour le modal de planning
+  const [showPlanningModal, setShowPlanningModal] = useState(false)
+  const [planningMember, setPlanningMember] = useState<TeamMember | null>(null)
+  const [planningLoading, setplanningLoading] = useState(false)
+  const [planningError, setPlanningError] = useState<string | null>(null)
+  const [planningSuccess, setPlanningSuccess] = useState<string | null>(null)
+  const [currentPlanning, setCurrentPlanning] = useState<PlanningSchedule[]>([])
+  const [planningFormData, setPlanningFormData] = useState<PlanningSchedule[]>([
+    { day: 'monday', time_in: '09:00', time_out: '17:00' },
+    { day: 'tuesday', time_in: '09:00', time_out: '17:00' },
+    { day: 'wednesday', time_in: '09:00', time_out: '17:00' },
+    { day: 'thursday', time_in: '09:00', time_out: '17:00' },
+    { day: 'friday', time_in: '09:00', time_out: '17:00' },
+    { day: 'saturday', time_in: '', time_out: '' },
+    { day: 'sunday', time_in: '', time_out: '' }
+  ])
+
 
 
   useEffect(() => {
@@ -122,6 +150,7 @@ export default function ManagerTeamPage() {
         const result = await response.json()
         
         if (result.success && result.data) {
+          console.log('Team members data:', result.data)
           setTeamMembers(result.data)
         } else {
           setError(result.message || 'Erreur lors du chargement')
@@ -300,6 +329,98 @@ export default function ManagerTeamPage() {
       setDeleteError('Erreur lors de la suppression de l\'employé')
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  // Ouvrir modal de planning
+  const openPlanningModal = async (member: TeamMember) => {
+    console.log('Opening planning for member:', member)
+    console.log('Member ID:', member.id)
+    console.log('Member planning_id:', member.planning_id)
+    setPlanningMember(member)
+    setPlanningError(null)
+    setPlanningSuccess(null)
+    setShowPlanningModal(true)
+    
+    // Vérifier si l'employé a un planning_id
+    if (!member.planning_id) {
+      console.log('Aucun planning assigné à cet employé - on peut en créer un')
+      // Garder les valeurs par défaut
+      return
+    }
+    
+    // Charger le planning actuel
+    setplanningLoading(true)
+    try {
+      const result = await GetUserTeamPlanning(member.id)
+      if (result.success && result.data?.planning?.schedule) {
+        const schedules = result.data.planning.schedule
+        
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        const formattedSchedules = days.map(day => {
+          const existingSchedule = schedules.find((s: any) => s.day === day)
+          return {
+            day,
+            time_in: existingSchedule ? existingSchedule.time_in.substring(0, 5) : '',
+            time_out: existingSchedule ? existingSchedule.time_out.substring(0, 5) : ''
+          }
+        })
+        
+        setPlanningFormData(formattedSchedules)
+        setCurrentPlanning(formattedSchedules)
+      }
+    } catch (err) {
+      console.error('Erreur chargement planning:', err)
+      setPlanningError('Erreur lors du chargement du planning')
+    } finally {
+      setplanningLoading(false)
+    }
+  }
+
+  // Modifier le planning
+  const handleUpdatePlanning = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!planningMember) return
+
+    setplanningLoading(true)
+    setPlanningError(null)
+    setPlanningSuccess(null)
+
+    try {
+      // Filtrer uniquement les jours avec horaires
+      const validSchedules = planningFormData
+        .filter(s => s.time_in && s.time_out)
+        .map(s => ({
+          day: s.day,
+          time_in: `${s.time_in}:00`,
+          time_out: `${s.time_out}:00`
+        }))
+
+      // Utiliser member.id (user_team_id) au lieu de planning_id
+      const result = await ModifyUserTeamPlanning(planningMember.id, {
+        schedules: validSchedules
+      })
+
+      if (result.success) {
+        setPlanningSuccess('Planning modifié avec succès')
+        
+        setTimeout(() => {
+          setShowPlanningModal(false)
+          setPlanningSuccess(null)
+          setPlanningMember(null)
+        }, 1500)
+      } else {
+        setPlanningError(result.message || 'Erreur lors de la modification du planning')
+        if (result.error?.includes('Session')) {
+          setTimeout(() => router.push('/login'), 1500)
+        }
+      }
+    } catch (err: any) {
+      console.error('Erreur:', err)
+      setPlanningError('Erreur lors de la modification du planning')
+    } finally {
+      setplanningLoading(false)
     }
   }
 
@@ -506,6 +627,13 @@ const filteredMembers = teamMembers.filter(member => {
                       
                       {/* Actions */}
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openPlanningModal(member)}
+                          className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 transition-colors"
+                          title="Planning"
+                        >
+                          <CalendarIcon className="w-5 h-5" />
+                        </button>
                         <button
                           onClick={() => openEditModal(member)}
                           className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
@@ -837,6 +965,130 @@ const filteredMembers = teamMembers.filter(member => {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de planning */}
+      {showPlanningModal && planningMember && (
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={() => setShowPlanningModal(false)} />
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+                <div className="bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] px-6 py-5 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Planning de l'employé</h2>
+                      <p className="text-white/90 text-sm mt-1">
+                        {planningMember.user.first_name} {planningMember.user.last_name}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowPlanningModal(false)}
+                      className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                    >
+                      <XMarkIcon className="w-6 h-6 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleUpdatePlanning} className="p-6 space-y-4">
+                  {planningError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-red-800 text-sm">{planningError}</p>
+                    </div>
+                  )}
+                  {planningSuccess && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-green-800 text-sm">{planningSuccess}</p>
+                    </div>
+                  )}
+
+                  {planningLoading && !planningSuccess && !planningError ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-3">
+                        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day, index) => {
+                          const dayLabels: Record<string, string> = {
+                            monday: 'Lundi',
+                            tuesday: 'Mardi',
+                            wednesday: 'Mercredi',
+                            thursday: 'Jeudi',
+                            friday: 'Vendredi',
+                            saturday: 'Samedi',
+                            sunday: 'Dimanche'
+                          }
+                          
+                          return (
+                            <div key={day} className="grid grid-cols-3 gap-4 items-center p-3 bg-gray-50 rounded-lg">
+                              <div className="font-medium text-gray-700">
+                                {dayLabels[day]}
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-600 mb-1">Début</label>
+                                <input
+                                  type="time"
+                                  value={planningFormData[index]?.time_in || ''}
+                                  onChange={(e) => {
+                                    const newData = [...planningFormData]
+                                    newData[index] = { ...newData[index], time_in: e.target.value }
+                                    setPlanningFormData(newData)
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent text-sm"
+                                  disabled={planningLoading}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-600 mb-1">Fin</label>
+                                <input
+                                  type="time"
+                                  value={planningFormData[index]?.time_out || ''}
+                                  onChange={(e) => {
+                                    const newData = [...planningFormData]
+                                    newData[index] = { ...newData[index], time_out: e.target.value }
+                                    setPlanningFormData(newData)
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent text-sm"
+                                  disabled={planningLoading}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                        <p className="text-blue-800 text-xs">
+                          💡 Astuce : Laissez les horaires vides pour les jours de repos
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowPlanningModal(false)}
+                          disabled={planningLoading}
+                          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={planningLoading}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-medium"
+                        >
+                          {planningLoading ? 'Enregistrement...' : 'Enregistrer le planning'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </form>
               </div>
             </div>
           </div>
