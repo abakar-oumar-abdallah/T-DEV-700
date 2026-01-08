@@ -29,7 +29,10 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
   const [formData, setFormData] = useState({
     email: '',
     first_name: '',
-    last_name: ''
+    last_name: '',
+    phone_number: '',
+    password: '',
+    confirmPassword: ''
   });
 
   useEffect(() => {
@@ -37,7 +40,10 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
       setFormData({
         email: member.user.email,
         first_name: member.user.first_name,
-        last_name: member.user.last_name
+        last_name: member.user.last_name,
+        phone_number: member.user.phonenumber || '',
+        password: '',
+        confirmPassword: ''
       });
       setError(null);
       setSuccess(null);
@@ -48,16 +54,37 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
     e.preventDefault();
     if (!member) return;
 
+    // Validate passwords if provided
+    if (formData.password || formData.confirmPassword) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Les mots de passe ne correspondent pas');
+        return;
+      }
+      if (formData.password.length < 6) {
+        setError('Le mot de passe doit contenir au moins 6 caractères');
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const result = await updateUser(member.user.id, {
+      // Build update data - only include password if it was provided
+      const updateData: any = {
         email: formData.email,
         first_name: formData.first_name,
-        last_name: formData.last_name
-      });
+        last_name: formData.last_name,
+        phone_number: formData.phone_number
+      };
+
+      // Only add password if it was filled in
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+
+      const result = await updateUser(member.user.id, updateData);
 
       if (result.success) {
         const updatedMember = {
@@ -66,7 +93,8 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
             ...member.user,
             email: formData.email,
             first_name: formData.first_name,
-            last_name: formData.last_name
+            last_name: formData.last_name,
+            phonenumber: formData.phone_number
           }
         };
         
@@ -90,6 +118,14 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
   const handleClose = () => {
     setError(null);
     setSuccess(null);
+    setFormData({
+      email: '',
+      first_name: '',
+      last_name: '',
+      phone_number: '',
+      password: '',
+      confirmPassword: ''
+    });
     onClose();
   };
 
@@ -177,6 +213,51 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
                   placeholder="Dupont"
                   disabled={loading}
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+              <input
+                type="tel"
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="+33 6 12 34 56 78"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Modifier le mot de passe</h4>
+              <p className="text-xs text-gray-500 mb-3">Laissez vide pour ne pas changer le mot de passe</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••••"
+                    minLength={6}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••••"
+                    minLength={6}
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
 
