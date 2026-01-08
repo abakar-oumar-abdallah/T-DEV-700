@@ -337,7 +337,6 @@ Cela créera un compte admin par défaut :
 ### 👤 Employee (Employé)
 - ✅ Pointer son arrivée/départ
 - ✅ Consulter son historique personnel
-- ✅ Voir ses statistiques
 - ❌ Ne peut pas gérer d'autres utilisateurs
 
 ### 👨‍💼 Manager
@@ -406,9 +405,6 @@ Cela créera un compte admin par défaut :
 ### Besoin d'aide ?
 
 - 📧 **Email** : support@2clock.com
-- 📞 **Téléphone** : +33 (0)1 XX XX XX XX
-- 💬 **Chat en direct** : Disponible sur notre site web
-- 📚 **Documentation complète** : [docs.2clock.com](https://docs.2clock.com)
 
 ### Signaler un bug
 
