@@ -259,8 +259,11 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
     setSchedules(newSchedules);
   };
 
+  // Wrapper component - either form or div based on standalone prop
+  const FormWrapper = standalone ? 'div' : 'form';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <FormWrapper onSubmit={!standalone ? handleSubmit : undefined} className="space-y-4">
       {!standalone && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
 
       {error && !standalone && (
@@ -293,6 +296,10 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
                 Marquer comme planning par défaut
               </label>
             </div>
+          )}
+
+          {standalone && (
+            <h4 className="text-sm font-medium text-gray-700 mb-3">{title}</h4>
           )}
 
           <div className="space-y-3">
@@ -351,7 +358,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           )}
         </>
       )}
-    </form>
+    </FormWrapper>
   );
 });
 
