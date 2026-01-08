@@ -439,7 +439,7 @@ class UserTeamController {
       const { data, error } = await supabase
         .from('user_team')
         .select(`
-          role,
+          *,
           user:user_id (id, email, first_name, last_name)
         `)
         .eq('team_id', teamId);

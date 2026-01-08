@@ -50,6 +50,30 @@ interface ModifyTeamPlanningResponse {
   error?: string;
 }
 
+interface ModifyUserTeamPlanningData {
+  schedules: Schedule[];
+}
+
+interface ModifyUserTeamPlanningResponse {
+  success: boolean;
+  data?: {
+    userTeam: any;
+    newPlanning: Planning;
+  };
+  message?: string;
+  error?: string;
+}
+
+interface GetUserTeamPlanningResponse {
+  success: boolean;
+  data?: {
+    userTeam: any;
+    planning: Planning;
+  };
+  message?: string;
+  error?: string;
+}
+
 interface GetTeamPlanningResponse {
   success: boolean;
   data?: {
@@ -153,7 +177,104 @@ export const ModifyTeamPlanning = async (teamId: number, planningData: ModifyTea
     };
   }
 };
+// Get planning for a user-team
+export const GetUserTeamPlanning = async (userTeamId: number): Promise<GetUserTeamPlanningResponse> => {
+  try {
+    const token = localStorage.getItem('session');
 
+    if (!token) {
+      return {
+        success: false,
+        message: 'Session expirée',
+        error: 'No authentication token found'
+      };
+    }
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
+
+    const response = await fetch(`${backendUrl}/plannings/user-teams/${userTeamId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      return {
+        success: false,
+        message: 'Erreur lors de la récupération du planning',
+        error: errorData.message || errorData.error || 'Failed to get user-team planning'
+      };
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      data: result.data
+    };
+  } catch (error) {
+    console.error('GetUserTeamPlanning error:', error);
+    return {
+      success: false,
+      message: 'Erreur réseau',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
+
+// Modify planning for a user-team
+export const ModifyUserTeamPlanning = async (
+  userTeamId: number,
+  planningData: ModifyUserTeamPlanningData
+): Promise<ModifyUserTeamPlanningResponse> => {
+  try {
+    const token = localStorage.getItem('session');
+
+    if (!token) {
+      return {
+        success: false,
+        message: 'Session expirée',
+        error: 'No authentication token found'
+      };
+    }
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
+
+    const response = await fetch(`${backendUrl}/plannings/user-teams/${userTeamId}/modify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(planningData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+      return {
+        success: false,
+        message: 'Erreur lors de la modification du planning',
+        error: errorData.message || errorData.error || 'Failed to modify user-team planning'
+      };
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      data: result.data,
+      message: result.message || 'Planning modifié avec succès'
+    };
+  } catch (error) {
+    console.error('ModifyUserTeamPlanning error:', error);
+    return {
+      success: false,
+      message: 'Erreur réseau',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
 export const GetDefaultPlannings = async (): Promise<GetDefaultPlanningsResponse> => {
   try {
     const token = localStorage.getItem('session');
