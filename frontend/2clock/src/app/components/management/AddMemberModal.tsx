@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { createEmployeeInTeam } from '@/user/user';
+import { addExistingUserToTeam } from '@/team/management';
 import { ModifyUserTeamPlanning } from '@/planning/planning';
 import Modal from '../Modal';
 import PlanningForm from '../PlanningForm';
@@ -53,40 +54,21 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
     return message;
   };
 
-  const addExistingUserToTeam = async (emailToAdd?: string, planningSchedules?: any) => {
+  const handleAddExistingUser = async (emailToAdd?: string, planningSchedules?: any) => {
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const token = localStorage.getItem('session');
-      if (!token) {
-        setError('Session expirée');
-        setLoading(false);
-        return;
-      }
-
       const emailToUse = emailToAdd || existingUserEmail || formData.email;
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/email`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: emailToUse,
-            teamId: teamId,
-            role: 'employee'
-          })
-        }
-      );
+      const result = await addExistingUserToTeam({
+        email: emailToUse,
+        teamId: teamId,
+        role: 'employee'
+      });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         const translatedError = translateError(result.message || 'Erreur lors de l\'ajout de l\'utilisateur existant');
         setError(translatedError);
         
@@ -184,9 +166,9 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
       planningSchedules = schedulesData;
     }
 
-    // If existing user mode, call addExistingUserToTeam directly
+    // If existing user mode, call handleAddExistingUser directly
     if (isExistingUser) {
-      await addExistingUserToTeam(undefined, planningSchedules);
+      await handleAddExistingUser(undefined, planningSchedules);
       return;
     }
 
@@ -383,7 +365,7 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
                       const schedulesData = hasCustomPlanning && planningFormRef.current 
                         ? planningFormRef.current.getSchedulesData() 
                         : null;
-                      addExistingUserToTeam(existingUserEmail, schedulesData);
+                      handleAddExistingUser(existingUserEmail, schedulesData);
                     }}
                     disabled={loading}
                     className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
