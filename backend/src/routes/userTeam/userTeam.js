@@ -71,8 +71,8 @@ router.get('/userteams',
  *         description: Server error
  */
 router.post('/userteams',
-    // AuthMiddleware,
-    // TeamRoleMiddleware(['manager', 'admin']),
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager', 'admin']),
     UserTeamController.createUserTeam
 );
 
@@ -118,8 +118,8 @@ router.post('/userteams',
  *         description: Server error
  */
 router.post('/userteams/email',
-    // AuthMiddleware,
-    // TeamRoleMiddleware(['manager', 'admin']),
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager', 'admin']),
     UserTeamController.createUserTeamWithEmail
 );
 

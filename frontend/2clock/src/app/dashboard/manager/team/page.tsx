@@ -11,13 +11,14 @@ import {
   BuildingOffice2Icon,
   PlusIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 import AddMemberModal from '@/app/components/management/AddMemberModal'
 import EditMemberModal from '@/app/components/management/EditMemberModal'
 import DeleteMemberModal from '@/app/components/management/DeleteMemberModal'
+import EditTeamModal from '@/app/components/team/EditTeamModal'
 import { getTeamMembers, type TeamMember } from '@/team/management'
-
 export default function ManagerTeamPage() {
   const { currentTeam, user } = useTeam()
   const router = useRouter()
@@ -32,6 +33,7 @@ export default function ManagerTeamPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [showEditTeamModal, setShowEditTeamModal] = useState(false)  
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null)
 
   const isManager = currentTeam?.role === 'manager'
@@ -89,6 +91,11 @@ export default function ManagerTeamPage() {
     }
     setShowDeleteModal(false)
     setDeletingMember(null)
+  }
+
+  const handleEditTeamSuccess = () => {
+    setShowEditTeamModal(false)
+    window.location.reload()
   }
 
   // Ouvrir les modals
@@ -151,9 +158,20 @@ export default function ManagerTeamPage() {
               <BuildingOffice2Icon className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent mb-2">
-                {currentTeam.team.name}
-              </h1>
+              <div className="flex flex-col gap-3 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
+                    {currentTeam.team.name}
+                  </h1>
+                  <button
+                    onClick={() => setShowEditTeamModal(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap w-full sm:w-auto"
+                  >
+                    <PencilIcon className="w-5 h-5" />
+                    <span className="font-medium">Modifier l&apos;équipe</span>
+                  </button>
+                </div>
+              </div>
               {currentTeam.team.description && (
                 <p className="text-gray-600">{currentTeam.team.description}</p>
               )}
@@ -167,19 +185,19 @@ export default function ManagerTeamPage() {
           </div>
         </div>
 
-        {/* Members List */}
+         {/* Members List */}
         <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-700 ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`} style={{ transitionDelay: '100ms' }}>
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-xl font-semibold text-gray-800">
                 Membres de l&apos;équipe ({teamMembers.length})
               </h2>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] hover:from-[#ff6b4a] hover:to-[var(--color-primary)] text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] hover:from-[#ff6b4a] hover:to-[var(--color-primary)] text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 w-full sm:w-auto"
               >
                 <PlusIcon className="w-5 h-5" />
                 <span className="font-medium">Ajouter un employé</span>
@@ -276,7 +294,17 @@ export default function ManagerTeamPage() {
                     </div>
 
                     {/* Actions */}
+                    
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          router.push(`/dashboard/kpi?userId=${member.user.id}`)
+                        }}
+                        className="p-2 rounded-lg hover:bg-purple-50 text-purple-600 transition-colors"
+                        title="Voir KPI"
+                      >
+                        <ChartBarIcon className="w-5 h-5" />
+                      </button>
                       <button
                         onClick={() => openEditModal(member)}
                         className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
@@ -328,6 +356,13 @@ export default function ManagerTeamPage() {
           setDeletingMember(null)
         }}
         onSuccess={handleDeleteSuccess}
+      />
+
+      <EditTeamModal
+        team={currentTeam}
+        isOpen={showEditTeamModal}
+        onClose={() => setShowEditTeamModal(false)}
+        onSuccess={handleEditTeamSuccess}
       />
     </main>
   )

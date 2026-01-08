@@ -14,6 +14,7 @@ interface AddToTeamData {
 }
 
 interface TeamMember {
+  id: number;
   role: string;
   user: {
     id: string;
@@ -241,6 +242,7 @@ export const createEmployeeInTeam = async (
 
     // 3. Retourner le membre créé
     const newMember: TeamMember = {
+      id: addToTeamResult.data ? (addToTeamResult.data as any).id : null,
       role: 'employee',
       user: {
         id: newUserId,

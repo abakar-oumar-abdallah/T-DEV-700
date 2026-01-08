@@ -18,6 +18,12 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+interface AddExistingUserToTeamData {
+  email: string;
+  teamId: string;
+  role: string;
+}
+
 /**
  * Get all members of a team
  */
@@ -67,6 +73,63 @@ export const getTeamMembers = async (teamId: string): Promise<ApiResponse<TeamMe
     }
   } catch (error) {
     console.error('getTeamMembers error:', error);
+    return {
+      success: false,
+      message: 'Erreur de connexion au serveur',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
+
+/**
+ * Add an existing user to a team by email
+ */
+export const addExistingUserToTeam = async (
+  data: AddExistingUserToTeamData
+): Promise<ApiResponse<any>> => {
+  try {
+    const token = localStorage.getItem('session');
+    if (!token) {
+      return {
+        success: false,
+        message: 'Session expirée',
+        error: 'No authentication token found'
+      };
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/email`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: data.email,
+          teamId: data.teamId,
+          role: data.role
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      return {
+        success: false,
+        message: result.message || 'Erreur lors de l\'ajout de l\'utilisateur existant',
+        error: result.error
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message || 'Utilisateur ajouté à l\'équipe avec succès',
+      data: result.data
+    };
+  } catch (error) {
+    console.error('Erreur addExistingUserToTeam:', error);
     return {
       success: false,
       message: 'Erreur de connexion au serveur',
