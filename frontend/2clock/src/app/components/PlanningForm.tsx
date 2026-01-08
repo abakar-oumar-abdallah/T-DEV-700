@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { GetUserTeamPlanning, ModifyUserTeamPlanning, GetTeamPlanning, ModifyTeamPlanning, CreatePlanning } from '@/planning/planning';
 import { CreateTeam } from '@/team/team';
 
@@ -13,11 +13,12 @@ interface PlanningFormProps {
   userTeamId?: number;
   teamId?: number;
   currentPlanningId?: number | null;
-  context: 'member' | 'team' | 'create';
+  context: 'member' | 'team' | 'create' | 'memberAfterCreation' | 'standalone'; 
   title?: string;
   teamData?: any;
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  standalone?: boolean;
 }
 
 const dayLabels: Record<string, string> = {
@@ -30,7 +31,7 @@ const dayLabels: Record<string, string> = {
   sunday: 'Dimanche'
 };
 
-export default function PlanningForm({ 
+const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormProps>(({ 
   userTeamId, 
   teamId, 
   currentPlanningId, 
@@ -38,8 +39,9 @@ export default function PlanningForm({
   title = 'Planning',
   teamData,
   onSuccess,
-  onError
-}: PlanningFormProps) {
+  onError,
+  standalone = false
+}, ref) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -54,15 +56,28 @@ export default function PlanningForm({
     { day: 'sunday', time_in: '09:00', time_out: '17:00', enabled: false }
   ]);
 
+  // Expose getSchedulesData method for parent component
+  useImperativeHandle(ref, () => ({
+    getSchedulesData: () => {
+      const enabledSchedules = schedules
+        .filter(schedule => schedule.enabled)
+        .map(schedule => ({
+          day: schedule.day,
+          time_in: schedule.time_in + ':00',
+          time_out: schedule.time_out + ':00'
+        }));
+      return enabledSchedules;
+    }
+  }));
+
   // Load existing planning
   useEffect(() => {
     const loadPlanning = async () => {
-      if (context === 'create') return;
+      if (context === 'create' || context === 'memberAfterCreation' || context === 'standalone') return;
 
       setLoading(true);
       try {
         let result;
-        
         if (context === 'member' && userTeamId) {
           result = await GetUserTeamPlanning(userTeamId);
         } else if (context === 'team' && teamId) {
@@ -108,6 +123,9 @@ export default function PlanningForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // If standalone mode, don't submit (parent handles it)
+    if (standalone) return;
+    
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -131,65 +149,65 @@ export default function PlanningForm({
 
       let result;
 
-      if (context === 'create' && teamData) {
-        // Create planning first
-        const planningResult = await CreatePlanning({
-          schedules: enabledSchedules,
-          is_default: isDefaultPlanning
-        });
+        if (context === 'create' && teamData) {
+            // Create planning first
+            const planningResult = await CreatePlanning({
+            schedules: enabledSchedules,
+            is_default: isDefaultPlanning
+            });
 
-        if (!planningResult.success) {
-          const errorMsg = planningResult.error || 'Erreur lors de la création du planning';
-          setError(errorMsg);
-          if (onError) onError(errorMsg);
-          setLoading(false);
-          return;
-        }
+            if (!planningResult.success) {
+            const errorMsg = planningResult.error || 'Erreur lors de la création du planning';
+            setError(errorMsg);
+            if (onError) onError(errorMsg);
+            setLoading(false);
+            return;
+            }
 
-        const planningId = planningResult.data?.id || null;
+            const planningId = planningResult.data?.id || null;
 
-        if (!planningId) {
-          const errorMsg = 'Un planning est obligatoire pour créer une équipe';
-          setError(errorMsg);
-          if (onError) onError(errorMsg);
-          setLoading(false);
-          return;
-        }
+            if (!planningId) {
+            const errorMsg = 'Un planning est obligatoire pour créer une équipe';
+            setError(errorMsg);
+            if (onError) onError(errorMsg);
+            setLoading(false);
+            return;
+            }
 
-        // Create team with planning
-        const finalTeamData = {
-          ...teamData,
-          default_planning_id: planningId
-        };
+            // Create team with planning
+            const finalTeamData = {
+            ...teamData,
+            default_planning_id: planningId
+            };
 
-        result = await CreateTeam(finalTeamData);
-        
-        if (result?.success) {
-          setSuccess('Équipe créée avec succès');
-          setTimeout(() => {
-            if (onSuccess) onSuccess();
-          }, 1500);
-        } else {
-          const errorMsg = result?.message || 'Erreur lors de la création de l\'équipe';
-          setError(errorMsg);
-          if (onError) onError(errorMsg);
-        }
-      } else if (context === 'member' && userTeamId) {
-        result = await ModifyUserTeamPlanning(userTeamId, {
-          schedules: enabledSchedules
-        });
+            result = await CreateTeam(finalTeamData);
 
-        if (result?.success) {
-          setSuccess('Planning modifié avec succès');
-          setTimeout(() => {
-            if (onSuccess) onSuccess();
-          }, 1500);
-        } else {
-          const errorMsg = result?.message || 'Erreur lors de la modification du planning';
-          setError(errorMsg);
-          if (onError) onError(errorMsg);
-        }
-      } else if (context === 'team' && teamId) {
+            if (result?.success) {
+                setSuccess('Équipe créée avec succès');
+                setTimeout(() => {
+                if (onSuccess) onSuccess();
+            }, 1500);
+            } else {
+                const errorMsg = result?.message || 'Erreur lors de la création de l\'équipe';
+                setError(errorMsg);
+                if (onError) onError(errorMsg);
+            }
+        } else if (context === 'member' && userTeamId) {
+            result = await ModifyUserTeamPlanning(userTeamId, {
+            schedules: enabledSchedules
+            });
+
+            if (result?.success) {
+            setSuccess('Planning modifié avec succès');
+            setTimeout(() => {
+                if (onSuccess) onSuccess();
+            }, 1500);
+            } else {
+            const errorMsg = result?.message || 'Erreur lors de la modification du planning';
+            setError(errorMsg);
+            if (onError) onError(errorMsg);
+            }
+        } else if (context === 'team' && teamId) {
         result = await ModifyTeamPlanning(teamId, {
           schedules: enabledSchedules
         });
@@ -204,8 +222,24 @@ export default function PlanningForm({
           setError(errorMsg);
           if (onError) onError(errorMsg);
         }
-      }
-    } catch (err: any) {
+      
+      } else if (context === 'memberAfterCreation' && userTeamId) {
+            result = await ModifyUserTeamPlanning(userTeamId, {
+                schedules: enabledSchedules
+            });
+
+            if (result?.success) {
+                setSuccess('Planning créé avec succès');
+                setTimeout(() => {
+                if (onSuccess) onSuccess();
+                }, 1500);
+            } else {
+                const errorMsg = result?.message || 'Erreur lors de la création du planning';
+                setError(errorMsg);
+                if (onError) onError(errorMsg);
+            }
+    } 
+    }catch (err: any) {
       console.error('Error:', err);
       const errorMsg = 'Erreur lors de la modification du planning';
       setError(errorMsg);
@@ -227,26 +261,26 @@ export default function PlanningForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+      {!standalone && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
 
-      {error && (
+      {error && !standalone && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <p className="text-red-800 text-sm">{error}</p>
         </div>
       )}
-      {success && (
+      {success && !standalone && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <p className="text-green-800 text-sm">{success}</p>
         </div>
       )}
 
-      {loading && !success && !error ? (
+      {loading && !success && !error && !standalone ? (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
         </div>
       ) : (
         <>
-          {context === 'create' && (
+          {context === 'create' && !standalone && (
             <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
               <input
                 type="checkbox"
@@ -303,18 +337,24 @@ export default function PlanningForm({
             </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-medium"
-          >
-            {loading 
-              ? (context === 'create' ? 'Création...' : 'Enregistrement...') 
-              : (context === 'create' ? 'Créer l\'équipe' : 'Enregistrer le planning')
-            }
-          </button>
+          {!standalone && (
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-medium"
+            >
+              {loading 
+                ? (context === 'create' ? 'Création...' : 'Enregistrement...') 
+                : (context === 'create' ? 'Créer l\'équipe' : 'Enregistrer le planning')
+              }
+            </button>
+          )}
         </>
       )}
     </form>
   );
-}
+});
+
+PlanningForm.displayName = 'PlanningForm';
+
+export default PlanningForm;

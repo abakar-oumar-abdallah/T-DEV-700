@@ -162,7 +162,15 @@ class UserTeamController {
       res.status(201).json({
         success: true,
         message: 'User-team association created successfully',
-        data: data
+        data: {
+          id: data.id,  // AJOUTER - Explicitement inclure l'ID
+          user_id: data.user_id,
+          team_id: data.team_id,
+          role: data.role,
+          user: data.user,
+          team: data.team,
+          ...data 
+        }
       });
 
     } catch (err) {
@@ -307,7 +315,15 @@ class UserTeamController {
       res.status(201).json({
         success: true,
         message: 'User-team association created successfully using email',
-        data: data
+        data: {
+          id: data.id,  // AJOUTER - Explicitement inclure l'ID
+          user_id: data.user_id,
+          team_id: data.team_id,
+          role: data.role,
+          user: data.user,
+          team: data.team,
+          ...data  // Garder toutes les autres données
+        }
       });
 
     } catch (err) {
