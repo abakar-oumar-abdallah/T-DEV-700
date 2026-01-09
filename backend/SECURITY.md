@@ -337,6 +337,69 @@ router.post('/sensitive-route', authLimiter, votreController);
 
 ---
 
+## Protection des Routes par Authentification
+
+Toutes les routes de l'API sont maintenant protégées par des middlewares d'authentification et d'autorisation appropriés:
+
+### Routes Publiques (sans authentification)
+- `GET /csrf-token` - Obtenir un token CSRF
+- `POST /login` - Connexion (protégée par CSRF)
+- `POST /logout` - Déconnexion (protégée par CSRF)
+
+### Routes Protégées par Authentification
+
+#### Routes Superadmin uniquement
+- `GET /users` - Liste de tous les utilisateurs
+- `GET /teams` - Liste de toutes les équipes
+- `GET /userteams` - Liste de toutes les associations user-team
+- `GET /clocks` - Liste de tous les pointages
+
+#### Routes Admin/Manager
+- `POST /users` - Créer un utilisateur (admin)
+- `GET /users/:id` - Obtenir un utilisateur (admin)
+- `GET /users/email/:email` - Obtenir un utilisateur par email (admin)
+- `PATCH /users/:id` - Modifier un utilisateur (admin)
+- `DELETE /users/:id` - Supprimer un utilisateur (admin)
+- `POST /teams` - Créer une équipe (admin)
+- `PATCH /teams/:id` - Modifier une équipe (admin + manager de l'équipe)
+- `DELETE /teams/:id` - Supprimer une équipe (admin + manager de l'équipe)
+- `POST /clocks` - Créer un pointage (admin)
+- `PATCH /clocks/:id` - Modifier un pointage (admin)
+- `DELETE /clocks/:id` - Supprimer un pointage (admin)
+- `GET /plannings` - Liste des plannings (admin)
+- `POST /plannings` - Créer un planning (admin)
+- `PATCH /plannings/:id` - Modifier un planning (admin)
+- `DELETE /plannings/:id` - Supprimer un planning (admin)
+- `GET /schedules` - Liste des horaires (admin)
+- `PATCH /schedules/:id` - Modifier un horaire (admin)
+- `DELETE /schedules/:id` - Supprimer un horaire (admin)
+
+#### Routes Utilisateur Authentifié
+Toutes les routes commençant par `/myTeam/`, `/myClocks`, `/myAssociation/` nécessitent une authentification et accèdent aux données de l'utilisateur connecté uniquement.
+
+### Middlewares de Sécurité Utilisés
+
+#### AuthMiddleware
+- Vérifie la présence et la validité du JWT (cookie ou header)
+- Ajoute `req.user` avec les informations de l'utilisateur
+- Retourne 401 si non authentifié
+
+#### PermissionMiddleware
+- Vérifie le niveau de permission de l'utilisateur (superadmin, admin, employee)
+- Doit être utilisé après AuthMiddleware
+- Retourne 403 si permissions insuffisantes
+
+#### TeamRoleMiddleware
+- Vérifie le rôle de l'utilisateur dans une équipe spécifique (manager, employee)
+- Peut être configuré en mode "useTokenUserId" pour vérifier l'équipe de l'utilisateur connecté
+- Doit être utilisé après AuthMiddleware
+- Retourne 403 si rôle insuffisant
+
+#### CsrfMiddleware
+- Protège toutes les routes POST/PUT/PATCH/DELETE
+- Vérifie la correspondance entre le cookie XSRF-TOKEN et le header X-CSRF-Token
+- Retourne 403 si tokens invalides
+
 ## Checklist de Sécurité
 
 - [x] Protection CSRF avec tokens sur toutes les routes mutantes (POST/PUT/DELETE)
@@ -352,6 +415,9 @@ router.post('/sensitive-route', authLimiter, votreController);
 - [x] Configuration CORS stricte
 - [x] Validation et sanitization des emails
 - [x] Validation des inputs avec longueur min/max
+- [x] **Authentification obligatoire sur toutes les routes sensibles**
+- [x] **Autorisation basée sur les rôles (RBAC) pour toutes les opérations**
+- [x] **Isolation des données utilisateur (accès uniquement aux propres données)**
 
 ---
 

@@ -56,7 +56,8 @@ jest.mock('../src/controllers/team/TeamController', () => ({
   getTeamById: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
   getTeamByName: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
   updateTeam: jest.fn((req, res) => res.status(200).json({ success: true, data: { id: 1 } })),
-  deleteTeam: jest.fn((req, res) => res.status(200).json({ success: true }))
+  deleteTeam: jest.fn((req, res) => res.status(200).json({ success: true })),
+  getAllValidTimezones: jest.fn((req, res) => res.status(200).json({ success: true, data: [], count: 0 }))
 }));
 
 jest.mock('../src/controllers/clock/ClockController', () => ({

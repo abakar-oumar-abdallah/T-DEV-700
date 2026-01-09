@@ -9,7 +9,7 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  * @swagger
  * tags:
  *   name: Users
- *   description: User management 
+ *   description: User management
  */
 
 // get all users
@@ -23,7 +23,10 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *       200:
  *         description: List of all users
  */
-router.get('/users', UserController.getAllUsers);
+router.get('/users',
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
+    UserController.getAllUsers);
 
 // create a user with email, password, first_name and last_name 
 /**
@@ -70,7 +73,10 @@ router.get('/users', UserController.getAllUsers);
  *       500:
  *         description: Server error
  */
-router.post('/users', UserController.createUser);
+router.post('/users',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.createUser);
 
 // get a user by id
 /**
@@ -96,7 +102,10 @@ router.post('/users', UserController.createUser);
  *       500:
  *         description: Server error
  */
-router.get('/users/:id', UserController.getUserById);
+router.get('/users/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.getUserById);
 
 // get a user by email
 /**
@@ -122,7 +131,10 @@ router.get('/users/:id', UserController.getUserById);
  *       500:
  *         description: Server error
  */
-router.get('/users/email/:email', UserController.getUserByEmail);
+router.get('/users/email/:email',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.getUserByEmail);
 
 // update a user's information
 /**
@@ -172,10 +184,10 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *       500:
  *         description: Server error
  */
-router.patch('/users/:id', 
+router.patch('/users/:id',
     AuthMiddleware,
-    UserController.updateUser
-);
+    PermissionMiddleware('admin'),
+    UserController.updateUser);
 
 // delete a user
 /**
@@ -201,6 +213,9 @@ router.patch('/users/:id',
  *       500:
  *         description: Server error
  */
-router.delete('/users/:id', UserController.deleteUser);
+router.delete('/users/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.deleteUser);
 
 module.exports = router;
