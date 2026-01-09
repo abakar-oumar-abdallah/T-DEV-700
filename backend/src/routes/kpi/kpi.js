@@ -172,4 +172,10 @@ router.get(
     KpiController.getDepartureRateByEmployee
 );
 
+// Get absences for a user
+router.get('/kpi/teams/:teamId/users/:userId/absences', AuthMiddleware, TeamRoleMiddleware(['manager','owner']),KpiController.getAbsences);
+
+// Fix absences (create clock entries)
+router.patch('/kpi/teams/:teamId/absences/fix', AuthMiddleware, TeamRoleMiddleware(['manager','owner']),KpiController.fixAbsences);
+
 module.exports = router;

@@ -2,7 +2,7 @@ import React from 'react'
 import { ChartBarIcon, UserIcon, ClockIcon, CalendarIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import type { UserTeam } from '@/kpi/kpi'
 
-type KpiType = 'lateness' | 'departure'
+type KpiType = 'lateness' | 'departure' | 'absences'
 type PeriodMode = 'days' | 'all' | 'range'
 
 interface KpiFiltersProps {
@@ -64,6 +64,7 @@ export default function KpiFilters({
           >
             <option value="lateness">Ponctualité (arrivées)</option>
             <option value="departure">Départ (heures de sortie)</option>
+            <option value="absences">Absences</option>
           </select>
         </div>
 
