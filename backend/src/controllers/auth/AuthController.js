@@ -73,7 +73,8 @@ class AuthController {
       const token = jwt.sign(
         {
           userId: user.id,
-          email: user.email
+          email: user.email,
+          permission: user.permission
         },
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
@@ -201,7 +202,7 @@ class AuthController {
       // Get user info (excluding password)
       const { data: user, error: userError } = await supabase
         .from('user')
-        .select('id, email, first_name, last_name, permission')
+        .select('id, email, first_name, last_name, phone_number ,permission')
         .eq('id', userId)
         .single();
 

@@ -23,7 +23,10 @@ const TotpMiddleware = require('../../middlewares/TotpMiddleware');
  *       200:
  *         description: List of all clocks
  */
-router.get('/clocks', ClockController.getAllClocks);
+router.get('/clocks',
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
+    ClockController.getAllClocks);
 
 // Create a new clock
 /**
@@ -61,8 +64,8 @@ router.get('/clocks', ClockController.getAllClocks);
  *         description: Server error
  */
 router.post('/clocks',
-    // AuthMiddleware,
-    // TeamRoleMiddleware(['employee', 'manager', 'admin']),
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
     ClockController.createClock
 );
 
@@ -88,7 +91,9 @@ router.post('/clocks',
  *       500:
  *         description: Server error
  */
-router.get('/clocks/:id', ClockController.getClockById);
+router.get('/clocks/:id',
+    AuthMiddleware,
+    ClockController.getClockById);
 
 // Get a clock by user team id
 /**
@@ -113,8 +118,7 @@ router.get('/clocks/:id', ClockController.getClockById);
  *         description: Server error
  */
 router.get('/clocks/userteams/:user_team_id',
-    // AuthMiddleware,
-    // TeamRoleMiddleware(['employee', 'manager', 'admin']),
+    AuthMiddleware,
     ClockController.getClockByUserTeamId
 );
 
@@ -155,7 +159,10 @@ router.get('/clocks/userteams/:user_team_id',
  *       500:
  *         description: Server error
  */
-router.patch('/clocks/:id', ClockController.updateClock);
+router.patch('/clocks/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    ClockController.updateClock);
 
 // Delete a clock
 /**
@@ -179,7 +186,10 @@ router.patch('/clocks/:id', ClockController.updateClock);
  *       500:
  *         description: Server error
  */
-router.delete('/clocks/:id', ClockController.deleteClock);
+router.delete('/clocks/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    ClockController.deleteClock);
 
 
 // ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================

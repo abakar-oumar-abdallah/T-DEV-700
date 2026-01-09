@@ -21,7 +21,7 @@ interface Team {
 interface User {
   id: string;
   email: string;
-  phonenumber: string;
+  phone_number: string;
   first_name: string;
   last_name: string;
   permission: string;
@@ -30,6 +30,7 @@ interface User {
 interface TeamContextType {
   currentTeam: Team | null;
   user: User | null;
+  setUser: (user: User | null) => void;
   teams: Team[];
   setCurrentTeam: (team: Team) => void;
   clearTeamContext: () => void;
@@ -70,6 +71,12 @@ export function TeamProvider({ children }: TeamProviderProps) {
       if (result.success && result.data) {
         setUser(result.data.user);
         setTeams(result.data.teams);
+
+        // Redirection automatique pour superadmin
+        if (result.data.user.permission === 'superadmin') {
+          router.push('/dashboard/superadmin');
+          return;
+        }
 
         if (result.data.teams.length === 1) {
           const team = result.data.teams[0];
@@ -129,6 +136,7 @@ export function TeamProvider({ children }: TeamProviderProps) {
   const value: TeamContextType = {
     currentTeam,
     user,
+    setUser,
     teams,
     setCurrentTeam,
     clearTeamContext,
