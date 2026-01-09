@@ -26,8 +26,8 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *         description: Server error
  */
 router.get('/userteams',
-    // AuthMiddleware, 
-    // PermissionMiddleware(['superadmin']),
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
     UserTeamController.getAllUserTeams);
 
 // Create a new user-team association
@@ -285,7 +285,9 @@ router.delete('/userteams/myAssociation/:teamId',
  *       500:
  *         description: Server error
  */
-router.get('/userteams/:userId/:teamId', UserTeamController.getUserTeamById);
+router.get('/userteams/:userId/:teamId',
+    AuthMiddleware,
+    UserTeamController.getUserTeamById);
 
 // Get all teams for a specific user
 /**
@@ -307,7 +309,10 @@ router.get('/userteams/:userId/:teamId', UserTeamController.getUserTeamById);
  *       500:
  *         description: Server error
  */
-router.get('/users/:userId/teams', UserTeamController.getTeamsByUserId);
+router.get('/users/:userId/teams',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserTeamController.getTeamsByUserId);
 
 // Get all users for a specific team
 /**
@@ -329,7 +334,10 @@ router.get('/users/:userId/teams', UserTeamController.getTeamsByUserId);
  *       500:
  *         description: Server error
  */
-router.get('/teams/:teamId/users', UserTeamController.getUsersByTeamId);
+router.get('/teams/:teamId/users',
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager'], true),
+    UserTeamController.getUsersByTeamId);
 
 // Update user-team association
 /**
@@ -374,7 +382,10 @@ router.get('/teams/:teamId/users', UserTeamController.getUsersByTeamId);
  *       500:
  *         description: Server error
  */
-router.patch('/userteams/:userId/:teamId', UserTeamController.updateUserTeam);
+router.patch('/userteams/:userId/:teamId',
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager'], true),
+    UserTeamController.updateUserTeam);
 
 // Delete user-team association
 /**
@@ -404,6 +415,9 @@ router.patch('/userteams/:userId/:teamId', UserTeamController.updateUserTeam);
  *       500:
  *         description: Server error
  */
-router.delete('/userteams/:userId/:teamId', UserTeamController.deleteUserTeam);
+router.delete('/userteams/:userId/:teamId',
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager'], true),
+    UserTeamController.deleteUserTeam);
 
 module.exports = router;

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const PlanningController = require('../../controllers/planning/PlanningController');
 const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
 const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
@@ -24,7 +25,10 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *       500:
  *         description: Server error
  */
-router.get('/plannings', PlanningController.getAllPlannings);
+router.get('/plannings',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    PlanningController.getAllPlannings);
 
 // Create a new planning
 /**
@@ -72,7 +76,10 @@ router.get('/plannings', PlanningController.getAllPlannings);
  *       500:
  *         description: Server error
  */
-router.post('/plannings', PlanningController.createPlanning);
+router.post('/plannings',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    PlanningController.createPlanning);
 
 // Get planning by ID
 /**
@@ -96,7 +103,9 @@ router.post('/plannings', PlanningController.createPlanning);
  *       500:
  *         description: Server error
  */
-router.get('/plannings/:id', PlanningController.getPlanningById);
+router.get('/plannings/:id',
+    AuthMiddleware,
+    PlanningController.getPlanningById);
 
 // Update planning
 /**
@@ -132,7 +141,10 @@ router.get('/plannings/:id', PlanningController.getPlanningById);
  *       500:
  *         description: Server error
  */
-router.patch('/plannings/:id', PlanningController.updatePlanning);
+router.patch('/plannings/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    PlanningController.updatePlanning);
 
 // Delete planning
 /**
@@ -158,7 +170,10 @@ router.patch('/plannings/:id', PlanningController.updatePlanning);
  *       500:
  *         description: Server error
  */
-router.delete('/plannings/:id', PlanningController.deletePlanning);
+router.delete('/plannings/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    PlanningController.deletePlanning);
 
 // Get default planning by team ID
 /**
@@ -182,7 +197,9 @@ router.delete('/plannings/:id', PlanningController.deletePlanning);
  *       500:
  *         description: Server error
  */
-router.get('/plannings/teams/:teamId/default', PlanningController.getDefaultPlanningByTeam);
+router.get('/plannings/teams/:teamId/default',
+    AuthMiddleware,
+    PlanningController.getDefaultPlanningByTeam);
 
 // Get planning by user-team ID
 /**
@@ -206,7 +223,9 @@ router.get('/plannings/teams/:teamId/default', PlanningController.getDefaultPlan
  *       500:
  *         description: Server error
  */
-router.get('/plannings/user-teams/:userTeamId', PlanningController.getPlanningByUserTeam);
+router.get('/plannings/user-teams/:userTeamId',
+    AuthMiddleware,
+    PlanningController.getPlanningByUserTeam);
 
 // Modify team planning (creates new planning)
 /**
@@ -262,7 +281,10 @@ router.get('/plannings/user-teams/:userTeamId', PlanningController.getPlanningBy
  *       500:
  *         description: Server error
  */
-router.post('/plannings/teams/:teamId/modify', PlanningController.modifyTeamPlanning);
+router.post('/plannings/teams/:teamId/modify',
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager'], true),
+    PlanningController.modifyTeamPlanning);
 
 // Modify user-team planning (creates new planning)
 /**
@@ -319,7 +341,10 @@ router.post('/plannings/teams/:teamId/modify', PlanningController.modifyTeamPlan
  *       500:
  *         description: Server error
  */
-router.post('/plannings/user-teams/:userTeamId/modify', PlanningController.modifyUserTeamPlanning);
+router.post('/plannings/user-teams/:userTeamId/modify',
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager'], true),
+    PlanningController.modifyUserTeamPlanning);
 
 
 // ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================

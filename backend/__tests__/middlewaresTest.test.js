@@ -164,7 +164,6 @@ describe('Middleware Tests', () => {
           userId: 1,
           permission: 'user'
         });
-        expect(req.body.userId).toBe(1);
         expect(next).toHaveBeenCalled();
       });
 

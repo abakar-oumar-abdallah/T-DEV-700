@@ -149,22 +149,32 @@ class PlanningController {
   getPlanningByUserTeam = async (req, res) => {
     // Use userTeamId from params, or fall back to userTeamId added by TeamRoleMiddleware
     const userTeamId = req.params.userTeamId || req.body.userTeamId;
-    
+
     if (!userTeamId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User team ID is required' 
+      return res.status(400).json({
+        success: false,
+        message: 'User team ID is required'
       });
     }
 
     const userTeamResult = await this.safeQuery(
-      supabase.from('user_team').select('id, role, planning_id, user:user_id (*), team:team_id (id, name)').eq('id', userTeamId).single()
+      supabase.from('user_team').select('id, role, planning_id, user:user_id (*), team:team_id (id, name, default_planning_id)').eq('id', userTeamId).single()
     );
     if (userTeamResult.error) return this.handleResponse(res, userTeamResult.error, null, null, 'User-team association not found');
 
-    // Only use user's specific planning, do NOT fall back to team's default
-    const planningId = userTeamResult.data.planning_id;
-    if (!planningId) return res.status(404).json({ success: false, message: 'No planning assigned to this employee' });
+    // Try user's specific planning first, then fall back to team's default
+    let planningId = userTeamResult.data.planning_id;
+    let isTeamDefault = false;
+
+    if (!planningId) {
+      // Fall back to team's default planning
+      planningId = userTeamResult.data.team.default_planning_id;
+      isTeamDefault = true;
+    }
+
+    if (!planningId) {
+      return res.status(404).json({ success: false, message: 'No planning assigned to this user or team' });
+    }
 
     const planningResult = await this.safeQuery(
       supabase.from('planning').select('*, schedule:schedule (*)').eq('id', planningId).single()
@@ -173,7 +183,8 @@ class PlanningController {
 
     return this.handleResponse(res, null, {
       userTeam: { id: userTeamResult.data.id, role: userTeamResult.data.role, user: userTeamResult.data.user, team: userTeamResult.data.team },
-      planning: planningResult.data
+      planning: planningResult.data,
+      isTeamDefault
     }, 'Planning retrieved successfully');
   };
 
