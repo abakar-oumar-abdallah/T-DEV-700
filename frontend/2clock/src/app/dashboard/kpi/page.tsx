@@ -117,7 +117,7 @@ function KpiContent() {
     }).finally(() => setLoading(false))
   }, [currentTeam?.team.id, selectedUserId, appliedDays, appliedStartDate, appliedEndDate, periodMode, kpiType])
 
-  // Load absences data
+    // Load absences data
   useEffect(() => {
     if (!currentTeam?.team.id || !selectedUserId || kpiType !== 'absences') return
     setLoading(true)
@@ -128,10 +128,19 @@ function KpiContent() {
       limit: 20
     }
     
+    // Add date filtering based on period mode
     if (periodMode === 'range' && appliedStartDate && appliedEndDate) {
       options.startDate = appliedStartDate
       options.endDate = appliedEndDate
+    } else if (periodMode === 'days' && appliedDays) {
+      // Calculate date range from days
+      const endDate = new Date()
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - appliedDays)
+      options.startDate = startDate.toISOString().split('T')[0]
+      options.endDate = endDate.toISOString().split('T')[0]
     }
+    // If periodMode === 'all', don't set dates (will use default: user created_at + 1 day to today)
     
     getAbsences(currentTeam.team.id, selectedUserId, options).then(r => {
       if (r.success && r.data) {
@@ -140,7 +149,7 @@ function KpiContent() {
         setError(r.error || 'Erreur chargement absences')
       }
     }).finally(() => setLoading(false))
-  }, [currentTeam?.team.id, selectedUserId, kpiType, absencesPage, appliedStartDate, appliedEndDate, periodMode])
+  }, [currentTeam?.team.id, selectedUserId, kpiType, absencesPage, appliedStartDate, appliedEndDate, periodMode, appliedDays])
 
   const handlePeriodModeChange = (value: 'days' | 'all' | 'range') => {
     setPeriodMode(value)
@@ -205,7 +214,7 @@ function KpiContent() {
       setTimeout(() => setAppliedDays(appliedDays), 0)
     }
   }
-
+  
   const handleFixAbsences = async (absences: Absence[]) => {
     if (!currentTeam?.team.id) return
     
@@ -213,19 +222,30 @@ function KpiContent() {
     setError(null)
     
     try {
-      const result = await fixAbsences(currentTeam.team.id, absences)
+      // Prepare date options based on period mode
+      const fixOptions: { startDate?: string; endDate?: string } = {}
+      
+      if (periodMode === 'range' && appliedStartDate && appliedEndDate) {
+        fixOptions.startDate = appliedStartDate
+        fixOptions.endDate = appliedEndDate
+      } else if (periodMode === 'days' && appliedDays) {
+        const endDate = new Date()
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - appliedDays)
+        fixOptions.startDate = startDate.toISOString().split('T')[0]
+        fixOptions.endDate = endDate.toISOString().split('T')[0]
+      }
+      // If periodMode === 'all', don't set dates (backend will use default: created_at + 1 to today)
+      
+      const result = await fixAbsences(currentTeam.team.id, absences, fixOptions)
       
       if (result.success) {
-        // Reload absences data
+        // Reload absences data with the same filters
         setAbsencesPage(1)
         const options: { startDate?: string; endDate?: string; page?: number; limit?: number } = {
           page: 1,
-          limit: 20
-        }
-        
-        if (periodMode === 'range' && appliedStartDate && appliedEndDate) {
-          options.startDate = appliedStartDate
-          options.endDate = appliedEndDate
+          limit: 20,
+          ...fixOptions
         }
         
         if (selectedUserId) {

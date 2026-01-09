@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const KpiController = require('../../controllers/kpi/KpiController');
+const AbsenceController = require('../../controllers/kpi/AbsenceController');
 const AuthMiddleware = require('../../middlewares/AuthMiddleware');
 const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
@@ -173,9 +174,9 @@ router.get(
 );
 
 // Get absences for a user
-router.get('/kpi/teams/:teamId/users/:userId/absences', AuthMiddleware, TeamRoleMiddleware(['manager','owner']),KpiController.getAbsences);
+router.get('/kpi/teams/:teamId/users/:userId/absences', AuthMiddleware, TeamRoleMiddleware(['manager','owner']),AbsenceController.getAbsences);
 
 // Fix absences (create clock entries)
-router.patch('/kpi/teams/:teamId/absences/fix', AuthMiddleware, TeamRoleMiddleware(['manager','owner']),KpiController.fixAbsences);
+router.patch('/kpi/teams/:teamId/absences/fix', AuthMiddleware, TeamRoleMiddleware(['manager','owner']),AbsenceController.fixAbsences);
 
 module.exports = router;

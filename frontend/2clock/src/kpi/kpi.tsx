@@ -152,8 +152,23 @@ export const getAbsences = (
   return apiCall<AbsencesResponse>(url)
 }
 
-export const fixAbsences = (teamId: number, absences: Absence[]) => {
-  return apiCall<{ created: number; errors: number }>(`/kpi/teams/${teamId}/absences/fix`, {
+export const fixAbsences = (
+  teamId: number, 
+  absences: Absence[],
+  options?: { startDate?: string; endDate?: string }
+) => {
+  let url = `/kpi/teams/${teamId}/absences/fix`
+  const params = new URLSearchParams()
+  
+  // Add date range parameters if provided
+  if (options?.startDate) params.append('startDate', options.startDate)
+  if (options?.endDate) params.append('endDate', options.endDate)
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`
+  }
+  
+  return apiCall<{ created: number; errors: number }>(url, {
     method: 'PATCH',
     body: JSON.stringify({ absences })
   })
