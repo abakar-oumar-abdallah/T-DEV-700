@@ -102,6 +102,7 @@ export const GetTeamPlanning = async (teamId: number): Promise<GetTeamPlanningRe
     const response = await fetch(`${backendUrl}/plannings/teams/${teamId}/default`, {
       headers: {
         'Authorization': `Bearer ${token}`,
+        'X-Team-Id': teamId.toString(),
       },
     });
 
@@ -149,6 +150,7 @@ export const ModifyTeamPlanning = async (teamId: number, planningData: ModifyTea
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'X-Team-Id': teamId.toString(),
       },
       body: JSON.stringify(planningData),
     });
@@ -177,8 +179,9 @@ export const ModifyTeamPlanning = async (teamId: number, planningData: ModifyTea
     };
   }
 };
+
 // Get planning for a user-team
-export const GetUserTeamPlanning = async (userTeamId: number): Promise<GetUserTeamPlanningResponse> => {
+export const GetUserTeamPlanning = async (userTeamId: number, teamId: number): Promise<GetUserTeamPlanningResponse> => {
   try {
     const token = localStorage.getItem('session');
 
@@ -195,6 +198,7 @@ export const GetUserTeamPlanning = async (userTeamId: number): Promise<GetUserTe
     const response = await fetch(`${backendUrl}/plannings/user-teams/${userTeamId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
+        'X-Team-Id': teamId.toString(),
       },
     });
 
@@ -226,6 +230,7 @@ export const GetUserTeamPlanning = async (userTeamId: number): Promise<GetUserTe
 // Modify planning for a user-team
 export const ModifyUserTeamPlanning = async (
   userTeamId: number,
+  teamId: number,
   planningData: ModifyUserTeamPlanningData
 ): Promise<ModifyUserTeamPlanningResponse> => {
   try {
@@ -246,6 +251,7 @@ export const ModifyUserTeamPlanning = async (
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'X-Team-Id': teamId.toString(),
       },
       body: JSON.stringify(planningData),
     });
@@ -275,6 +281,7 @@ export const ModifyUserTeamPlanning = async (
     };
   }
 };
+
 export const GetDefaultPlannings = async (): Promise<GetDefaultPlanningsResponse> => {
   try {
     const token = localStorage.getItem('session');

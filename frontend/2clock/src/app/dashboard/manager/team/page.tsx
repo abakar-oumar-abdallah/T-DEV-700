@@ -84,7 +84,7 @@ export default function ManagerTeamPage() {
     
     // Owner can edit anyone except other owners
     if (isOwner) {
-      return member.role !== 'owner'
+      return true
     }
     
     // Manager can only edit employees

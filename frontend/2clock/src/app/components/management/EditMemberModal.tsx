@@ -354,6 +354,7 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
         <div className="border-t border-gray-200 pt-6">
           <PlanningForm
             userTeamId={member.id}
+            teamId={parseInt(teamId)}
             currentPlanningId={member.planning_id}
             context="member"
             title={`Planning de ${member.user.first_name} ${member.user.last_name}`}

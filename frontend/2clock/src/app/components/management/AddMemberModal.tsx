@@ -103,7 +103,7 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
 
         console.log('Updating planning for userTeam ID:', userTeamId, 'with schedules:', planningSchedules);
         
-        const planningResult = await ModifyUserTeamPlanning(userTeamId, {
+        const planningResult = await ModifyUserTeamPlanning(userTeamId, parseInt(teamId), {
           schedules: planningSchedules
         });
 
@@ -241,7 +241,7 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
 
         console.log('Updating planning for userTeam ID:', userTeamId, 'with schedules:', planningSchedules);
         
-        const planningResult = await ModifyUserTeamPlanning(userTeamId, {
+        const planningResult = await ModifyUserTeamPlanning(userTeamId, parseInt(teamId), {
           schedules: planningSchedules
         });
 
