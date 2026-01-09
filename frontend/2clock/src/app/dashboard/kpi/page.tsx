@@ -41,9 +41,17 @@ function KpiContent() {
   const selectedUser = teamMembers.find(m => m.user.id === selectedUserId)
 
   useEffect(() => { setMounted(true) }, [])
-  useEffect(() => { 
-    if (currentTeam && !isManagerOrOwner) router.push('/dashboard') 
-  }, [currentTeam, isManagerOrOwner, router])
+  
+  // Rediriger les superadmin vers leur page
+  useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+      return
+    }
+    if (currentTeam && !isManagerOrOwner) {
+      router.push('/dashboard')
+    }
+  }, [user, currentTeam, isManagerOrOwner, router])
 
   useEffect(() => {
     if (!currentTeam?.team.id || !isManagerOrOwner) return

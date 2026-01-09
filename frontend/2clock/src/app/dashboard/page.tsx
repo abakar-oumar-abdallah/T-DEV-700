@@ -1,16 +1,23 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ClockIcon, UserIcon, ChartBarIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline'
 import { useTeam } from '@/contexts/TeamContext'
 
 export default function EmployeePage() {
+  const router = useRouter()
   const { currentTeam, user } = useTeam()
   const [mounted, setMounted] = useState(false)
   
+  // Rediriger les superadmin vers leur page
   useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+      return
+    }
     setMounted(true)
-  }, [])
+  }, [user, router])
 
   return (
     <main className="p-6 sm:p-10 min-h-screen">

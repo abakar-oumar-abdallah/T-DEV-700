@@ -47,12 +47,23 @@ export default function ManagerTeamPage() {
     setMounted(true)
   }, [])
 
+  // Rediriger les superadmin vers leur page
   useEffect(() => {
-    if (!currentTeam || !isManagerOrOwner) {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+      return
+    }
+    if (currentTeam && !isManagerOrOwner) {
+      router.push('/dashboard')
+    }
+  }, [user, currentTeam, isManagerOrOwner, router])
+
+  useEffect(() => {
+    if (!currentTeam || !isManagerOrOwner || user?.permission === 'superadmin') {
       return
     }
     fetchTeamMembers()
-  }, [currentTeam, isManagerOrOwner])
+  }, [currentTeam, isManagerOrOwner, user])
 
   const fetchTeamMembers = async () => {
     if (!currentTeam?.team?.id) return

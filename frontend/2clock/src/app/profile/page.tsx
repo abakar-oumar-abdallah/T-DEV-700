@@ -9,11 +9,13 @@ import {
   PencilSquareIcon,
   CheckIcon,
   XMarkIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline'
 import { useTeam } from '@/contexts/TeamContext'
 import { updateUser } from '@/user/user'
 import Image from "next/image"
+import PlanningForm from '@/app/components/PlanningForm'
 
 export default function ProfilePage() {
   const { user, refreshUser, setUser, currentTeam } = useTeam()
@@ -485,6 +487,34 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Planning Section - Readonly */}
+      {currentTeam && (
+        <div className={`mt-8 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-700 ${
+          mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`} style={{ transitionDelay: '800ms' }}>
+          <div className="px-6 py-4 bg-[var(--color-secondary)] border-b border-gray-100">
+            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+              <ClockIcon className="w-6 h-6" />
+              Mon Planning
+            </h2>
+          </div>
+
+          <div className="p-6">
+            <p className="text-sm text-gray-600 mb-4">
+              Équipe: <span className="font-semibold">{currentTeam.team.name}</span>
+            </p>
+            <PlanningForm
+              userTeamId={parseInt(currentTeam.id)}
+              teamId={currentTeam.team.id}
+              context="member"
+              title="Horaires de travail"
+              standalone={true}
+              readonly={true}
+            />
+          </div>
+        </div>
+      )}
     </main>
   )
 }

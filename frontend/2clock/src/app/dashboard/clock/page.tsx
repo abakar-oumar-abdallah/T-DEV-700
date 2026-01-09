@@ -1,7 +1,9 @@
 "use client"
 import React, { useEffect, useState } from "react"
+import { useRouter } from 'next/navigation'
 import { useTeam } from "@/contexts/TeamContext"
 import { clockInOut, getClockHistory } from "@/clock/clock"
+import { GetUserTeamPlanning } from "@/planning/planning"
 import { BuildingOffice2Icon, ClockIcon } from "@heroicons/react/24/outline"
 
 type Punch = {
@@ -106,15 +108,24 @@ function formatTime(d = new Date(), timezone = 'Europe/Paris') {
 }
 
 export default function ClockPage() {
+  const router = useRouter()
   const [pin, setPin] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [history, setHistory] = useState<Punch[]>([])
   const [mounted, setMounted] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [todaySchedule, setTodaySchedule] = useState<{time_in: string, time_out: string} | null>(null)
   const { currentTeam, user } = useTeam()
 
   const teamTimezone = currentTeam?.team.timezone || 'Europe/Paris'
+
+  // Rediriger les superadmin vers leur page
+  useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+    }
+  }, [user, router])
 
   useEffect(() => {
     setMounted(true)
@@ -164,7 +175,9 @@ export default function ClockPage() {
           // Convert API data to local Punch format with calculated stats
           const punches: Punch[] = []
           
-          for (const clockEntry of result.data) {
+          const dataArray = Array.isArray(result.data) ? result.data : [result.data]
+          
+          for (const clockEntry of dataArray) {
             if (clockEntry.arrival_time) {
               let arrivalPunch: Punch = {
                 id: `${clockEntry.id}-arrival`,
@@ -196,6 +209,31 @@ export default function ClockPage() {
 
     loadClockHistory()
   }, [currentTeam?.team.id, user?.id])
+
+  // Load today's schedule
+  useEffect(() => {
+    const loadTodaySchedule = async () => {
+      if (!currentTeam?.id || !currentTeam?.team.id) return;
+      
+      try {
+        const result = await GetUserTeamPlanning(parseInt(currentTeam.id), currentTeam.team.id);
+        if (result.success && result.data?.planning?.schedule) {
+          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+          const schedule = result.data.planning.schedule.find((s: any) => s.day === today);
+          if (schedule) {
+            setTodaySchedule({
+              time_in: schedule.time_in.substring(0, 5),
+              time_out: schedule.time_out.substring(0, 5)
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading today schedule:', error);
+      }
+    };
+
+    loadTodaySchedule();
+  }, [currentTeam?.id, currentTeam?.team.id]);
 
   const handleSubmit = async () => {
     setMessage(null)
@@ -229,7 +267,7 @@ export default function ClockPage() {
         code: pin
       })
 
-      if (result.success && result.data) {
+      if (result.success && result.data && !Array.isArray(result.data)) {
         const actionType: Punch["type"] = result.data.status === 'clocked_in' ? "Arrivée" : "Départ"
         const time = result.data.status === 'clocked_in' 
           ? result.data.arrival_time 
@@ -345,6 +383,15 @@ export default function ClockPage() {
               <p className="text-xs text-gray-400 mt-1">
                 Fuseau horaire: {teamTimezone}
               </p>
+            )}
+            
+            {/* Horaires du jour */}
+            {todaySchedule && (
+              <div className="mt-4 inline-block bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                <p className="text-sm text-blue-800 font-medium">
+                  Horaires du jour : {todaySchedule.time_in} - {todaySchedule.time_out}
+                </p>
+              </div>
             )}
           </div>
 

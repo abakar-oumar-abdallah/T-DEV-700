@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   ChartBarIcon, 
   ClockIcon, 
@@ -30,6 +31,7 @@ const weekStats = {
 type FilterType = 'week' | 'month' | 'custom'
 
 export default function PunchesPage() {
+  const router = useRouter()
   const { currentTeam, user } = useTeam()
   const [mounted, setMounted] = useState(false)
   const [filterType, setFilterType] = useState<FilterType>('week')
@@ -38,9 +40,14 @@ export default function PunchesPage() {
   const [endDate, setEndDate] = useState('')
   const [selectedPeriod, setSelectedPeriod] = useState('Cette semaine')
 
+  // Rediriger les superadmin vers leur page
   useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+      return
+    }
     setMounted(true)
-  }, [])
+  }, [user, router])
 
   const exportToCSV = () => {
     const headers = ['Jour', 'Date', 'Heures', 'Statut', 'Retard']

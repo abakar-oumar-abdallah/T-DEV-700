@@ -38,12 +38,16 @@ export default function TotpManagerPage() {
   // Vérifier si l'utilisateur est manager
   const isManager = currentTeam?.role === 'manager' || currentTeam?.role === 'owner'
 
-  // Rediriger si pas manager
+  // Rediriger les superadmin vers leur page et les non-managers vers dashboard
   useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+      return
+    }
     if (currentTeam && !isManager) {
       router.push('/dashboard')
     }
-  }, [currentTeam, isManager, router])
+  }, [user, currentTeam, isManager, router])
 
   // Initialiser la connexion WebSocket
   useEffect(() => {
