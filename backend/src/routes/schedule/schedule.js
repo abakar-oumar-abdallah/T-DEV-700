@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ScheduleController = require('../../controllers/schedule/ScheduleController');
 const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
 const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
@@ -24,7 +25,10 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *       500:
  *         description: Server error
  */
-router.get('/schedules', ScheduleController.getAllSchedules);
+router.get('/schedules',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    ScheduleController.getAllSchedules);
 
 // Get schedule by ID
 /**
@@ -48,7 +52,9 @@ router.get('/schedules', ScheduleController.getAllSchedules);
  *       500:
  *         description: Server error
  */
-router.get('/schedules/:id', ScheduleController.getScheduleById);
+router.get('/schedules/:id',
+    AuthMiddleware,
+    ScheduleController.getScheduleById);
 
 // Get schedules by planning ID
 /**
@@ -72,7 +78,9 @@ router.get('/schedules/:id', ScheduleController.getScheduleById);
  *       500:
  *         description: Server error
  */
-router.get('/schedules/plannings/:planningId', ScheduleController.getSchedulesByPlanningId);
+router.get('/schedules/plannings/:planningId',
+    AuthMiddleware,
+    ScheduleController.getSchedulesByPlanningId);
 
 // Update schedule
 /**
@@ -119,7 +127,10 @@ router.get('/schedules/plannings/:planningId', ScheduleController.getSchedulesBy
  *       500:
  *         description: Server error
  */
-router.patch('/schedules/:id', ScheduleController.updateSchedule);
+router.patch('/schedules/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    ScheduleController.updateSchedule);
 
 // Delete schedule
 /**
@@ -143,7 +154,10 @@ router.patch('/schedules/:id', ScheduleController.updateSchedule);
  *       500:
  *         description: Server error
  */
-router.delete('/schedules/:id', ScheduleController.deleteSchedule);
+router.delete('/schedules/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    ScheduleController.deleteSchedule);
 
 // Get current schedule by user-team ID
 /**
@@ -167,7 +181,9 @@ router.delete('/schedules/:id', ScheduleController.deleteSchedule);
  *       500:
  *         description: Server error
  */
-router.get('/schedules/user-teams/:userTeamId/current', ScheduleController.getCurrentScheduleByUserTeam);
+router.get('/schedules/user-teams/:userTeamId/current',
+    AuthMiddleware,
+    ScheduleController.getCurrentScheduleByUserTeam);
 
 // Get current default schedule by team ID
 /**
@@ -191,7 +207,9 @@ router.get('/schedules/user-teams/:userTeamId/current', ScheduleController.getCu
  *       500:
  *         description: Server error
  */
-router.get('/schedules/teams/:teamId/current-default', ScheduleController.getCurrentDefaultScheduleByTeam);
+router.get('/schedules/teams/:teamId/current-default',
+    AuthMiddleware,
+    ScheduleController.getCurrentDefaultScheduleByTeam);
 
 // ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================
 

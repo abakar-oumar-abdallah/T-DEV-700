@@ -9,7 +9,7 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  * @swagger
  * tags:
  *   name: Users
- *   description: User management 
+ *   description: User management
  */
 
 // get all users
@@ -104,7 +104,10 @@ router.post('/users',
  *       500:
  *         description: Server error
  */
-router.get('/users/:id', UserController.getUserById);
+router.get('/users/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.getUserById);
 
 // get a user by email
 /**
@@ -130,7 +133,10 @@ router.get('/users/:id', UserController.getUserById);
  *       500:
  *         description: Server error
  */
-router.get('/users/email/:email', UserController.getUserByEmail);
+router.get('/users/email/:email',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.getUserByEmail);
 
 // update a user's information
 /**
@@ -180,10 +186,9 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *       500:
  *         description: Server error
  */
-router.patch('/users/:id', 
+router.patch('/users/:id',
     AuthMiddleware,
-    UserController.updateUser
-);
+    UserController.updateUser);
 
 // delete a user
 /**
@@ -209,6 +214,9 @@ router.patch('/users/:id',
  *       500:
  *         description: Server error
  */
-router.delete('/users/:id', UserController.deleteUser);
+router.delete('/users/:id',
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
+    UserController.deleteUser);
 
 module.exports = router;
