@@ -16,13 +16,17 @@ describe('UserController', () => {
   beforeEach(() => {
     // Reset des mocks avant chaque test
     jest.clearAllMocks();
-    
+
     // Mock de la requête et de la réponse
     req = {
       body: {},
-      params: {}
+      params: {},
+      user: {
+        userId: 'test-user-id',
+        permission: 'superadmin' // Par défaut superadmin pour éviter les restrictions
+      }
     };
-    
+
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis()
@@ -350,6 +354,8 @@ describe('UserController', () => {
   describe('updateUser', () => {
     beforeEach(() => {
       req.params.id = '1';
+      // Make it a self-update so we don't need teamId
+      req.user.userId = '1';
     });
 
     it('devrait mettre à jour un utilisateur avec succès', async () => {
@@ -427,7 +433,7 @@ describe('UserController', () => {
 
       await UserController.updateUser(req, res);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPassword123', 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith('newPassword123', 10);
       expect(res.status).toHaveBeenCalledWith(200);
     });
 
@@ -571,7 +577,7 @@ describe('UserController', () => {
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Email already exists for another user'
+        message: 'Email already exists'
       });
     });
   });

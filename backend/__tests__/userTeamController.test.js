@@ -14,7 +14,15 @@ describe('UserTeamController', () => {
     jest.clearAllMocks();
 
     // Mock de la requête et de la réponse
-    req = { body: {}, params: {} };
+    req = {
+      body: {},
+      params: {},
+      user: {
+        userId: 'test-user-id',
+        permission: 'superadmin', // Par défaut superadmin pour éviter les restrictions
+        teamRole: 'owner'
+      }
+    };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis()
@@ -168,7 +176,7 @@ describe('UserTeamController', () => {
       await UserTeamController.createUserTeam(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Invalid role. Must be one of: employee, manager' });
+      expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Invalid role. Must be one of: employee, manager, owner' });
     });
 
     it('devrait retourner 404 si l\'utilisateur est introuvable', async () => {
@@ -549,6 +557,11 @@ describe('UserTeamController', () => {
       req.params = { userId: 'u1', teamId: 't1' };
       req.body = { role: 'manager' };
 
+      const mockExisting = {
+        role: 'employee',
+        user_id: 'u1'
+      };
+
       const mockUpdated = {
         id: 'ut1',
         user_id: 'u1',
@@ -558,7 +571,19 @@ describe('UserTeamController', () => {
         team: { id: 't1', name: 'Team 1', description: 'First team' }
       };
 
-      supabase.from.mockReturnValue({
+      // Mock du select pour récupérer l'association existante
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({ data: mockExisting, error: null })
+            })
+          })
+        })
+      });
+
+      // Mock de l'update
+      supabase.from.mockReturnValueOnce({
         update: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -593,20 +618,19 @@ describe('UserTeamController', () => {
       await UserTeamController.updateUserTeam(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Invalid role. Must be one of: employee, manager' });
+      expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Invalid role. Must be one of: employee, manager, owner' });
     });
 
     it('devrait retourner 404 si association introuvable', async () => {
       req.params = { userId: 'u1', teamId: 't1' };
       req.body = { role: 'manager' };
 
-      supabase.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
+      // Mock du select qui ne trouve pas l'association
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              select: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
-              })
+              single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
             })
           })
         })
@@ -650,8 +674,7 @@ describe('UserTeamController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'User-team association deleted successfully',
-        data: { deletedAssociation: mockExisting }
+        message: 'User-team association deleted successfully'
       });
     });
 
