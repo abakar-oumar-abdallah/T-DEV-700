@@ -122,6 +122,37 @@ export default function ClockPage() {
     return () => clearInterval(timer)
   }, [])
 
+  // Gestion du clavier PC
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (loading) return
+      
+      // Chiffres 0-9
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault()
+        press(e.key)
+      }
+      // Backspace
+      else if (e.key === 'Backspace') {
+        e.preventDefault()
+        press('back')
+      }
+      // Escape ou Delete pour Clear
+      else if (e.key === 'Escape' || e.key === 'Delete') {
+        e.preventDefault()
+        press('clear')
+      }
+      // Enter pour valider
+      else if (e.key === 'Enter' && pin.length === 6 && currentTeam) {
+        e.preventDefault()
+        handleSubmit()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [loading, pin, currentTeam])
+
   // Load clock history from API on component mount
   useEffect(() => {
     const loadClockHistory = async () => {
@@ -341,19 +372,24 @@ export default function ClockPage() {
             {/* PIN display */}
             <div className="mb-6">
               <div className="h-14 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center tracking-widest border-2 border-gray-200 transition-all duration-300 hover:border-[var(--color-primary)]">
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold transition-all duration-300 ${
                         i < pin.length 
-                          ? "bg-[var(--color-primary)] scale-110 shadow-lg" 
-                          : "bg-gray-300"
+                          ? "bg-[var(--color-primary)] text-white scale-105 shadow-lg" 
+                          : "bg-gray-200 text-gray-400"
                       }`}
-                    ></div>
+                    >
+                      {i < pin.length ? pin[i] : '·'}
+                    </div>
                   ))}
                 </div>
               </div>
+              <p className="text-xs text-gray-400 text-center mt-2">
+                Utilisez le pavé numérique ou votre clavier • Entrée pour valider
+              </p>
             </div>
 
             {/* Keypad */}
