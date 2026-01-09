@@ -72,6 +72,12 @@ export function TeamProvider({ children }: TeamProviderProps) {
         setUser(result.data.user);
         setTeams(result.data.teams);
 
+        // Redirection automatique pour superadmin
+        if (result.data.user.permission === 'superadmin') {
+          router.push('/dashboard/superadmin');
+          return;
+        }
+
         if (result.data.teams.length === 1) {
           const team = result.data.teams[0];
           setCurrentTeam(team);

@@ -70,10 +70,9 @@ router.get('/teams',
  *       500:
  *         description: Server error
  */
-router.post(
-    '/teams',
+router.post('/teams',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
+    PermissionMiddleware(['admin']),
     TeamController.createTeam
 );
 
@@ -128,7 +127,9 @@ router.get('/teams/:id',
  */
 router.get('/teams/:name/name',
     AuthMiddleware,
-    TeamController.getTeamByName);
+    PermissionMiddleware('superadmin'),
+    TeamController.getTeamByName
+);
 
 /**
  * @swagger

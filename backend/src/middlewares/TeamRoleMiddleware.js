@@ -83,7 +83,7 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
         if (allowedTeamRoles.length > 0 && !allowedTeamRoles.includes(userTeam.role)) {
           return res.status(403).json({ 
             success: false, 
-            message: `Forbidden - Requires one of the following team roles: ${allowedTeamRoles.join(', ')}` 
+            message: `Forbidden - Requires one of the following team roles: ${allowedTeamRoles.join(', ')} but found team role : ${userTeam.role}` 
           });
         }
 

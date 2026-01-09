@@ -212,7 +212,8 @@ export const createEmployeeInTeam = async (
     // 1. Créer l'utilisateur
     const createUserResult = await createUser({
       ...userData,
-      permission: 'user'
+      permission: 'user',
+      teamId
     });
 
     if (!createUserResult.success || !createUserResult.data?.id) {

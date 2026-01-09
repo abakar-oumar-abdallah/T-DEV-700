@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 interface AnimatedWaveProps {
   fillColor: string
@@ -12,19 +12,20 @@ export default function AnimatedWave({
   position = 'bottom',
   animationDuration = 15
 }: AnimatedWaveProps) {
-  // Récupérer la couleur réelle si c'est une variable CSS
-  const getColor = () => {
+  const [color, setColor] = useState(fillColor)
+
+  useEffect(() => {
+    // Résoudre les variables CSS côté client uniquement
     if (fillColor.startsWith('var(')) {
-      // Extraire le nom de la variable
       const varName = fillColor.match(/var\((--[\w-]+)\)/)?.[1]
-      if (varName && typeof window !== 'undefined') {
-        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
+      if (varName) {
+        const resolvedColor = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
+        if (resolvedColor) {
+          setColor(resolvedColor)
+        }
       }
     }
-    return fillColor
-  }
-
-  const color = typeof window !== 'undefined' ? getColor() : fillColor
+  }, [fillColor])
 
   return (
     <div className={`absolute ${position === 'bottom' ? 'bottom-0' : 'top-0'} left-0 w-full`} style={{ marginBottom: -1 }}>

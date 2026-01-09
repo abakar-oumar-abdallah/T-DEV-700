@@ -23,10 +23,11 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *       200:
  *         description: List of all users
  */
-router.get('/users',
+router.get('/users', 
     AuthMiddleware,
     PermissionMiddleware('superadmin'),
-    UserController.getAllUsers);
+    UserController.getAllUsers
+);
 
 // create a user with email, password, first_name and last_name 
 /**
@@ -73,10 +74,11 @@ router.get('/users',
  *       500:
  *         description: Server error
  */
-router.post('/users',
+router.post('/users', 
     AuthMiddleware,
-    PermissionMiddleware('admin'),
-    UserController.createUser);
+    TeamRoleMiddleware(["manager","owner"]),
+    UserController.createUser
+);
 
 // get a user by id
 /**
@@ -186,7 +188,6 @@ router.get('/users/email/:email',
  */
 router.patch('/users/:id',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
     UserController.updateUser);
 
 // delete a user
@@ -215,7 +216,7 @@ router.patch('/users/:id',
  */
 router.delete('/users/:id',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
+    PermissionMiddleware('superadmin'),
     UserController.deleteUser);
 
 module.exports = router;
