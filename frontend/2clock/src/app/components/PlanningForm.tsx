@@ -133,7 +133,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
     // If standalone mode, don't submit (parent handles it)
     if (standalone) return;
     
-    if (!teamId) {
+    if (!teamId && context !== 'create') {
       const errorMsg = 'Team ID is required';
       setError(errorMsg);
       if (onError) onError(errorMsg);
