@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../../controllers/user/UserController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -169,7 +172,10 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *       500:
  *         description: Server error
  */
-router.patch('/users/:id', UserController.updateUser);
+router.patch('/users/:id', 
+    AuthMiddleware,
+    UserController.updateUser
+);
 
 // delete a user
 /**

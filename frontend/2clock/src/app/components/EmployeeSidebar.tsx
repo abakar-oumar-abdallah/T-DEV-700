@@ -271,10 +271,10 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         {/* Profil en bas - Lien cliquable avec déconnexion */}
         <div className={`mt-auto px-6 pb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '600ms' }}>
           <Link 
-            href="/dashboard/employee/profile"
+            href="/profile"
             onClick={() => setMobileOpen(false)}
             className={`block rounded-xl p-3 mb-3 ${
-              isActive("/dashboard/employee/profile")
+              isActive("/profile")
                 ? "bg-[var(--color-primary)] shadow-lg"
                 : "bg-white/5 hover:bg-white/10"
             } transition-all duration-300 backdrop-blur-sm group`}
@@ -292,14 +292,14 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </div>
               <div className="flex-1 min-w-0">
                 <div className={`font-semibold truncate transition-colors duration-300 ${
-                  isActive("/dashboard/employee/profile")
+                  isActive("/profile")
                     ? "text-[var(--color-secondary)]"
                     : "text-white group-hover:text-[var(--color-primary)]"
                 }`}>
                   {userPrenomStr || "Inconnu"} {userNomStr || ""}
                 </div>
                 <div className={`text-xs transition-colors duration-300 ${
-                  isActive("/dashboard/employee/profile")
+                  isActive("/profile")
                     ? "text-[var(--color-secondary)]/70"
                     : "text-white/60 group-hover:text-white/80"
                 }`}>

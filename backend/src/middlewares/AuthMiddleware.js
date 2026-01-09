@@ -41,7 +41,7 @@ const AuthMiddleware = async (req, res, next) => {
         message: 'Unauthorized - User not found' 
       });
     }
-
+    req.user.userId = user.id
     // Add user permission to request
     req.user.permission = user.permission;
 
