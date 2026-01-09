@@ -202,7 +202,7 @@ class AuthController {
       // Get user info (excluding password)
       const { data: user, error: userError } = await supabase
         .from('user')
-        .select('id, email, first_name, last_name, permission')
+        .select('id, email, first_name, last_name, phone_number ,permission')
         .eq('id', userId)
         .single();
 

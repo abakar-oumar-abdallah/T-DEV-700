@@ -8,13 +8,46 @@ class TeamController {
 
   
   /**
-   * Get all teams
+   * Get all teams with member counts (paginated)
    */
-  async getAllTeams(req, res) {
+  getAllTeams = async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      const offset = (page - 1) * limit;
+
+      // Get total count
+      const { count: totalCount, error: countError } = await supabase
+        .from('team')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Error counting teams:', countError);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to count teams',
+          error: countError.message
+        });
+      }
+
+      // Get paginated data
       const { data, error } = await supabase
         .from('team')
-        .select('*');
+        .select(`
+          id,
+          name,
+          description,
+          lateness_limit,
+          timezone,
+          created_at,
+          user_team (
+            id,
+            user:user_id (id, email, first_name, last_name),
+            role
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (error) {
         console.error('Error fetching teams:', error);
@@ -25,11 +58,24 @@ class TeamController {
         });
       }
 
+      // Add member count to each team
+      const teamsWithCounts = data.map(team => ({
+        ...team,
+        memberCount: team.user_team?.length || 0
+      }));
+
       res.status(200).json({
         success: true,
         message: 'Teams retrieved successfully',
-        data: data,
-        count: data.length
+        data: teamsWithCounts,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasNext: page < Math.ceil(totalCount / limit),
+          hasPrev: page > 1
+        }
       });
 
     } catch (err) {
@@ -40,7 +86,7 @@ class TeamController {
         error: err.message
       });
     }
-  }
+  };
 
   /**
    * Create a new team
@@ -116,7 +162,7 @@ class TeamController {
           {
             user_id: userId,
             team_id: data.id,
-            role: 'manager'
+            role: 'owner'
           }
         ])
         .select()
@@ -128,7 +174,7 @@ class TeamController {
         // But we log the error and inform the user
         return res.status(201).json({
           success: true,
-          message: 'Team created successfully, but failed to add you as manager. Please contact support.',
+          message: 'Team created successfully, but failed to add you as owner. Please contact support.',
           data,
           warning: 'User-team association failed'
         });
@@ -364,15 +410,6 @@ class TeamController {
         });
       }
 
-      // Check if there are any employees (non-managers)
-      const hasEmployees = teamMembers.some(member => member.role === 'employee');
-
-      if (hasEmployees) {
-        return res.status(400).json({
-          success: false,
-          message: 'Cannot delete team with employees. Please remove all employees first.',
-        });
-      }
 
       // Delete all user_team associations (managers)
       const { error: userTeamDeleteError } = await supabase

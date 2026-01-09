@@ -51,7 +51,7 @@ interface ApiResponse<T> {
   pagination?: Pagination;
 }
 
-// Get dashboard statistics
+// Get dashboard statistics (uses dedicated superadmin route)
 export const getSuperadminStats = async (): Promise<ApiResponse<DashboardStats>> => {
   try {
     const token = localStorage.getItem('session');
@@ -94,7 +94,7 @@ export const getSuperadminStats = async (): Promise<ApiResponse<DashboardStats>>
   }
 };
 
-// Get all users
+// Get all users (uses existing /users route)
 export const getAllUsers = async (page: number = 1, limit: number = 20): Promise<ApiResponse<User[]>> => {
   try {
     const token = localStorage.getItem('session');
@@ -107,7 +107,7 @@ export const getAllUsers = async (page: number = 1, limit: number = 20): Promise
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
-    const response = await fetch(`${backendUrl}/superadmin/users?page=${page}&limit=${limit}`, {
+    const response = await fetch(`${backendUrl}/users?page=${page}&limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -138,8 +138,8 @@ export const getAllUsers = async (page: number = 1, limit: number = 20): Promise
   }
 };
 
-// Search users by email
-export const searchUserByEmail = async (email: string): Promise<ApiResponse<User[]>> => {
+// Search user by email (uses existing /users/:email route)
+export const searchUserByEmail = async (email: string): Promise<ApiResponse<User>> => {
   try {
     const token = localStorage.getItem('session');
     if (!token) {
@@ -151,7 +151,7 @@ export const searchUserByEmail = async (email: string): Promise<ApiResponse<User
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
-    const response = await fetch(`${backendUrl}/superadmin/users/search?email=${encodeURIComponent(email)}`, {
+    const response = await fetch(`${backendUrl}/users/${encodeURIComponent(email)}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -182,7 +182,7 @@ export const searchUserByEmail = async (email: string): Promise<ApiResponse<User
   }
 };
 
-// Update user permission
+// Update user permission (uses dedicated superadmin route)
 export const updateUserPermission = async (
   userId: number,
   permission: 'user' | 'admin' | 'superadmin'
@@ -232,7 +232,7 @@ export const updateUserPermission = async (
   }
 };
 
-// Delete user
+// Delete user (uses existing /users/:id route)
 export const deleteUser = async (userId: number): Promise<ApiResponse<any>> => {
   try {
     const token = localStorage.getItem('session');
@@ -245,7 +245,7 @@ export const deleteUser = async (userId: number): Promise<ApiResponse<any>> => {
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
-    const response = await fetch(`${backendUrl}/superadmin/users/${userId}`, {
+    const response = await fetch(`${backendUrl}/users/${userId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -277,7 +277,7 @@ export const deleteUser = async (userId: number): Promise<ApiResponse<any>> => {
   }
 };
 
-// Get all teams
+// Get all teams (uses existing /teams route)
 export const getAllTeams = async (page: number = 1, limit: number = 20): Promise<ApiResponse<Team[]>> => {
   try {
     const token = localStorage.getItem('session');
@@ -290,7 +290,7 @@ export const getAllTeams = async (page: number = 1, limit: number = 20): Promise
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
-    const response = await fetch(`${backendUrl}/superadmin/teams?page=${page}&limit=${limit}`, {
+    const response = await fetch(`${backendUrl}/teams?page=${page}&limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -321,7 +321,7 @@ export const getAllTeams = async (page: number = 1, limit: number = 20): Promise
   }
 };
 
-// Delete team
+// Delete team (uses existing /teams/:id route)
 export const deleteTeam = async (teamId: number): Promise<ApiResponse<any>> => {
   try {
     const token = localStorage.getItem('session');
@@ -334,7 +334,7 @@ export const deleteTeam = async (teamId: number): Promise<ApiResponse<any>> => {
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
-    const response = await fetch(`${backendUrl}/superadmin/teams/${teamId}`, {
+    const response = await fetch(`${backendUrl}/teams/${teamId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

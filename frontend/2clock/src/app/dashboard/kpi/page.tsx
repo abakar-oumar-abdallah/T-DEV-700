@@ -1,7 +1,7 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { getLatenessRateByEmployee, getDepartureRateByEmployee, getTeamMembers } from '@/kpi/kpi'
 import type { LatenessData, UserTeam } from '@/kpi/kpi'
@@ -12,9 +12,11 @@ import KpiStats from '@/app/components/kpi/KpiStats'
 
 type KpiType = 'lateness' | 'departure'
 
-export default function KpiPage() {
+// Composant qui utilise useSearchParams (doit être dans Suspense)
+function KpiContent() {
   const { currentTeam, user } = useTeam()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,21 +34,56 @@ export default function KpiPage() {
 
   const [latenessData, setLatenessData] = useState<LatenessData | null>(null)
 
+  const isSuperadmin = user?.permission === 'superadmin'
+  const isManagerOrOwner = currentTeam?.role === 'manager' || currentTeam?.role === 'owner' || isSuperadmin
+  const isOwner = currentTeam?.role === 'owner' || isSuperadmin
   const isManager = currentTeam?.role === 'manager'
   const selectedUser = teamMembers.find(m => m.user.id === selectedUserId)
 
   useEffect(() => { setMounted(true) }, [])
-  useEffect(() => { if (currentTeam && !isManager) router.push('/dashboard/employee') }, [currentTeam, isManager, router])
+  useEffect(() => { 
+    if (currentTeam && !isManagerOrOwner) router.push('/dashboard') 
+  }, [currentTeam, isManagerOrOwner, router])
 
   useEffect(() => {
-    if (!currentTeam?.team.id || !isManager) return
+    if (!currentTeam?.team.id || !isManagerOrOwner) return
     setLoading(true)
     getTeamMembers(currentTeam.team.id).then(r => {
-      if (r.success && r.data) setTeamMembers(r.data)
-      else setError(r.error || 'Erreur chargement membres')
+      if (r.success && r.data) {
+        let members = r.data
+        
+        // Filter members based on role
+        if (isOwner && !isSuperadmin) {
+          // Owner can see managers and employees, but not other owners
+          members = members.filter(m => m.role !== 'owner')
+        } else if (isManager && !isSuperadmin) {
+          // Manager can only see employees
+          members = members.filter(m => m.role === 'employee')
+        }
+        // Superadmin can see everyone (no filter)
+        
+        setTeamMembers(members)
+      } else {
+        setError(r.error || 'Erreur chargement membres')
+      }
     }).finally(() => setLoading(false))
-  }, [currentTeam?.team.id, isManager])
+  }, [currentTeam?.team.id, isManagerOrOwner, isOwner, isManager, isSuperadmin])
 
+  useEffect(() => {
+    const userIdParam = searchParams.get('userId')
+    if (userIdParam && teamMembers.length > 0) {
+      const userId = parseInt(userIdParam)
+      const memberExists = teamMembers.some(m => m.user.id === userId)
+      if (memberExists) {
+        setSelectedUserId(userId)
+      } else {
+        // If trying to access unauthorized KPI, clear selection
+        setSelectedUserId(null)
+        setError('Vous n\'avez pas l\'autorisation de consulter les KPI de cet utilisateur')
+      }
+    }
+  }, [searchParams, teamMembers])
+  
   useEffect(() => {
     if (!currentTeam?.team.id || !selectedUserId) return
     setLoading(true)
@@ -134,14 +171,14 @@ export default function KpiPage() {
     }
   }
 
-  if (!currentTeam || !isManager) return (
+  if (!currentTeam || !isManagerOrOwner) return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className={`bg-white rounded-2xl shadow-2xl p-8 text-center transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
         <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
           <ExclamationTriangleIcon className="w-8 h-8 text-orange-600" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Accès Restreint</h1>
-        <p className="text-gray-600">Seuls les managers peuvent accéder aux KPI.</p>
+        <p className="text-gray-600">Seuls les responsables d&apos;équipe peuvent accéder aux KPI.</p>
       </div>
     </div>
   )
@@ -151,6 +188,7 @@ export default function KpiPage() {
       {/* Header */}
       <div className={`relative bg-white rounded-xl shadow-lg p-6 mb-8 overflow-hidden transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <div className="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-gradient-to-br from-[rgba(236,77,54,0.12)] to-transparent opacity-80 blur-3xl" />
+        
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-full bg-gradient-to-br from-[rgba(236,77,54,0.12)] to-[rgba(236,77,54,0.05)] hover:scale-105 duration-300">
@@ -232,5 +270,26 @@ export default function KpiPage() {
         </div>
       )}
     </main>
+  )
+}
+
+// Composant Loading pour le Suspense
+function KpiLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto mb-4"></div>
+        <p className="text-gray-600">Chargement des KPI...</p>
+      </div>
+    </div>
+  )
+}
+
+// Export par défaut avec Suspense
+export default function KpiPage() {
+  return (
+    <Suspense fallback={<KpiLoading />}>
+      <KpiContent />
+    </Suspense>
   )
 }

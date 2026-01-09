@@ -24,8 +24,8 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
  *         description: List of all teams
  */
 router.get('/teams', 
-    // AuthMiddleware,
-    // PermissionMiddleware('superadmin'),
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
     TeamController.getAllTeams
 );
 
@@ -73,7 +73,7 @@ router.get('/teams',
 router.post(
     '/teams',
     AuthMiddleware,
-    PermissionMiddleware.check('admin'),
+    PermissionMiddleware(['admin']),
     TeamController.createTeam
 );
 
@@ -124,7 +124,10 @@ router.get('/teams/:id', TeamController.getTeamById);
  *       500:
  *         description: Server error
  */
-router.get('/teams/:name/name', TeamController.getTeamByName);
+router.get('/teams/:name/name', 
+    PermissionMiddleware('superadmin'),
+    TeamController.getTeamByName
+);
 
 /**
  * @swagger
@@ -171,7 +174,6 @@ router.get('/teams/:name/name', TeamController.getTeamByName);
  */
 router.patch('/teams/:id',
     AuthMiddleware,
-    PermissionMiddleware.check('admin'),
     TeamRoleMiddleware(['manager']),
     TeamController.updateTeam
 );
@@ -200,8 +202,7 @@ router.patch('/teams/:id',
  */
 router.delete('/teams/:id',
     AuthMiddleware,
-    PermissionMiddleware.check('admin'),
-    TeamRoleMiddleware(['manager']),
+    TeamRoleMiddleware(['owner']),
     TeamController.deleteTeam
 );
 

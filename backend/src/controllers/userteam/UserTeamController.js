@@ -41,9 +41,6 @@ class UserTeamController {
     }
   }
 
-  /**
-   * Add a user to a team (Create a user-team association)
-   */
   async createUserTeam(req, res) {
     try {
       const { userId, teamId, role } = req.body;
@@ -57,11 +54,22 @@ class UserTeamController {
       }
 
       // Validate role
-      const validRoles = ['employee', 'manager'];
+      const validRoles = ['employee', 'manager', 'owner'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
           message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+        });
+      }
+
+      // Check if user is superadmin
+      const isSuperadmin = req.user?.permission === 'superadmin';
+
+      // Only owner or superadmin can create managers or owners
+      if ((role === 'manager' || role === 'owner') && !isSuperadmin && req.currentTeam?.userRole !== 'owner') {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden - Only team owner or superadmin can create managers or owners'
         });
       }
 
@@ -82,7 +90,7 @@ class UserTeamController {
         console.error('Error checking user:', userError);
         return res.status(500).json({
           success: false,
-          message: 'Failed to check user existence',
+          message: 'Failed to verify user',
           error: userError.message
         });
       }
@@ -104,29 +112,20 @@ class UserTeamController {
         console.error('Error checking team:', teamError);
         return res.status(500).json({
           success: false,
-          message: 'Failed to check team existence',
+          message: 'Failed to verify team',
           error: teamError.message
         });
       }
 
       // Check if association already exists
-      const { data: existingAssociation, error: checkError } = await supabase
+      const { data: existingAssoc, error: assocError } = await supabase
         .from('user_team')
-        .select('*')
+        .select('id')
         .eq('user_id', userId)
         .eq('team_id', teamId)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing association:', checkError);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to check existing association',
-          error: checkError.message
-        });
-      }
-
-      if (existingAssociation) {
+      if (existingAssoc) {
         return res.status(409).json({
           success: false,
           message: 'User is already associated with this team'
@@ -162,7 +161,15 @@ class UserTeamController {
       res.status(201).json({
         success: true,
         message: 'User-team association created successfully',
-        data: data
+        data: {
+          id: data.id,
+          user_id: data.user_id,
+          team_id: data.team_id,
+          role: data.role,
+          user: data.user,
+          team: data.team,
+          ...data 
+        }
       });
 
     } catch (err) {
@@ -175,9 +182,6 @@ class UserTeamController {
     }
   }
 
-   /**
-   * Add a user to a team with their email (Create a user-team association)
-   */
   async createUserTeamWithEmail(req, res) {
     try {
       const { email, teamId, role } = req.body;
@@ -200,7 +204,7 @@ class UserTeamController {
       }
 
       // Validate role
-      const validRoles = ['employee', 'manager'];
+      const validRoles = ['employee', 'manager', 'owner'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
@@ -208,11 +212,22 @@ class UserTeamController {
         });
       }
 
-      // Find user by email
+      // Check if user is superadmin
+      const isSuperadmin = req.user?.permission === 'superadmin';
+
+      // Only owner or superadmin can create managers or owners
+      if ((role === 'manager' || role === 'owner') && !isSuperadmin && req.currentTeam?.userRole !== 'owner') {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden - Only team owner or superadmin can create managers or owners'
+        });
+      }
+
+      // Get user by email
       const { data: user, error: userError } = await supabase
         .from('user')
         .select('id, email, first_name, last_name')
-        .eq('email', email.toLowerCase().trim())
+        .eq('email', email)
         .single();
 
       if (userError) {
@@ -222,7 +237,7 @@ class UserTeamController {
             message: 'User not found with this email'
           });
         }
-        console.error('Error finding user by email:', userError);
+        console.error('Error finding user:', userError);
         return res.status(500).json({
           success: false,
           message: 'Failed to find user',
@@ -249,29 +264,20 @@ class UserTeamController {
         console.error('Error checking team:', teamError);
         return res.status(500).json({
           success: false,
-          message: 'Failed to check team existence',
+          message: 'Failed to verify team',
           error: teamError.message
         });
       }
 
       // Check if association already exists
-      const { data: existingAssociation, error: checkError } = await supabase
+      const { data: existingAssoc } = await supabase
         .from('user_team')
-        .select('*')
+        .select('id')
         .eq('user_id', userId)
         .eq('team_id', teamId)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing association:', checkError);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to check existing association',
-          error: checkError.message
-        });
-      }
-
-      if (existingAssociation) {
+      if (existingAssoc) {
         return res.status(409).json({
           success: false,
           message: 'User is already associated with this team'
@@ -307,7 +313,15 @@ class UserTeamController {
       res.status(201).json({
         success: true,
         message: 'User-team association created successfully using email',
-        data: data
+        data: {
+          id: data.id,
+          user_id: data.user_id,
+          team_id: data.team_id,
+          role: data.role,
+          user: data.user,
+          team: data.team,
+          ...data
+        }
       });
 
     } catch (err) {
@@ -439,7 +453,7 @@ class UserTeamController {
       const { data, error } = await supabase
         .from('user_team')
         .select(`
-          role,
+          *,
           user:user_id (id, email, first_name, last_name)
         `)
         .eq('team_id', teamId);
@@ -470,13 +484,8 @@ class UserTeamController {
     }
   }
 
-  /**
-   * Update user-team association role
-   * If userId not in params, uses current user from token
-   */
-  async updateUserTeam(req, res) {
+ async updateUserTeam(req, res) {
     try {
-      // Use userId from params, or fall back to current user from token
       const userId = req.params.userId || req.user?.userId;
       const { teamId } = req.params;
       const { role } = req.body;
@@ -497,12 +506,78 @@ class UserTeamController {
       }
 
       // Validate role
-      const validRoles = ['employee', 'manager'];
+      const validRoles = ['employee', 'manager', 'owner'];
       if (!validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
           message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
         });
+      }
+
+      // Get target user's current role
+      const { data: targetUserTeam, error: targetError } = await supabase
+        .from('user_team')
+        .select('role, user_id')
+        .eq('user_id', userId)
+        .eq('team_id', teamId)
+        .single();
+
+      if (targetError || !targetUserTeam) {
+        return res.status(404).json({
+          success: false,
+          message: 'User-team association not found'
+        });
+      }
+
+      // Check if user is superadmin
+      const isSuperadmin = req.user?.permission === 'superadmin';
+
+      // Superadmin can modify anyone without restrictions
+      if (!isSuperadmin) {
+        // Check permissions for non-superadmin users:
+        // - Only owner can modify roles
+        // - Cannot modify owner's role
+        // - Managers cannot modify themselves or other managers/owners
+        if (req.user.teamRole !== 'owner') {
+          // If user is manager trying to modify
+          if (req.user.teamRole === 'manager') {
+            // Managers cannot modify themselves
+            if (userId === req.user.userId) {
+              return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Managers cannot modify their own role'
+              });
+            }
+            // Managers cannot modify other managers or owners
+            if (targetUserTeam.role === 'manager' || targetUserTeam.role === 'owner') {
+              return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Managers cannot modify other managers or owners'
+              });
+            }
+          } else {
+            return res.status(403).json({
+              success: false,
+              message: 'Forbidden - Only team owner can modify roles'
+            });
+          }
+        }
+
+        // Cannot modify owner's role (unless superadmin)
+        if (targetUserTeam.role === 'owner' && role !== 'owner') {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden - Cannot modify owner role'
+          });
+        }
+
+        // Only owner can promote to manager or owner (unless superadmin)
+        if ((role === 'manager' || role === 'owner') && req.currentTeam?.userRole !== 'owner') {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden - Only team owner can promote to manager or owner'
+          });
+        }
       }
 
       const { data, error } = await supabase
@@ -549,13 +624,8 @@ class UserTeamController {
     }
   }
 
-  /**
-   * Delete user-team association
-   * If userId not in params, uses current user from token
-   */
-  async deleteUserTeam(req, res) {
+ async deleteUserTeam(req, res) {
     try {
-      // Use userId from params, or fall back to current user from token
       const userId = req.params.userId || req.user?.userId;
       const { teamId } = req.params;
 
@@ -566,31 +636,62 @@ class UserTeamController {
         });
       }
 
-      // Check if association exists
-      const { data: existingAssociation, error: checkError } = await supabase
+      // Get target user's current role
+      const { data: targetUserTeam, error: targetError } = await supabase
         .from('user_team')
-        .select('*')
+        .select('role, user_id')
         .eq('user_id', userId)
         .eq('team_id', teamId)
         .single();
 
-      if (checkError) {
-        if (checkError.code === 'PGRST116') {
-          return res.status(404).json({
-            success: false,
-            message: 'User-team association not found'
-          });
-        }
-
-        console.error('Error checking user-team association:', checkError);
-        return res.status(500).json({
+      if (targetError || !targetUserTeam) {
+        return res.status(404).json({
           success: false,
-          message: 'Failed to check user-team association',
-          error: checkError.message
+          message: 'User-team association not found'
         });
       }
 
-      // Delete the association
+      // Check if user is superadmin
+      const isSuperadmin = req.user?.permission === 'superadmin';
+
+      // Superadmin can delete anyone without restrictions
+      if (!isSuperadmin) {
+        // Cannot delete owner (unless superadmin)
+        if (targetUserTeam.role === 'owner') {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden - Cannot remove team owner. Transfer ownership first or delete the team.'
+          });
+        }
+
+        // Check permissions for non-superadmin users:
+        // - Owner can remove anyone (except themselves as owner)
+        // - Managers cannot remove themselves, other managers, or owners
+        if (req.currentTeam?.userRole !== 'owner') {
+          if (req.currentTeam?.userRole === 'manager') {
+            // Managers cannot remove themselves
+            if (userId === req.user.userId) {
+              return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Managers cannot remove themselves from the team'
+              });
+            }
+            // Managers cannot remove other managers or owners
+            if (targetUserTeam.role === 'manager' || targetUserTeam.role === 'owner') {
+              return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Managers cannot remove other managers or owners'
+              });
+            }
+          } else {
+            return res.status(403).json({
+              success: false,
+              message: 'Forbidden - Insufficient permissions to remove team members'
+            });
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('user_team')
         .delete()
@@ -608,10 +709,7 @@ class UserTeamController {
 
       res.status(200).json({
         success: true,
-        message: 'User-team association deleted successfully',
-        data: {
-          deletedAssociation: existingAssociation
-        }
+        message: 'User-team association deleted successfully'
       });
 
     } catch (err) {
@@ -623,6 +721,8 @@ class UserTeamController {
       });
     }
   }
+
+
 }
 
 module.exports = new UserTeamController();

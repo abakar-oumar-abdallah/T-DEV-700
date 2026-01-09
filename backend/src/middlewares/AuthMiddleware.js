@@ -27,7 +27,6 @@ const AuthMiddleware = async (req, res, next) => {
     
     // Add userId to request body
     if (!req.body) req.body = {};
-    req.body.userId = decoded.userId;
 
     // Get user details from database
     const { data: user, error: userError } = await supabase
@@ -42,7 +41,7 @@ const AuthMiddleware = async (req, res, next) => {
         message: 'Unauthorized - User not found' 
       });
     }
-
+    req.user.userId = user.id
     // Add user permission to request
     req.user.permission = user.permission;
 
