@@ -30,7 +30,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
   const userPrenomStr = user?.first_name ?? '';
   const userNomStr = user?.last_name ?? '';
-
+  const canManageCurrentTeam = currentTeam?.role === 'manager' || currentTeam?.role === 'owner';
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -45,7 +45,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
   };
 
   const handleTeamClick = () => {
-    if (currentTeam?.role === 'manager') {
+    if (canManageCurrentTeam) {
       router.push('/dashboard/manager/team');
       setMobileOpen(false);
     }
@@ -80,34 +80,34 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           className={`rounded-xl p-4 mb-6 text-center mx-6 backdrop-blur-sm transition-all duration-300 group relative overflow-hidden ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
           } ${
-            currentTeam?.role === 'manager' 
+            canManageCurrentTeam 
               ? isActive("/dashboard/manager/team")
                 ? 'bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-lg scale-105 cursor-pointer'
                 : 'cursor-pointer hover:bg-white/15 active:scale-95'
               : ''
           }`}
           style={{ 
-            backgroundColor: currentTeam?.role === 'manager' && isActive("/dashboard/manager/team") 
+            backgroundColor: canManageCurrentTeam && isActive("/dashboard/manager/team") 
               ? 'var(--color-primary)' 
               : "rgba(255,255,255,0.08)", 
             boxShadow: "0 4px 12px rgba(0,0,0,0.1)" 
           }}
         >
-          {currentTeam?.role === 'manager' && (
+          {canManageCurrentTeam && (
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           )}
           {currentTeam ? (
             <>
               <div className="flex items-center justify-center gap-2 mb-2">
                 <div className={`p-2 rounded-lg transition-all duration-300 ${
-                  currentTeam.role === 'manager' ? 'group-hover:scale-110' : ''
+                  canManageCurrentTeam ? 'group-hover:scale-110' : ''
                 } ${
                   isActive("/dashboard/manager/team") ? 'bg-white/20' : 'bg-white/10'
                 }`}>
                   <BuildingOffice2Icon 
                     className="w-5 h-5 relative z-10 transition-transform duration-300" 
                     style={{
-                      color: isActive("/dashboard/manager/team") && currentTeam.role === 'manager'
+                      color: isActive("/dashboard/manager/team") && canManageCurrentTeam
                         ? "var(--color-secondary)"
                         : "var(--color-primary)"
                     }}
@@ -115,18 +115,18 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
                 </div>
               </div>
               <div className={`font-bold text-lg relative z-10 ${
-                isActive("/dashboard/manager/team") && currentTeam.role === 'manager' 
+                isActive("/dashboard/manager/team") && canManageCurrentTeam
                   ? 'text-[var(--color-secondary)]' 
                   : ''
               }`}>{currentTeam.team.name}</div>
               <div className={`text-sm mt-1 capitalize relative z-10 ${
-                isActive("/dashboard/manager/team") && currentTeam.role === 'manager'
+                isActive("/dashboard/manager/team") && canManageCurrentTeam
                   ? 'text-[var(--color-secondary)]/80'
                   : 'text-white/70'
               }`}>
-                {currentTeam.role === 'manager' ? 'Responsable' : 'Employé'}
+                {currentTeam.role !== 'employee' ? (currentTeam.role === 'manager' ? 'Responsable' : 'Propriétaire') : 'Employé'}
               </div>
-              {currentTeam.role === 'manager' && (
+              {canManageCurrentTeam && (
                 <div className={`text-xs mt-2 flex items-center justify-center gap-1 relative z-10 transition-all duration-300 ${
                   isActive("/dashboard/manager/team")
                     ? 'text-[var(--color-secondary)]/60'
@@ -171,7 +171,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
             </li>
 
           {/* TOTP Code page - Only for managers */}
-          {currentTeam?.role === 'manager' && (
+          {canManageCurrentTeam && (
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
               <Link
                 href="/dashboard/code"
@@ -219,7 +219,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
               </Link>
             </li>
             
-          {currentTeam?.role === 'manager' && (
+          {canManageCurrentTeam && (
 
             <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
               <Link
@@ -281,11 +281,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           >
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className={`absolute inset-0 ${
-                  isActive("/dashboard/employee/profile")
-                    ? "bg-white"
-                    : "bg-[var(--color-primary)]"
-                } rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300`} />
+                <div className={`absolute inset-0 bg-white/10 rounded-full  group-hover:opacity-75 transition-opacity duration-300`} />
                 <Image 
                   src={`https://api.dicebear.com/5.x/initials/svg?seed=${userPrenomStr.substr(0, 1)}${userNomStr.substr(0, 1)}`} 
                   alt='Image de profile' 

@@ -182,7 +182,10 @@ router.delete('/plannings/:id', PlanningController.deletePlanning);
  *       500:
  *         description: Server error
  */
-router.get('/plannings/teams/:teamId/default', PlanningController.getDefaultPlanningByTeam);
+router.get('/plannings/teams/:teamId/default', 
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager','owner'], true),
+    PlanningController.getDefaultPlanningByTeam);
 
 // Get planning by user-team ID
 /**
@@ -206,7 +209,10 @@ router.get('/plannings/teams/:teamId/default', PlanningController.getDefaultPlan
  *       500:
  *         description: Server error
  */
-router.get('/plannings/user-teams/:userTeamId', PlanningController.getPlanningByUserTeam);
+router.get('/plannings/user-teams/:userTeamId', 
+    AuthMiddleware,
+    TeamRoleMiddleware(['employee', 'manager','owner'], true),
+    PlanningController.getPlanningByUserTeam);
 
 // Modify team planning (creates new planning)
 /**
@@ -262,7 +268,10 @@ router.get('/plannings/user-teams/:userTeamId', PlanningController.getPlanningBy
  *       500:
  *         description: Server error
  */
-router.post('/plannings/teams/:teamId/modify', PlanningController.modifyTeamPlanning);
+router.post('/plannings/teams/:teamId/modify',
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager','owner'], true),
+    PlanningController.modifyTeamPlanning);
 
 // Modify user-team planning (creates new planning)
 /**
@@ -319,7 +328,10 @@ router.post('/plannings/teams/:teamId/modify', PlanningController.modifyTeamPlan
  *       500:
  *         description: Server error
  */
-router.post('/plannings/user-teams/:userTeamId/modify', PlanningController.modifyUserTeamPlanning);
+router.post('/plannings/user-teams/:userTeamId/modify', 
+    AuthMiddleware,
+    TeamRoleMiddleware(['manager','owner'], true),
+    PlanningController.modifyUserTeamPlanning);
 
 
 // ==================== CURRENT USER ROUTES (TOKEN-BASED) ====================

@@ -116,7 +116,7 @@ const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 router.get(
     '/kpi/teams/:teamId/employees/:userId/lateness',
     AuthMiddleware,
-    TeamRoleMiddleware(['manager'], true),
+    TeamRoleMiddleware(['manager','owner'], true),
     KpiController.getLatenessRateByEmployee
 );
 
@@ -168,7 +168,7 @@ router.get(
 router.get(
     '/kpi/teams/:teamId/employees/:userId/departures',
     AuthMiddleware,
-    TeamRoleMiddleware(['manager'], true),
+    TeamRoleMiddleware(['manager','owner'], true),
     KpiController.getDepartureRateByEmployee
 );
 

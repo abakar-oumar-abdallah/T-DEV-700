@@ -373,6 +373,14 @@ class KpiController {
                 });
             }
 
+            // Cannot view KPI of owner
+            if (userTeam.role === 'owner' && req.user.teamRole !== 'owner') {
+                return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Cannot view KPI of team owner'
+                });
+            }
+
             // Calculate date range
             let calculatedStartDate = null;
             let calculatedEndDate = null;
@@ -450,6 +458,15 @@ class KpiController {
                     message: 'User is not a member of this team'
                 });
             }
+
+            // Cannot view KPI of owner
+            if (userTeam.role === 'owner' && req.user.teamRole !== 'owner') {
+                return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Cannot view KPI of team owner'
+                });
+            }
+
 
             // Calculate date range
             let calculatedStartDate = null;
