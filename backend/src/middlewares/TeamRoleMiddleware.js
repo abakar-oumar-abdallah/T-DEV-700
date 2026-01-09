@@ -4,12 +4,43 @@ const TeamRoleMiddleware = (allowedTeamRoles = [], requireTeamContext = false) =
   return async (req, res, next) => {
     try {
       // Check if user is authenticated (should be called after AuthMiddleware)
-
       if (!req.user || !req.user.userId) {
         return res.status(401).json({ 
           success: false, 
           message: 'Unauthorized - User authentication required' 
         });
+      }
+
+      // Superadmin bypass: Skip all team role checks
+      if (req.user.permission === 'superadmin') {
+        console.log('Superadmin detected - bypassing team role checks');
+        
+        // Get team context if teamId is provided (for context purposes)
+        const teamId = req.params.teamId || req.params.id || req.body.teamId || req.query.teamId || req.headers['x-team-id'];
+        
+        if (teamId) {
+          // Get team info without checking membership
+          const { data: team, error: teamError } = await supabase
+            .from('team')
+            .select('id, name, default_planning_id')
+            .eq('id', teamId)
+            .single();
+
+          if (!teamError && team) {
+            // Add team context to request with superadmin privileges
+            req.currentTeam = {
+              id: parseInt(teamId),
+              name: team.name,
+              userRole: 'superadmin', // Special role for superadmins
+              userTeamId: null, // Superadmin may not have a user_team association
+              defaultPlanningId: team.default_planning_id
+            };
+
+            req.user.teamRole = 'superadmin';
+          }
+        }
+
+        return next();
       }
 
       // Get team context from multiple sources (including 'id' param for routes like /teams/:id)

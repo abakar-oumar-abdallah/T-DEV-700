@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
 import { useRouter } from 'next/navigation'
+import Image from "next/image";
 import { 
   UserGroupIcon, 
   EnvelopeIcon, 
@@ -19,6 +20,7 @@ import EditMemberModal from '@/app/components/management/EditMemberModal'
 import DeleteMemberModal from '@/app/components/management/DeleteMemberModal'
 import EditTeamModal from '@/app/components/team/EditTeamModal'
 import { getTeamMembers, type TeamMember } from '@/team/management'
+
 export default function ManagerTeamPage() {
   const { currentTeam, user } = useTeam()
   const router = useRouter()
@@ -33,21 +35,24 @@ export default function ManagerTeamPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-    const [showEditTeamModal, setShowEditTeamModal] = useState(false)  
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false)  
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null)
 
-  const isManager = currentTeam?.role === 'manager'
+  const isSuperadmin = user?.permission === 'superadmin'
+  const isOwner = currentTeam?.role === 'owner' || isSuperadmin
+  const isManager = currentTeam?.role === 'manager' || isOwner
+  const isManagerOrOwner = currentTeam?.role === 'manager' || currentTeam?.role === 'owner' || isSuperadmin
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   useEffect(() => {
-    if (!currentTeam || !isManager) {
+    if (!currentTeam || !isManagerOrOwner) {
       return
     }
     fetchTeamMembers()
-  }, [currentTeam, isManager])
+  }, [currentTeam, isManagerOrOwner])
 
   const fetchTeamMembers = async () => {
     if (!currentTeam?.team?.id) return
@@ -69,6 +74,53 @@ export default function ManagerTeamPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const canEditMember = (member: TeamMember) => {
+    if (!currentTeam) return false
+    
+    // Superadmin can edit anyone
+    if (isSuperadmin) return true
+    
+    // Owner can edit anyone except other owners
+    if (isOwner) {
+      return member.role !== 'owner'
+    }
+    
+    // Manager can only edit employees
+    if (currentTeam.role === 'manager') {
+      return member.role === 'employee'
+    }
+    
+    return false
+  }
+
+  const canDeleteMember = (member: TeamMember) => {
+    if (!currentTeam) return false
+    
+    // Superadmin can delete anyone
+    if (isSuperadmin) return true
+    
+    // Owner can delete anyone except themselves and other owners
+    if (isOwner) {
+      return member.role !== 'owner' && member.user.id !== user?.id
+    }
+    
+    // Manager can only delete employees
+    if (currentTeam.role === 'manager') {
+      return member.role === 'employee'
+    }
+    
+    return false
+  }
+
+  const canViewKpi = (member: TeamMember) => {
+    // Superadmin can view all KPIs
+    if (isSuperadmin) return true
+    
+    // Cannot view KPI of owners (unless superadmin)
+
+    return ( member.role !== 'owner' && member.role!=='manager') || (currentTeam?.role === 'owner' && member.role !=='owner')
   }
 
   // Gestion des succès des modals
@@ -116,16 +168,28 @@ export default function ManagerTeamPage() {
   }
 
   const getRoleColor = (role: string) => {
-    return role === 'manager' 
-      ? 'bg-blue-500 text-white' 
-      : 'bg-green-500 text-white'
+    switch (role) {
+      case 'owner':
+        return 'bg-purple-500 text-white'
+      case 'manager':
+        return 'bg-blue-500 text-white'
+      default:
+        return 'bg-green-500 text-white'
+    }
   }
 
   const getRoleLabel = (role: string) => {
-    return role === 'manager' ? 'Manager' : 'Employé'
+    switch (role) {
+      case 'owner':
+        return 'Propriétaire'
+      case 'manager':
+        return 'Manager'
+      default:
+        return 'Employé'
+    }
   }
 
-  if (!currentTeam || !isManager) {
+  if (!currentTeam || !isManagerOrOwner) {
     return null
   }
 
@@ -263,10 +327,14 @@ export default function ManagerTeamPage() {
                 >
                   <div className="flex items-center gap-4">
                     {/* Avatar */}
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[#ff6b4a] flex items-center justify-center text-white font-semibold text-lg shadow-lg">
-                        {getInitials(member.user.first_name, member.user.last_name)}
-                      </div>
+                    <div className="flex-shrink-0 relative w-11 h-11 rounded-full overflow-hidden bg-gray-100 group">
+                    <Image 
+                      src={`https://api.dicebear.com/5.x/initials/svg?seed=${member.user.first_name[0]}${member.user.last_name[0]}`} 
+                      alt='Image de profile' 
+                      width={44} 
+                      height={44} 
+                      className="relative rounded-full border-2 border-white/20 transform transition-transform duration-300 group-hover:scale-110" 
+                    />
                     </div>
 
                     {/* Info - flex-1 with min-width 0 for proper text truncation */}
@@ -296,29 +364,36 @@ export default function ManagerTeamPage() {
                     {/* Actions */}
                     
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => {
-                          router.push(`/dashboard/kpi?userId=${member.user.id}`)
-                        }}
-                        className="p-2 rounded-lg hover:bg-purple-50 text-purple-600 transition-colors"
-                        title="Voir KPI"
-                      >
-                        <ChartBarIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => openEditModal(member)}
-                        className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
-                        title="Modifier"
-                      >
-                        <PencilIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(member)}
-                        className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
-                        title="Supprimer"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
+                      {canViewKpi(member) && (
+                        <button
+                          onClick={() => {
+                            router.push(`/dashboard/kpi?userId=${member.user.id}`)
+                          }}
+                          className="p-2 rounded-lg hover:bg-purple-50 text-purple-600 transition-colors"
+                          title="Voir KPI"
+                        >
+                                    
+                          <ChartBarIcon className="w-5 h-5" />
+                        </button>
+                       )}
+                      {canEditMember(member) && (
+                        <button
+                          onClick={() => openEditModal(member)}
+                          className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                          title="Modifier"
+                        >
+                          <PencilIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                      {canDeleteMember(member) && (
+                        <button
+                          onClick={() => openDeleteModal(member)}
+                          className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                          title="Supprimer"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

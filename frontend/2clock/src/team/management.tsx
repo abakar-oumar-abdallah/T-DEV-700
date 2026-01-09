@@ -138,4 +138,59 @@ export const addExistingUserToTeam = async (
   }
 };
 
+/**
+ * Update user's role in a team
+ */
+export const updateUserTeamRole = async (
+  userId: string,
+  teamId: string,
+  role: string
+): Promise<ApiResponse<any>> => {
+  try {
+    const token = localStorage.getItem('session');
+    if (!token) {
+      return {
+        success: false,
+        message: 'Session expirée',
+        error: 'No authentication token found'
+      };
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKENDURL}/userteams/${userId}/${teamId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role })
+      }
+    );
+
+    const result = await response.json();
+    
+    if (result.success) {
+      return {
+        success: true,
+        message: result.message || 'Rôle mis à jour avec succès',
+        data: result.data
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || 'Erreur lors de la mise à jour du rôle',
+        error: result.error
+      };
+    }
+  } catch (error) {
+    console.error('updateUserTeamRole error:', error);
+    return {
+      success: false,
+      message: 'Erreur de connexion au serveur',
+      error: 'Network error. Please try again.'
+    };
+  }
+};
+
 export type { TeamMember, ApiResponse };
