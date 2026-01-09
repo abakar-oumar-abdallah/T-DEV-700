@@ -84,7 +84,7 @@ class AuthController {
       res.cookie('jwt', token, {
         httpOnly: true, // Cannot be accessed by JavaScript (protection XSS)
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        sameSite: 'strict', // Protection against CSRF
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
       });
 
@@ -159,7 +159,7 @@ class AuthController {
         res.clearCookie('jwt', {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
+          sameSite: 'lax', // Changé de 'strict' à 'lax' pour permettre les cookies en production
         });
 
         // Successful logout
