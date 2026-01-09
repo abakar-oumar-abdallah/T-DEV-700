@@ -139,7 +139,7 @@ class UserController {
   };
 
 
-  /**
+   /**
    * Create a new user
    */
   async createUser(req, res) {
@@ -152,6 +152,19 @@ class UserController {
           success: false,
           message: 'Email, password, first_name, last_name, permission and phone number are required'
         });
+      }
+
+      // Check if current user is trying to create an admin or superadmin
+      if (permission === 'admin' || permission === 'superadmin') {
+        const currentUserPermission = req.user?.permission;
+        
+        // Only superadmins can create admins or superadmins
+        if (currentUserPermission !== 'superadmin') {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden - Only superadmins can create users with admin or superadmin permissions'
+          });
+        }
       }
 
       // Validation de l'email
@@ -221,7 +234,8 @@ class UserController {
             password: hashedPassword,
             first_name: first_name.trim(),
             last_name: last_name.trim(),
-            permission:permission.trim()
+            permission:permission.trim(),
+            phone_number: phone_number.trim()
           }
         ])
         .select()

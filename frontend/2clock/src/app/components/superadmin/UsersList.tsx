@@ -83,17 +83,17 @@ export default function UsersList({
       <div className="divide-y divide-gray-100">
         {users.map((user) => (
           <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-gray-900">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 className="font-semibold text-gray-900 truncate">
                     {user.first_name} {user.last_name}
                   </h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPermissionBadgeColor(user.permission)}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getPermissionBadgeColor(user.permission)}`}>
                     {getPermissionLabel(user.permission)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{user.email}</p>
+                <p className="text-sm text-gray-600 mb-1 truncate">{user.email}</p>
                 {user.user_team && user.user_team.length > 0 && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {user.user_team.length} équipe{user.user_team.length > 1 ? 's' : ''}
@@ -101,7 +101,7 @@ export default function UsersList({
                 )}
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => onEditPermission(user)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -121,6 +121,7 @@ export default function UsersList({
           </div>
         ))}
       </div>
+
 
       {pagination && (
         <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">

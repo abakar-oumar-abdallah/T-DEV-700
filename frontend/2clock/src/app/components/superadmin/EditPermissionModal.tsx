@@ -100,9 +100,9 @@ export default function EditPermissionModal({ user, isOpen, onClose, onSave }: E
           </select>
           
           <p className="mt-2 text-xs text-gray-500">
-            {permission === 'superadmin' && '🔴 Accès complet au système'}
-            {permission === 'admin' && '🔵 Peut créer des équipes'}
-            {permission === 'user' && '⚪ Accès utilisateur standard'}
+            {permission === 'superadmin' && 'Accès complet au système'}
+            {permission === 'admin' && 'Peut créer des équipes'}
+            {permission === 'user' && 'Accès utilisateur standard'}
           </p>
         </div>
 

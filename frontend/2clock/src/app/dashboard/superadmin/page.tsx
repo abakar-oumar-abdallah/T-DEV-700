@@ -8,7 +8,8 @@ import {
   ShieldCheckIcon, 
   BuildingOffice2Icon,
   MagnifyingGlassIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline'
 import {
   getSuperadminStats,
@@ -25,6 +26,7 @@ import TeamsList from '@/app/components/superadmin/TeamsList'
 import EditPermissionModal from '@/app/components/superadmin/EditPermissionModal'
 import DeleteUserModal from '@/app/components/superadmin/DeleteUserModal'
 import DeleteTeamModal from '@/app/components/team/DeleteTeamModal'
+import CreateUserModal from '@/app/components/superadmin/CreateUserModal'
 
 interface User {
   id: number
@@ -94,6 +96,7 @@ export default function SuperadminPage() {
   const [teamsPage, setTeamsPage] = useState(1)
   
   // Modals
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null)
@@ -197,6 +200,12 @@ export default function SuperadminPage() {
     }
 
     setUsersLoading(false)
+  }
+
+  const handleCreateUserSuccess = (newUser: any) => {
+    setUsers(prev => [newUser, ...prev])
+    loadStats()
+    setShowCreateUserModal(false)
   }
 
   const handleUpdatePermission = async (userId: number, permission: 'user' | 'admin' | 'superadmin') => {
@@ -369,37 +378,46 @@ export default function SuperadminPage() {
       {/* Users Tab */}
       {activeTab === 'users' && (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-          {/* Search Bar */}
+          {/* Search Bar and Create Button */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  value={searchEmail}
-                  onChange={(e) => setSearchEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}
-                  placeholder="Rechercher par email..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 flex gap-3">
+                <div className="flex-1 relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    value={searchEmail}
+                    onChange={(e) => setSearchEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}
+                    placeholder="Rechercher par email..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <button
+                  onClick={handleSearchUser}
+                  className="px-6 py-2.5 bg-[var(--color-secondary)] text-white rounded-lg font-medium transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  Rechercher
+                </button>
+                {searchEmail && (
+                  <button
+                    onClick={() => {
+                      setSearchEmail('')
+                      loadUsers()
+                    }}
+                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+                  >
+                    Réinitialiser
+                  </button>
+                )}
               </div>
               <button
-                onClick={handleSearchUser}
-                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                onClick={() => setShowCreateUserModal(true)}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-lg font-medium transition-colors whitespace-nowrap"
               >
-                Rechercher
+                <PlusIcon className="w-5 h-5" />
+                Créer un utilisateur
               </button>
-              {searchEmail && (
-                <button
-                  onClick={() => {
-                    setSearchEmail('')
-                    loadUsers()
-                  }}
-                  className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Réinitialiser
-                </button>
-              )}
             </div>
           </div>
 
@@ -428,6 +446,12 @@ export default function SuperadminPage() {
       )}
 
       {/* Modals */}
+      <CreateUserModal
+        isOpen={showCreateUserModal}
+        onClose={() => setShowCreateUserModal(false)}
+        onSuccess={handleCreateUserSuccess}
+      />
+
       <EditPermissionModal
         user={editingUser}
         isOpen={!!editingUser}

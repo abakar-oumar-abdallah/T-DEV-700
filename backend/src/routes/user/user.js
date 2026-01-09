@@ -76,7 +76,7 @@ router.get('/users',
  */
 router.post('/users', 
     AuthMiddleware,
-    TeamRoleMiddleware(["Manager","Owner"]),
+    TeamRoleMiddleware(["manager","owner"]),
     UserController.createUser
 );
 
