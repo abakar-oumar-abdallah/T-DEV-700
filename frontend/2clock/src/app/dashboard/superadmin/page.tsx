@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTeam } from '@/contexts/TeamContext'
 import { 
   UsersIcon, 
   ShieldCheckIcon, 
@@ -70,6 +71,7 @@ interface Pagination {
 
 export default function SuperadminPage() {
   const router = useRouter()
+  const { user } = useTeam()
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'teams'>('dashboard')
   
@@ -110,10 +112,21 @@ export default function SuperadminPage() {
   
   const [error, setError] = useState<string | null>(null)
 
+  // Vérification du rôle superadmin
   useEffect(() => {
     setMounted(true)
-    loadStats()
-  }, [])
+    
+    // Vérifier si l'utilisateur est superadmin
+    if (user && user.permission !== 'superadmin') {
+      setError('Accès refusé : vous devez être superadmin')
+      setTimeout(() => router.push('/dashboard'), 2000)
+      return
+    }
+    
+    if (user && user.permission === 'superadmin') {
+      loadStats()
+    }
+  }, [user])
 
   useEffect(() => {
     if (activeTab === 'users') {

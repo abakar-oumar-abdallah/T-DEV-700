@@ -82,8 +82,7 @@ export const getSuperadminStats = async (): Promise<ApiResponse<DashboardStats>>
     const result = await response.json();
     return {
       success: true,
-      data: result.data,
-      pagination: result.pagination
+      data: result.data
     };
   } catch (error) {
     console.error('getSuperadminStats error:', error);
@@ -171,7 +170,7 @@ export const searchUserByEmail = async (email: string): Promise<ApiResponse<User
     return {
       success: true,
       data: result.data,
-      count: result.count
+      pagination: result.pagination
     };
   } catch (error) {
     console.error('searchUserByEmail error:', error);
