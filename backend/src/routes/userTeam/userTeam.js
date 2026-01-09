@@ -72,7 +72,7 @@ router.get('/userteams',
  */
 router.post('/userteams',
     AuthMiddleware,
-    TeamRoleMiddleware(['manager', 'admin']),
+    TeamRoleMiddleware(['manager', 'owner']),
     UserTeamController.createUserTeam
 );
 
@@ -119,7 +119,7 @@ router.post('/userteams',
  */
 router.post('/userteams/email',
     AuthMiddleware,
-    TeamRoleMiddleware(['manager', 'admin']),
+    TeamRoleMiddleware(['manager', 'owner']),
     UserTeamController.createUserTeamWithEmail
 );
 
@@ -382,10 +382,11 @@ router.get('/teams/:teamId/users',
  *       500:
  *         description: Server error
  */
-router.patch('/userteams/:userId/:teamId',
+router.patch('/userteams/:userId/:teamId', 
     AuthMiddleware,
-    TeamRoleMiddleware(['manager'], true),
-    UserTeamController.updateUserTeam);
+    TeamRoleMiddleware(['owner', 'manager']),
+    UserTeamController.updateUserTeam
+);
 
 // Delete user-team association
 /**
@@ -415,9 +416,10 @@ router.patch('/userteams/:userId/:teamId',
  *       500:
  *         description: Server error
  */
-router.delete('/userteams/:userId/:teamId',
+router.delete('/userteams/:userId/:teamId', 
     AuthMiddleware,
-    TeamRoleMiddleware(['manager'], true),
-    UserTeamController.deleteUserTeam);
+    TeamRoleMiddleware(['owner', 'manager']),
+    UserTeamController.deleteUserTeam
+);
 
 module.exports = router;

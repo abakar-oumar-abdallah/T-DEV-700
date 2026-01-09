@@ -82,7 +82,7 @@ export default function KpiFilters({
             <option value="">Sélectionner un employé</option>
             {teamMembers.map((m, i) => (
               <option key={`m-${m.user.id}-${i}`} value={m.user.id}>
-                {m.user.first_name} {m.user.last_name} ({m.role})
+                {m.user.first_name} {m.user.last_name} ({m.role === 'manager' ? 'Manager' : 'Employé'})
               </option>
             ))}
           </select>

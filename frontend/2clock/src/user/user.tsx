@@ -273,7 +273,8 @@ export const createEmployeeInTeam = async (
  */
 export const updateUser = async (
   userId: string,
-  userData: Partial<Omit<CreateUserData, 'password' | 'permission'>>
+  userData: Partial<Omit<CreateUserData, 'password' | 'permission'>>,
+  teamId?: string
 ): Promise<ApiResponse<void>> => {
   try {
     const token = localStorage.getItem('session');
@@ -285,6 +286,14 @@ export const updateUser = async (
       };
     }
 
+    // Prepare body data
+    const bodyData: any = { ...userData };
+    
+    // Add teamId if provided (for manager/owner updates)
+    if (teamId) {
+      bodyData.teamId = teamId;
+    }
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKENDURL}/users/${userId}`,
       {
@@ -293,7 +302,7 @@ export const updateUser = async (
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify(bodyData)
       }
     );
 

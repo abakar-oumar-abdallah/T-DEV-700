@@ -74,13 +74,14 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
   useEffect(() => {
     const loadPlanning = async () => {
       if (context === 'create' || context === 'memberAfterCreation' || context === 'standalone') return;
+      if (!teamId) return;
 
       setLoading(true);
       try {
         let result;
         if (context === 'member' && userTeamId) {
-          result = await GetUserTeamPlanning(userTeamId);
-        } else if (context === 'team' && teamId) {
+          result = await GetUserTeamPlanning(userTeamId, teamId);
+        } else if (context === 'team') {
           result = await GetTeamPlanning(teamId);
         }
 
@@ -120,11 +121,24 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
     loadPlanning();
   }, [userTeamId, teamId, context]);
 
+  const handleScheduleChange = (index: number, field: keyof Schedule, value: string | boolean) => {
+    const newSchedules = [...schedules];
+    newSchedules[index] = { ...newSchedules[index], [field]: value };
+    setSchedules(newSchedules);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // If standalone mode, don't submit (parent handles it)
     if (standalone) return;
+    
+    if (!teamId) {
+      const errorMsg = 'Team ID is required';
+      setError(errorMsg);
+      if (onError) onError(errorMsg);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -149,65 +163,65 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
 
       let result;
 
-        if (context === 'create' && teamData) {
-            // Create planning first
-            const planningResult = await CreatePlanning({
-            schedules: enabledSchedules,
-            is_default: isDefaultPlanning
-            });
+      if (context === 'create' && teamData) {
+        // Create planning first
+        const planningResult = await CreatePlanning({
+          schedules: enabledSchedules,
+          is_default: isDefaultPlanning
+        });
 
-            if (!planningResult.success) {
-            const errorMsg = planningResult.error || 'Erreur lors de la création du planning';
-            setError(errorMsg);
-            if (onError) onError(errorMsg);
-            setLoading(false);
-            return;
-            }
+        if (!planningResult.success) {
+          const errorMsg = planningResult.error || 'Erreur lors de la création du planning';
+          setError(errorMsg);
+          if (onError) onError(errorMsg);
+          setLoading(false);
+          return;
+        }
 
-            const planningId = planningResult.data?.id || null;
+        const planningId = planningResult.data?.id || null;
 
-            if (!planningId) {
-            const errorMsg = 'Un planning est obligatoire pour créer une équipe';
-            setError(errorMsg);
-            if (onError) onError(errorMsg);
-            setLoading(false);
-            return;
-            }
+        if (!planningId) {
+          const errorMsg = 'Un planning est obligatoire pour créer une équipe';
+          setError(errorMsg);
+          if (onError) onError(errorMsg);
+          setLoading(false);
+          return;
+        }
 
-            // Create team with planning
-            const finalTeamData = {
-            ...teamData,
-            default_planning_id: planningId
-            };
+        // Create team with planning
+        const finalTeamData = {
+          ...teamData,
+          default_planning_id: planningId
+        };
 
-            result = await CreateTeam(finalTeamData);
+        result = await CreateTeam(finalTeamData);
 
-            if (result?.success) {
-                setSuccess('Équipe créée avec succès');
-                setTimeout(() => {
-                if (onSuccess) onSuccess();
-            }, 1500);
-            } else {
-                const errorMsg = result?.message || 'Erreur lors de la création de l\'équipe';
-                setError(errorMsg);
-                if (onError) onError(errorMsg);
-            }
-        } else if (context === 'member' && userTeamId) {
-            result = await ModifyUserTeamPlanning(userTeamId, {
-            schedules: enabledSchedules
-            });
+        if (result?.success) {
+          setSuccess('Équipe créée avec succès');
+          setTimeout(() => {
+            if (onSuccess) onSuccess();
+          }, 1500);
+        } else {
+          const errorMsg = result?.message || 'Erreur lors de la création de l\'équipe';
+          setError(errorMsg);
+          if (onError) onError(errorMsg);
+        }
+      } else if (context === 'member' && userTeamId) {
+        result = await ModifyUserTeamPlanning(userTeamId, teamId, {
+          schedules: enabledSchedules
+        });
 
-            if (result?.success) {
-            setSuccess('Planning modifié avec succès');
-            setTimeout(() => {
-                if (onSuccess) onSuccess();
-            }, 1500);
-            } else {
-            const errorMsg = result?.message || 'Erreur lors de la modification du planning';
-            setError(errorMsg);
-            if (onError) onError(errorMsg);
-            }
-        } else if (context === 'team' && teamId) {
+        if (result?.success) {
+          setSuccess('Planning modifié avec succès');
+          setTimeout(() => {
+            if (onSuccess) onSuccess();
+          }, 1500);
+        } else {
+          const errorMsg = result?.message || 'Erreur lors de la modification du planning';
+          setError(errorMsg);
+          if (onError) onError(errorMsg);
+        }
+      } else if (context === 'team') {
         result = await ModifyTeamPlanning(teamId, {
           schedules: enabledSchedules
         });
@@ -224,24 +238,24 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
         }
       
       } else if (context === 'memberAfterCreation' && userTeamId) {
-            result = await ModifyUserTeamPlanning(userTeamId, {
-                schedules: enabledSchedules
-            });
+        result = await ModifyUserTeamPlanning(userTeamId, teamId, {
+          schedules: enabledSchedules
+        });
 
-            if (result?.success) {
-                setSuccess('Planning créé avec succès');
-                setTimeout(() => {
-                if (onSuccess) onSuccess();
-                }, 1500);
-            } else {
-                const errorMsg = result?.message || 'Erreur lors de la création du planning';
-                setError(errorMsg);
-                if (onError) onError(errorMsg);
-            }
-    } 
-    }catch (err: any) {
-      console.error('Error:', err);
-      const errorMsg = 'Erreur lors de la modification du planning';
+        if (result?.success) {
+          setSuccess('Planning créé avec succès');
+          setTimeout(() => {
+            if (onSuccess) onSuccess();
+          }, 1500);
+        } else {
+          const errorMsg = result?.message || 'Erreur lors de la création du planning';
+          setError(errorMsg);
+          if (onError) onError(errorMsg);
+        }
+      } 
+    } catch (err: any) {
+      console.error('Erreur:', err);
+      const errorMsg = 'Erreur lors de la soumission du planning';
       setError(errorMsg);
       if (onError) onError(errorMsg);
     } finally {
@@ -249,21 +263,11 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
     }
   };
 
-  const handleScheduleChange = (index: number, field: 'time_in' | 'time_out' | 'enabled', value: string | boolean) => {
-    const newSchedules = [...schedules];
-    if (field === 'enabled') {
-      newSchedules[index].enabled = value as boolean;
-    } else {
-      newSchedules[index][field] = value as string;
-    }
-    setSchedules(newSchedules);
-  };
-
-  // Wrapper component - either form or div based on standalone prop
   const FormWrapper = standalone ? 'div' : 'form';
+  const formProps = standalone ? {} : { onSubmit: handleSubmit };
 
   return (
-    <FormWrapper onSubmit={!standalone ? handleSubmit : undefined} className="space-y-4">
+    <FormWrapper {...formProps} className="space-y-4">
       {!standalone && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
 
       {error && !standalone && (
@@ -310,38 +314,34 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
                     type="checkbox"
                     checked={schedule.enabled}
                     onChange={(e) => handleScheduleChange(index, 'enabled', e.target.checked)}
-                    className="w-4 h-4 text-blue-600"
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="font-medium text-gray-700">{dayLabels[schedule.day]}</span>
+                  <label className="text-sm font-medium text-gray-700 capitalize">
+                    {dayLabels[schedule.day]}
+                  </label>
                 </div>
+
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Début</label>
                   <input
                     type="time"
                     value={schedule.time_in}
                     onChange={(e) => handleScheduleChange(index, 'time_in', e.target.value)}
-                    disabled={!schedule.enabled || loading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent text-sm disabled:bg-gray-100"
+                    disabled={!schedule.enabled}
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Fin</label>
                   <input
                     type="time"
                     value={schedule.time_out}
                     onChange={(e) => handleScheduleChange(index, 'time_out', e.target.value)}
-                    disabled={!schedule.enabled || loading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent text-sm disabled:bg-gray-100"
+                    disabled={!schedule.enabled}
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
                   />
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-            <p className="text-blue-800 text-xs">
-              Astuce : Décochez les jours de repos
-            </p>
           </div>
 
           {!standalone && (

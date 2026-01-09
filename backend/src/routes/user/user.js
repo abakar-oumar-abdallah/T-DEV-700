@@ -3,6 +3,7 @@ const router = express.Router();
 const UserController = require('../../controllers/user/UserController');
 const AuthMiddleware = require('../../middlewares/AuthMiddleware');
 const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger

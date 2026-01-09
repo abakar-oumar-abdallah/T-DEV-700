@@ -175,7 +175,6 @@ router.get('/teams/:name/name',
  */
 router.patch('/teams/:id',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
     TeamRoleMiddleware(['manager']),
     TeamController.updateTeam
 );
@@ -204,8 +203,7 @@ router.patch('/teams/:id',
  */
 router.delete('/teams/:id',
     AuthMiddleware,
-    PermissionMiddleware('admin'),
-    TeamRoleMiddleware(['manager']),
+    TeamRoleMiddleware(['owner']),
     TeamController.deleteTeam
 );
 

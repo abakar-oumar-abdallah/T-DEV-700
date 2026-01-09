@@ -36,7 +36,7 @@ export default function TotpManagerPage() {
   }, [])
 
   // Vérifier si l'utilisateur est manager
-  const isManager = currentTeam?.role === 'manager'
+  const isManager = currentTeam?.role === 'manager' || currentTeam?.role === 'owner'
 
   // Rediriger si pas manager
   useEffect(() => {

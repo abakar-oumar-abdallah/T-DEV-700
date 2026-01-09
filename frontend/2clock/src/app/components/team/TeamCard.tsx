@@ -48,8 +48,31 @@ export default function TeamCard({
 }: TeamCardProps) {
   const router = useRouter();
 
-  const getRoleColor = (role: string) => 
-    role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'owner':
+        return 'bg-purple-100 text-purple-800';
+      case 'manager':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-green-100 text-green-800';
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'owner':
+        return 'Propriétaire';
+      case 'manager':
+        return 'Manager';
+      default:
+        return 'Employé';
+    }
+  };
+
+  // Only owners can delete teams
+  const canEdit = (team.role === 'owner' || team.role === 'manager');
+  const canDelete =  team.role === 'owner'
 
   return (
     <div
@@ -63,9 +86,9 @@ export default function TeamCard({
           <BuildingOffice2Icon className="h-6 w-6 text-blue-600" />
         </div>
 
-        {canManage && (
+        {(canEdit || canDelete) && (
           <div className="flex gap-2">
-            {onEdit && (
+            {canEdit && onEdit && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -77,7 +100,7 @@ export default function TeamCard({
                 <PencilIcon className="w-4 h-4" />
               </button>
             )}
-            {onDelete && (
+            {canDelete && onDelete && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -99,7 +122,7 @@ export default function TeamCard({
           <p className="text-sm text-gray-600 mb-3">{team.team.description}</p>
         )}
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(team.role)}`}>
-          {team.role === 'manager' ? 'Responsable' : 'Employé'}
+          {getRoleLabel(team.role)}
         </span>
       </div>
 
@@ -122,8 +145,8 @@ export default function TeamCard({
       </div>
 
       {/* Action buttons */}
-      <div className={`mt-4 flex gap-2 ${team.role === 'manager' ? 'flex-col' : ''}`}>
-        {team.role === 'manager' && (
+      <div className={`mt-4 flex gap-2 ${(team.role === 'manager' || team.role === 'owner') ? 'flex-col' : ''}`}>
+        {(team.role === 'manager' || team.role === 'owner') && (
           <button
             onClick={() => {
               setCurrentTeam(team);
@@ -133,7 +156,7 @@ export default function TeamCard({
             className="w-full flex cursor-pointer items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <UserGroupIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">Voir membres</span>
+            <span className="text-sm font-medium">Gérer l&apos;équipe</span>
           </button>
         )}
 
