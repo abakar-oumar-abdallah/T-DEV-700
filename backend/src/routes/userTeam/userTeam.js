@@ -336,7 +336,7 @@ router.get('/users/:userId/teams',
  */
 router.get('/teams/:teamId/users',
     AuthMiddleware,
-    TeamRoleMiddleware(['manager'], true),
+    TeamRoleMiddleware(['manager','owner'], true),
     UserTeamController.getUsersByTeamId);
 
 // Update user-team association

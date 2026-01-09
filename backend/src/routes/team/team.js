@@ -176,7 +176,7 @@ router.get('/teams/:name/name',
  */
 router.patch('/teams/:id',
     AuthMiddleware,
-    TeamRoleMiddleware(['manager']),
+    TeamRoleMiddleware(['manager','owner']),
     TeamController.updateTeam
 );
 

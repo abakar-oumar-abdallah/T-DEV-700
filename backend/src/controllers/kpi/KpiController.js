@@ -511,10 +511,6 @@ class KpiController {
     }
 
 
-    // Lateness rate by team
-
-    // Overtime rate by team
-
 }
 
 module.exports = new KpiController();
