@@ -60,7 +60,7 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
     }
   }, [member, isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!member) return;
 
@@ -118,7 +118,7 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
         return;
       }
 
-      // If user information changed, update user first
+      // If user information changed, update user first WITH teamId
       if (userInfoChanged) {
         const updateData: any = {
           email: formData.email,
@@ -132,7 +132,8 @@ export default function EditMemberModal({ member, teamId, isOpen, onClose, onSuc
           updateData.password = formData.password;
         }
 
-        const userUpdateResult = await updateUser(member.user.id, updateData);
+        // Pass teamId as third parameter for permission check
+        const userUpdateResult = await updateUser(member.user.id, updateData, teamId);
 
         if (!userUpdateResult.success) {
           setError(userUpdateResult.message || 'Erreur lors de la modification des informations');

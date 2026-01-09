@@ -252,20 +252,96 @@ class UserController {
     }
   }
 
-  /**
+    /**
    * Update user
    */
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { email, password, first_name, last_name, permission, phone_number } = req.body;
+      const { email, password, first_name, last_name, permission, phone_number, teamId } = req.body;
+      const currentUserId = req.user?.userId;
 
       // Vérifier qu'au moins un champ est fourni
-      if (!email && !password && !first_name && !last_name  && !permission && !phone_number) {
+      if (!email && !password && !first_name && !last_name && !permission && !phone_number) {
         return res.status(400).json({
           success: false,
           message: 'At least one field must be provided to update'
         });
+      }
+
+      // Check if current user is the same as target user
+      const isSelfUpdate = currentUserId == id;
+
+      // If not self-update, check team permissions
+      if (!isSelfUpdate) {
+        // TeamId is required for non-self updates
+        if (!teamId) {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden - TeamId is required to update other users' + 'sent id :' +currentUserId + ' found : ' + id
+          });
+        }
+
+        // Check if user is superadmin
+        const isSuperadmin = req.user?.permission === 'superadmin';
+
+        if (!isSuperadmin) {
+          // Get current user's role in the team
+          const { data: currentUserTeam, error: currentUserError } = await supabase
+            .from('user_team')
+            .select('role')
+            .eq('user_id', currentUserId)
+            .eq('team_id', teamId)
+            .single();
+
+          if (currentUserError || !currentUserTeam) {
+            return res.status(403).json({
+              success: false,
+              message: 'Forbidden - You are not a member of this team'
+            });
+          }
+
+          // Only managers and owners can update other users
+          if (currentUserTeam.role !== 'manager' && currentUserTeam.role !== 'owner') {
+            return res.status(403).json({
+              success: false,
+              message: 'Forbidden - Only managers and owners can update other users'
+            });
+          }
+
+          // Get target user's role in the team
+          const { data: targetUserTeam, error: targetUserError } = await supabase
+            .from('user_team')
+            .select('role')
+            .eq('user_id', id)
+            .eq('team_id', teamId)
+            .single();
+
+          if (targetUserError || !targetUserTeam) {
+            return res.status(404).json({
+              success: false,
+              message: 'Target user is not a member of this team'
+            });
+          }
+
+          // Managers cannot update owners or other managers
+          if (currentUserTeam.role === 'manager') {
+            if (targetUserTeam.role === 'owner' || targetUserTeam.role === 'manager') {
+              return res.status(403).json({
+                success: false,
+                message: 'Forbidden - Managers cannot update owners or other managers'
+              });
+            }
+          }
+
+          // Owners cannot update other owners
+          if (currentUserTeam.role === 'owner' && targetUserTeam.role === 'owner' && currentUserId !== id) {
+            return res.status(403).json({
+              success: false,
+              message: 'Forbidden - Owners cannot update other owners'
+            });
+          }
+        }
       }
 
       const updateData = {};
@@ -280,7 +356,7 @@ class UserController {
           });
         }
 
-        // Vérifier si l'email existe déjà pour un autre utilisateur
+        // Vérifier si l'email existe déjà
         const { data: existingUser, error: checkError } = await supabase
           .from('user')
           .select('id')
@@ -288,26 +364,17 @@ class UserController {
           .neq('id', id)
           .single();
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          console.error('Error checking existing email:', checkError);
-          return res.status(500).json({
-            success: false,
-            message: 'Failed to check existing email',
-            error: checkError.message
-          });
-        }
-
         if (existingUser) {
           return res.status(409).json({
             success: false,
-            message: 'Email already exists for another user'
+            message: 'Email already exists'
           });
         }
 
-        updateData.email = email.toLowerCase().trim();
+        updateData.email = email.trim();
       }
 
-      // Validation et hash du mot de passe
+      // Validation et ajout du mot de passe
       if (password) {
         if (password.length < 6) {
           return res.status(400).json({
@@ -315,15 +382,14 @@ class UserController {
             message: 'Password must be at least 6 characters long'
           });
         }
-
-        const saltRounds = 12;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-        updateData.password = hashedPassword;
+        const bcrypt = require('bcrypt');
+        const saltRounds = 10;
+        updateData.password = await bcrypt.hash(password, saltRounds);
       }
 
       // Validation et ajout du prénom
       if (first_name) {
-        if (first_name.trim().length < 2) {
+        if (first_name.length < 2) {
           return res.status(400).json({
             success: false,
             message: 'First name must be at least 2 characters long'
@@ -334,7 +400,7 @@ class UserController {
 
       // Validation et ajout du nom
       if (last_name) {
-        if (last_name.trim().length < 2) {
+        if (last_name.length < 2) {
           return res.status(400).json({
             success: false,
             message: 'Last name must be at least 2 characters long'
@@ -342,6 +408,7 @@ class UserController {
         }
         updateData.last_name = last_name.trim();
       }
+
       // Ajout de la permission
       if (permission) {
         updateData.permission = permission.trim();
@@ -357,6 +424,7 @@ class UserController {
         }
         updateData.phone_number = phone_number;
       }
+
       // Ajouter la date de mise à jour
       updateData.updated_at = new Date().toISOString();
 

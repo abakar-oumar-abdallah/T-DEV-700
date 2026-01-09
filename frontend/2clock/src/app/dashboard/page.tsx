@@ -77,7 +77,7 @@ export default function EmployeePage() {
           </article>
         </Link>
 
-        <Link href="/dashboard/employee/profile" className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+        <Link href="/profile" className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
           <article className="group bg-white rounded-xl shadow-md p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer border-t-4 border-[#7a5bdc] hover:-translate-y-2 overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-br from-[rgba(122,91,220,0.02)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="flex flex-col items-center text-center relative z-10">
