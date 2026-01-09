@@ -318,29 +318,29 @@ export default function SuperadminPage() {
   }
 
   return (
-    <main className="p-6 sm:p-10 min-h-screen bg-gradient-to-br from-gray-50 to-red-50/30">
+    <main className="p-4 sm:p-6 lg:p-10 min-h-screen bg-gradient-to-br from-gray-50 to-red-50/30">
       {/* Header */}
-      <div className={`bg-gradient-to-r from-red-600 to-red-500 rounded-2xl shadow-xl p-6 sm:p-8 mb-8 transition-all duration-700 ${
+      <div className={`bg-gradient-to-r from-red-600 to-red-500 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 transition-all duration-700 ${
         mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-white shadow-2xl flex items-center justify-center">
-              <ShieldCheckIcon className="w-8 h-8 text-red-600" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white shadow-2xl flex items-center justify-center flex-shrink-0">
+              <ShieldCheckIcon className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                Superadmin Panel
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                Administration
               </h1>
-              <p className="text-white/90 text-sm sm:text-base">
-                Gestion globale du système
+              <p className="text-white/90 text-xs sm:text-sm lg:text-base">
+                Gestion du système
               </p>
             </div>
           </div>
           
           <button
             onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white transition-all"
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white transition-all text-sm sm:text-base whitespace-nowrap"
           >
             Retour
           </button>
