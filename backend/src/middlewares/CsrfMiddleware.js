@@ -30,7 +30,7 @@ function csrfTokenGenerator(req, res, next) {
   res.cookie('XSRF-TOKEN', csrfToken, {
     httpOnly: false, // Le client doit pouvoir lire ce cookie
     secure: process.env.NODE_ENV === 'production', // HTTPS uniquement en production
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: 'lax',  // Changé de 'strict' à 'lax' pour permettre CSRF en production
     maxAge: 3600000 // 1 heure
   });
 
@@ -88,7 +88,7 @@ function getCsrfToken(req, res) {
   res.cookie('XSRF-TOKEN', csrfToken, {
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: 'lax',
     maxAge: 3600000
   });
 

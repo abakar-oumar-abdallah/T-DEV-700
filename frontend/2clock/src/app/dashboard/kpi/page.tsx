@@ -3,14 +3,21 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useTeam } from '@/contexts/TeamContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { getLatenessRateByEmployee, getDepartureRateByEmployee, getTeamMembers } from '@/kpi/kpi'
-import type { LatenessData, UserTeam } from '@/kpi/kpi'
+import { 
+  getLatenessRateByEmployee, 
+  getDepartureRateByEmployee, 
+  getTeamMembers,
+  getAbsences,
+  fixAbsences
+} from '@/kpi/kpi'
+import type { LatenessData, UserTeam, AbsencesResponse, Absence } from '@/kpi/kpi'
 import KpiGraphs from '@/app/components/kpi/KpiGraphs'
 import KpiFilters from '@/app/components/kpi/KpiFilters'
 import EmployeeInfoCard from '@/app/components/kpi/EmployeeInfoCard'
 import KpiStats from '@/app/components/kpi/KpiStats'
+import AbsenceList from '@/app/components/kpi/AbsenceList'
 
-type KpiType = 'lateness' | 'departure'
+type KpiType = 'lateness' | 'departure' | 'absences'
 
 // Composant qui utilise useSearchParams (doit être dans Suspense)
 function KpiContent() {
@@ -33,6 +40,8 @@ function KpiContent() {
   const [appliedEndDate, setAppliedEndDate] = useState('')
 
   const [latenessData, setLatenessData] = useState<LatenessData | null>(null)
+  const [absencesData, setAbsencesData] = useState<AbsencesResponse | null>(null)
+  const [absencesPage, setAbsencesPage] = useState(1)
 
   const isSuperadmin = user?.permission === 'superadmin'
   const isManagerOrOwner = currentTeam?.role === 'manager' || currentTeam?.role === 'owner' || isSuperadmin
@@ -92,8 +101,9 @@ function KpiContent() {
     }
   }, [searchParams, teamMembers])
   
+  // Load KPI data (lateness/departure)
   useEffect(() => {
-    if (!currentTeam?.team.id || !selectedUserId) return
+    if (!currentTeam?.team.id || !selectedUserId || kpiType === 'absences') return
     setLoading(true)
     setError(null)
     let options: { days?: number | null; startDate?: string; endDate?: string } = {}
@@ -114,6 +124,40 @@ function KpiContent() {
       else setError(r.error || 'Erreur chargement données')
     }).finally(() => setLoading(false))
   }, [currentTeam?.team.id, selectedUserId, appliedDays, appliedStartDate, appliedEndDate, periodMode, kpiType])
+
+    // Load absences data
+  useEffect(() => {
+    if (!currentTeam?.team.id || !selectedUserId || kpiType !== 'absences') return
+    setLoading(true)
+    setError(null)
+    
+    const options: { startDate?: string; endDate?: string; page?: number; limit?: number } = {
+      page: absencesPage,
+      limit: 20
+    }
+    
+    // Add date filtering based on period mode
+    if (periodMode === 'range' && appliedStartDate && appliedEndDate) {
+      options.startDate = appliedStartDate
+      options.endDate = appliedEndDate
+    } else if (periodMode === 'days' && appliedDays) {
+      // Calculate date range from days
+      const endDate = new Date()
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - appliedDays)
+      options.startDate = startDate.toISOString().split('T')[0]
+      options.endDate = endDate.toISOString().split('T')[0]
+    }
+    // If periodMode === 'all', don't set dates (will use default: user created_at + 1 day to today)
+    
+    getAbsences(currentTeam.team.id, selectedUserId, options).then(r => {
+      if (r.success && r.data) {
+        setAbsencesData(r.data)
+      } else {
+        setError(r.error || 'Erreur chargement absences')
+      }
+    }).finally(() => setLoading(false))
+  }, [currentTeam?.team.id, selectedUserId, kpiType, absencesPage, appliedStartDate, appliedEndDate, periodMode, appliedDays])
 
   const handlePeriodModeChange = (value: 'days' | 'all' | 'range') => {
     setPeriodMode(value)
@@ -178,6 +222,59 @@ function KpiContent() {
       setTimeout(() => setAppliedDays(appliedDays), 0)
     }
   }
+  
+  const handleFixAbsences = async (absences: Absence[]) => {
+    if (!currentTeam?.team.id) return
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Prepare date options based on period mode
+      const fixOptions: { startDate?: string; endDate?: string } = {}
+      
+      if (periodMode === 'range' && appliedStartDate && appliedEndDate) {
+        fixOptions.startDate = appliedStartDate
+        fixOptions.endDate = appliedEndDate
+      } else if (periodMode === 'days' && appliedDays) {
+        const endDate = new Date()
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - appliedDays)
+        fixOptions.startDate = startDate.toISOString().split('T')[0]
+        fixOptions.endDate = endDate.toISOString().split('T')[0]
+      }
+      // If periodMode === 'all', don't set dates (backend will use default: created_at + 1 to today)
+      
+      const result = await fixAbsences(currentTeam.team.id, absences, fixOptions)
+      
+      if (result.success) {
+        // Reload absences data with the same filters
+        setAbsencesPage(1)
+        const options: { startDate?: string; endDate?: string; page?: number; limit?: number } = {
+          page: 1,
+          limit: 20,
+          ...fixOptions
+        }
+        
+        if (selectedUserId) {
+          const r = await getAbsences(currentTeam.team.id, selectedUserId, options)
+          if (r.success && r.data) {
+            setAbsencesData(r.data)
+          }
+        }
+      } else {
+        setError(result.error || 'Erreur lors de la correction des absences')
+      }
+    } catch (err) {
+      setError('Erreur inattendue lors de la correction')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAbsencesPageChange = (page: number) => {
+    setAbsencesPage(page)
+  }
 
   if (!currentTeam || !isManagerOrOwner) return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -204,12 +301,14 @@ function KpiContent() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
-                {kpiType === 'lateness' ? 'KPI de Ponctualité' : 'KPI de Départ'}
+                {kpiType === 'lateness' ? 'KPI de Ponctualité' : kpiType === 'departure' ? 'KPI de Départ' : 'Gestion des Absences'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {kpiType === 'lateness'
                   ? 'Analysez les statistiques de ponctualité'
-                  : 'Analysez les statistiques de départ (heures de sortie)'}
+                  : kpiType === 'departure'
+                  ? 'Analysez les statistiques de départ (heures de sortie)'
+                  : 'Consultez et corrigez les absences détectées'}
               </p>
             </div>
           </div>
@@ -250,13 +349,14 @@ function KpiContent() {
         </div>
       )}
 
-      {loading && !latenessData && (
+      {loading && !latenessData && !absencesData && (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)]"></div>
         </div>
       )}
 
-      {!loading && latenessData && selectedUser && (
+      {/* KPI Data Display (Lateness/Departure) */}
+      {!loading && latenessData && selectedUser && kpiType !== 'absences' && (
         <>
           <EmployeeInfoCard selectedUser={selectedUser} latenessData={latenessData} mounted={mounted} />
           <KpiStats latenessData={latenessData} kpiType={kpiType} mounted={mounted} />
@@ -264,7 +364,17 @@ function KpiContent() {
         </>
       )}
 
-      {!loading && !latenessData && !error && (
+      {/* Absences Display */}
+      {!loading && kpiType === 'absences' && (
+        <AbsenceList 
+          data={absencesData}
+          loading={loading}
+          onFixAbsences={handleFixAbsences}
+          onPageChange={handleAbsencesPageChange}
+        />
+      )}
+
+      {!loading && !latenessData && !absencesData && !error && (
         <div className="bg-white rounded-xl shadow-lg p-12 text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ChartBarIcon className="w-8 h-8 text-gray-400" />
@@ -273,7 +383,7 @@ function KpiContent() {
             {selectedUserId ? 'Aucune donnée' : 'Sélectionnez un employé'}
           </h3>
           <p className="text-gray-600">
-            {selectedUserId ? 'Aucun pointage trouvé.' : 'Choisissez un employé pour voir ses stats.'}
+            {selectedUserId ? 'Aucune donnée trouvée.' : 'Choisissez un employé pour voir ses statistiques.'}
           </p>
         </div>
       )}

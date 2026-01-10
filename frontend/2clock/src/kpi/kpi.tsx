@@ -25,15 +25,53 @@ export interface ApiResponse<T> {
   error?: string
 }
 
-const apiCall = async <T,>(url: string): Promise<ApiResponse<T>> => {
+export interface TimeSlot {
+  start: string
+  end: string
+}
+
+export interface Absence {
+  date: string
+  dayOfWeek: number
+  expectedSchedule: TimeSlot[]
+  planningId: number
+  userTeamId: number
+  reason: 'missing_clock' | 'incomplete_clock'
+  clockId?: number
+}
+
+export interface AbsencesResponse {
+  absences: Absence[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
+  user: {
+    id: number
+    first_name: string
+    last_name: string
+    email: string
+  }
+  userTeamId: number
+  dateRange: {
+    start: string
+    end: string
+  }
+}
+
+const apiCall = async <T,>(url: string, options?: RequestInit): Promise<ApiResponse<T>> => {
   try {
     const token = localStorage.getItem('session')
     if (!token) return { success: false, error: 'No authentication token found' }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKENDURL}${url}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        ...options?.headers
       }
     })
 
@@ -92,6 +130,48 @@ export const getDepartureRateByEmployee = (
   }
   
   return apiCall<LatenessData>(url)
+}
+
+export const getAbsences = (
+  teamId: number,
+  userId: number,
+  options?: { startDate?: string; endDate?: string; page?: number; limit?: number }
+) => {
+  let url = `/kpi/teams/${teamId}/users/${userId}/absences`
+  const params = new URLSearchParams()
+  
+  if (options?.startDate) params.append('startDate', options.startDate)
+  if (options?.endDate) params.append('endDate', options.endDate)
+  if (options?.page) params.append('page', options.page.toString())
+  if (options?.limit) params.append('limit', options.limit.toString())
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`
+  }
+  
+  return apiCall<AbsencesResponse>(url)
+}
+
+export const fixAbsences = (
+  teamId: number, 
+  absences: Absence[],
+  options?: { startDate?: string; endDate?: string }
+) => {
+  let url = `/kpi/teams/${teamId}/absences/fix`
+  const params = new URLSearchParams()
+  
+  // Add date range parameters if provided
+  if (options?.startDate) params.append('startDate', options.startDate)
+  if (options?.endDate) params.append('endDate', options.endDate)
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`
+  }
+  
+  return apiCall<{ created: number; errors: number }>(url, {
+    method: 'PATCH',
+    body: JSON.stringify({ absences })
+  })
 }
 
 export const getTeamMembers = (teamId: number) =>

@@ -135,7 +135,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
     // If standalone mode, don't submit (parent handles it)
     if (standalone) return;
     
-    if (!teamId) {
+    if (!teamId && context !== 'create') {
       const errorMsg = 'Team ID is required';
       setError(errorMsg);
       if (onError) onError(errorMsg);
@@ -310,7 +310,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
 
           <div className="space-y-3">
             {schedules.map((schedule, index) => (
-              <div key={schedule.day} className="grid grid-cols-3 gap-4 items-center p-3 bg-gray-50 rounded-lg">
+              <div key={schedule.day} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 items-start sm:items-center p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -324,24 +324,28 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
                   </label>
                 </div>
 
-                <div>
-                  <input
-                    type="time"
-                    value={schedule.time_in}
-                    onChange={(e) => handleScheduleChange(index, 'time_in', e.target.value)}
-                    disabled={!schedule.enabled || readonly}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-                  />
-                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:gap-0 sm:contents">
+                  <div>
+                    <label className="block sm:hidden text-xs text-gray-600 mb-1">Début</label>
+                    <input
+                      type="time"
+                      value={schedule.time_in}
+                      onChange={(e) => handleScheduleChange(index, 'time_in', e.target.value)}
+                      disabled={!schedule.enabled || readonly}
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                    />
+                  </div>
 
-                <div>
-                  <input
-                    type="time"
-                    value={schedule.time_out}
-                    onChange={(e) => handleScheduleChange(index, 'time_out', e.target.value)}
-                    disabled={!schedule.enabled || readonly}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-                  />
+                  <div>
+                    <label className="block sm:hidden text-xs text-gray-600 mb-1">Fin</label>
+                    <input
+                      type="time"
+                      value={schedule.time_out}
+                      onChange={(e) => handleScheduleChange(index, 'time_out', e.target.value)}
+                      disabled={!schedule.enabled || readonly}
+                      className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
