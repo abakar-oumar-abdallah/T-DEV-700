@@ -83,6 +83,8 @@ export default function EmployeePage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {currentTeam && (
         <Link href="/dashboard/clock" className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
           <article className="group bg-white rounded-xl shadow-md p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer border-t-4 border-[var(--color-primary)] hover:-translate-y-2 overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-br from-[rgba(236,77,54,0.02)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -95,6 +97,7 @@ export default function EmployeePage() {
             </div>
           </article>
         </Link>
+        )}
 
         <Link href="/profile" className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
           <article className="group bg-white rounded-xl shadow-md p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer border-t-4 border-[#7a5bdc] hover:-translate-y-2 overflow-hidden relative">

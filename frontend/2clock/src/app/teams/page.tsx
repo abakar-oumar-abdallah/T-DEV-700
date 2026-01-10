@@ -31,13 +31,13 @@ export default function TeamSelectionPage() {
         return;
       }
       
-      if (teams.length === 1) {
+      if (teams.length === 1 && !(user.permission === 'admin' || user.permission === 'superadmin')) {
         setCurrentTeam(teams[0]);
         router.push('/dashboard');
         return;
       }
       
-      if (teams.length === 0) {
+      if (teams.length === 0 && !(user.permission === 'admin' || user.permission === 'superadmin')) {
         router.push('/dashboard');
         return;
       }
