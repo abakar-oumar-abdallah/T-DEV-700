@@ -53,11 +53,27 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
 
   return (
     <>
+      <style jsx>{`
+        .sidebar-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          margin: 16px 0;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 3px;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      `}</style>
       <aside
         className={`fixed top-0 left-0 z-50 h-screen transform transition-transform duration-300
         ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
         sm:translate-x-0
-        flex flex-col w-[100vw] sm:w-64 overflow-y-auto`}
+        flex flex-col w-[100vw] sm:w-64 overflow-y-auto sidebar-scrollbar`}
         style={{
           background: "var(--color-secondary)",
           color: "white",
