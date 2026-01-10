@@ -14,6 +14,7 @@ const translateError = (error: string): string => {
     'Invalid email or password': 'Email ou mot de passe incorrect',
     'User not found': 'Utilisateur non trouvé',
     'Invalid email format': 'Format d\'email invalide',
+    'Email and password are required': 'L\'email et le mot de passe sont requis',
   };
 
   return translations[error] || error;

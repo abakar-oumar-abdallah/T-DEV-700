@@ -10,7 +10,7 @@ import {
 } from '@/totp/totp'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import type { Socket } from 'socket.io-client'
+import { Socket } from 'socket.io-client'
 
 interface TotpData {
   teamId: string;
@@ -27,7 +27,7 @@ export default function TotpManagerPage() {
   const [isActive, setIsActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [socket, setSocket] = useState<Socket | null>(null)
+  const [socket, setSocket] = useState<typeof Socket | null>(null)
   const [mounted, setMounted] = useState(false)
 
   // Mount animation
@@ -38,12 +38,16 @@ export default function TotpManagerPage() {
   // Vérifier si l'utilisateur est manager
   const isManager = currentTeam?.role === 'manager' || currentTeam?.role === 'owner'
 
-  // Rediriger si pas manager
+  // Rediriger les superadmin vers leur page et les non-managers vers dashboard
   useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+      return
+    }
     if (currentTeam && !isManager) {
       router.push('/dashboard')
     }
-  }, [currentTeam, isManager, router])
+  }, [user, currentTeam, isManager, router])
 
   // Initialiser la connexion WebSocket
   useEffect(() => {

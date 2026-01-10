@@ -19,6 +19,7 @@ interface PlanningFormProps {
   onSuccess?: () => void;
   onError?: (error: string) => void;
   standalone?: boolean;
+  readonly?: boolean;
 }
 
 const dayLabels: Record<string, string> = {
@@ -40,7 +41,8 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
   teamData,
   onSuccess,
   onError,
-  standalone = false
+  standalone = false,
+  readonly = false
 }, ref) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +208,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           setError(errorMsg);
           if (onError) onError(errorMsg);
         }
-      } else if (context === 'member' && userTeamId) {
+      } else if (context === 'member' && userTeamId && teamId) {
         result = await ModifyUserTeamPlanning(userTeamId, teamId, {
           schedules: enabledSchedules
         });
@@ -221,7 +223,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           setError(errorMsg);
           if (onError) onError(errorMsg);
         }
-      } else if (context === 'team') {
+      } else if (context === 'team' && teamId) {
         result = await ModifyTeamPlanning(teamId, {
           schedules: enabledSchedules
         });
@@ -237,7 +239,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           if (onError) onError(errorMsg);
         }
       
-      } else if (context === 'memberAfterCreation' && userTeamId) {
+      } else if (context === 'memberAfterCreation' && userTeamId && teamId) {
         result = await ModifyUserTeamPlanning(userTeamId, teamId, {
           schedules: enabledSchedules
         });
@@ -306,7 +308,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
             <h4 className="text-sm font-medium text-gray-700 mb-3">{title}</h4>
           )}
 
-                   <div className="space-y-3">
+          <div className="space-y-3">
             {schedules.map((schedule, index) => (
               <div key={schedule.day} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 items-start sm:items-center p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
@@ -314,7 +316,8 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
                     type="checkbox"
                     checked={schedule.enabled}
                     onChange={(e) => handleScheduleChange(index, 'enabled', e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    disabled={readonly}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   />
                   <label className="text-sm font-medium text-gray-700 capitalize">
                     {dayLabels[schedule.day]}
@@ -328,7 +331,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
                       type="time"
                       value={schedule.time_in}
                       onChange={(e) => handleScheduleChange(index, 'time_in', e.target.value)}
-                      disabled={!schedule.enabled}
+                      disabled={!schedule.enabled || readonly}
                       className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
                     />
                   </div>
@@ -339,7 +342,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
                       type="time"
                       value={schedule.time_out}
                       onChange={(e) => handleScheduleChange(index, 'time_out', e.target.value)}
-                      disabled={!schedule.enabled}
+                      disabled={!schedule.enabled || readonly}
                       className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
                     />
                   </div>
@@ -348,7 +351,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
             ))}
           </div>
 
-          {!standalone && (
+          {!standalone && !readonly && (
             <button
               type="submit"
               disabled={loading}

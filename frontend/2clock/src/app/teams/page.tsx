@@ -85,7 +85,12 @@ export default function TeamSelectionPage() {
       if (result.success) {
         if (result.data.team_id === team.team.id && result.data.user_id === user?.id) {
           setCurrentTeam(team);
-          router.push('/dashboard');
+          if (team.role === 'owner' || team.role === 'manager') {
+            router.push('/dashboard');
+          } else {
+            router.push('/dashboard/clock');
+          }
+
         } else {
           setError('Données d\'équipe incohérentes. Veuillez vous reconnecter.');
           clearTeamContext();

@@ -1,5 +1,7 @@
 interface ClockInOutRequest {
   totp?: string;
+  code?: string;
+  teamId?: string;
 }
 
 interface ClockInOutResponse {
@@ -13,7 +15,15 @@ interface ClockInOutResponse {
     planning_id?: string;
     work_day?: string;
     status: 'clocked_in' | 'clocked_out';
-  };
+  } | Array<{
+    id: string;
+    user_team_id: number;
+    arrival_time?: string;
+    departure_time?: string;
+    planning_id?: string;
+    work_day?: string;
+    status: 'clocked_in' | 'clocked_out';
+  }>;
   warnings?: string[];
   isLate?: boolean;
   lateBy?: number;

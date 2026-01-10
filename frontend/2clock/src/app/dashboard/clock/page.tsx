@@ -1,7 +1,9 @@
 "use client"
 import React, { useEffect, useState } from "react"
+import { useRouter } from 'next/navigation'
 import { useTeam } from "@/contexts/TeamContext"
 import { clockInOut, getClockHistory } from "@/clock/clock"
+import { GetUserTeamPlanning } from "@/planning/planning"
 import { BuildingOffice2Icon, ClockIcon } from "@heroicons/react/24/outline"
 
 type Punch = {
@@ -106,21 +108,64 @@ function formatTime(d = new Date(), timezone = 'Europe/Paris') {
 }
 
 export default function ClockPage() {
+  const router = useRouter()
   const [pin, setPin] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [history, setHistory] = useState<Punch[]>([])
   const [mounted, setMounted] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [todaySchedule, setTodaySchedule] = useState<{time_in: string, time_out: string} | null>(null)
+  const [scheduleLoading, setScheduleLoading] = useState(true)
   const { currentTeam, user } = useTeam()
 
   const teamTimezone = currentTeam?.team.timezone || 'Europe/Paris'
+  const hasScheduleToday = todaySchedule !== null
+  const canInteract = currentTeam && hasScheduleToday
+
+  // Rediriger les superadmin vers leur page
+  useEffect(() => {
+    if (user?.permission === 'superadmin') {
+      router.push('/dashboard/superadmin')
+    }
+  }, [user, router])
 
   useEffect(() => {
     setMounted(true)
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // Gestion du clavier PC
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (loading || !canInteract) return
+      
+      // Chiffres 0-9
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault()
+        press(e.key)
+      }
+      // Backspace
+      else if (e.key === 'Backspace') {
+        e.preventDefault()
+        press('back')
+      }
+      // Escape ou Delete pour Clear
+      else if (e.key === 'Escape' || e.key === 'Delete') {
+        e.preventDefault()
+        press('clear')
+      }
+      // Enter pour valider
+      else if (e.key === 'Enter' && pin.length === 6 && canInteract) {
+        e.preventDefault()
+        handleSubmit()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [loading, pin, canInteract])
 
   // Load clock history from API on component mount
   useEffect(() => {
@@ -133,7 +178,9 @@ export default function ClockPage() {
           // Convert API data to local Punch format with calculated stats
           const punches: Punch[] = []
           
-          for (const clockEntry of result.data) {
+          const dataArray = Array.isArray(result.data) ? result.data : [result.data]
+          
+          for (const clockEntry of dataArray) {
             if (clockEntry.arrival_time) {
               let arrivalPunch: Punch = {
                 id: `${clockEntry.id}-arrival`,
@@ -166,16 +213,57 @@ export default function ClockPage() {
     loadClockHistory()
   }, [currentTeam?.team.id, user?.id])
 
+  // Load today's schedule
+  useEffect(() => {
+    const loadTodaySchedule = async () => {
+      if (!currentTeam?.id || !currentTeam?.team.id) {
+        setScheduleLoading(false);
+        return;
+      }
+      
+      setScheduleLoading(true);
+      try {
+        const result = await GetUserTeamPlanning(parseInt(currentTeam.id), currentTeam.team.id);
+        if (result.success && result.data?.planning?.schedule) {
+          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+          const schedule = result.data.planning.schedule.find((s: any) => s.day === today);
+          if (schedule) {
+            setTodaySchedule({
+              time_in: schedule.time_in.substring(0, 5),
+              time_out: schedule.time_out.substring(0, 5)
+            });
+          } else {
+            setTodaySchedule(null);
+          }
+        } else {
+          setTodaySchedule(null);
+        }
+      } catch (error) {
+        console.error('Error loading today schedule:', error);
+        setTodaySchedule(null);
+      } finally {
+        setScheduleLoading(false);
+      }
+    };
+
+    loadTodaySchedule();
+  }, [currentTeam?.id, currentTeam?.team.id]);
+
   const handleSubmit = async () => {
     setMessage(null)
     
-    if (pin.length !== 6) {
-      setMessage("Le code TOTP doit contenir exactement 6 chiffres")
+    if (!currentTeam) {
+      setMessage("Aucune équipe sélectionnée")
+      return
+    }
+
+    if (!hasScheduleToday) {
+      setMessage("Aucun horaire programmé pour aujourd'hui")
       return
     }
     
-    if (!currentTeam) {
-      setMessage("Aucune équipe sélectionnée")
+    if (pin.length !== 6) {
+      setMessage("Le code TOTP doit contenir exactement 6 chiffres")
       return
     }
 
@@ -198,7 +286,7 @@ export default function ClockPage() {
         code: pin
       })
 
-      if (result.success && result.data) {
+      if (result.success && result.data && !Array.isArray(result.data)) {
         const actionType: Punch["type"] = result.data.status === 'clocked_in' ? "Arrivée" : "Départ"
         const time = result.data.status === 'clocked_in' 
           ? result.data.arrival_time 
@@ -240,7 +328,7 @@ export default function ClockPage() {
         if (frenchWarnings.length > 0) {
           successMessage += ` (${frenchWarnings.join(', ')})`
         }
-        
+
         setMessage(successMessage)
         setPin("")
       } else {
@@ -275,7 +363,7 @@ export default function ClockPage() {
   }
 
   const press = (d: string) => {
-    if (loading) return
+    if (loading || !canInteract) return
     if (d === "clear") return setPin("")
     if (d === "back") return setPin((p) => p.slice(0, -1))
     setPin((p) => (p.length >= 6 ? p : p + d))
@@ -315,6 +403,27 @@ export default function ClockPage() {
                 Fuseau horaire: {teamTimezone}
               </p>
             )}
+            
+            {/* Horaires du jour */}
+            {scheduleLoading ? (
+              <div className="mt-4 inline-block bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+                <p className="text-sm text-gray-600 font-medium">
+                  Chargement des horaires...
+                </p>
+              </div>
+            ) : currentTeam && hasScheduleToday ? (
+              <div className="mt-4 inline-block bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                <p className="text-sm text-blue-800 font-medium">
+                  Horaires du jour : {todaySchedule.time_in} - {todaySchedule.time_out}
+                </p>
+              </div>
+            ) : currentTeam && !hasScheduleToday ? (
+              <div className="mt-4 inline-block bg-orange-50 border border-orange-200 rounded-lg px-4 py-2">
+                <p className="text-sm text-orange-800 font-medium">
+                  Aucun horaire programmé pour aujourd'hui
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {/* Card de pointage */}
@@ -341,19 +450,28 @@ export default function ClockPage() {
             {/* PIN display */}
             <div className="mb-6">
               <div className="h-14 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center tracking-widest border-2 border-gray-200 transition-all duration-300 hover:border-[var(--color-primary)]">
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold transition-all duration-300 ${
                         i < pin.length 
-                          ? "bg-[var(--color-primary)] scale-110 shadow-lg" 
-                          : "bg-gray-300"
+                          ? "bg-[var(--color-primary)] text-white scale-105 shadow-lg" 
+                          : "bg-gray-200 text-gray-400"
                       }`}
-                    ></div>
+                    >
+                      {i < pin.length ? pin[i] : '·'}
+                    </div>
                   ))}
                 </div>
               </div>
+              <p className="text-xs text-gray-400 text-center mt-2">
+                {!currentTeam 
+                  ? 'Veuillez sélectionner une équipe'
+                  : !hasScheduleToday
+                  ? 'Aucun horaire programmé aujourd\'hui'
+                  : 'Utilisez le pavé numérique ou votre clavier • Entrée pour valider'}
+              </p>
             </div>
 
             {/* Keypad */}
@@ -362,30 +480,30 @@ export default function ClockPage() {
                 <button
                   key={n}
                   onClick={() => press(String(n))}
-                  disabled={loading}
-                  className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50"
+                  disabled={loading || !canInteract}
+                  className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-50 disabled:hover:to-gray-100 disabled:hover:border-gray-200"
                 >
                   <span className="group-hover:scale-110 transition-transform duration-200">{n}</span>
                 </button>
               ))}
               <button
                 onClick={() => press("clear")}
-                disabled={loading}
-                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-sm font-semibold hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50"
+                disabled={loading || !canInteract}
+                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-sm font-semibold hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-100 disabled:hover:to-gray-200"
               >
                 Clear
               </button>
               <button
                 onClick={() => press("0")}
-                disabled={loading}
-                className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50"
+                disabled={loading || !canInteract}
+                className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-50 disabled:hover:to-gray-100 disabled:hover:border-gray-200"
               >
                 <span className="group-hover:scale-110 transition-transform duration-200">0</span>
               </button>
               <button
                 onClick={() => press("back")}
-                disabled={loading}
-                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50"
+                disabled={loading || !canInteract}
+                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-100 disabled:hover:to-gray-200"
               >
                 ←
               </button>
@@ -395,7 +513,7 @@ export default function ClockPage() {
             <div>
               <button
                 onClick={handleSubmit}
-                disabled={loading || !currentTeam || pin.length !== 6}
+                disabled={loading || !canInteract || pin.length !== 6}
                 className="w-full bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
               >
                 <span className="relative z-10">
@@ -457,6 +575,7 @@ export default function ClockPage() {
                   <p className="text-sm text-gray-400 font-medium">{"Aucun pointage aujourd'hui"}</p>
                 </div>
               )}
+              
               {history.slice(0, 10).map((h, idx) => (
                 <div 
                   key={h.id} 

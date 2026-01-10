@@ -1,4 +1,5 @@
-import { io, Socket } from 'socket.io-client'
+import { Socket } from 'socket.io-client'
+import io from 'socket.io-client'
 
 interface TotpResponse {
   success: boolean;
@@ -172,7 +173,7 @@ export const resetTeamSecret = async (teamId: string): Promise<TotpResetResponse
 };
 
 // Socket functions
-export const createTotpSocket = (teamId: string): Socket => {
+export const createTotpSocket = (teamId: string): typeof Socket => {
   const socket = io(process.env.NEXT_PUBLIC_BACKENDURL || 'http://localhost:3001', {
     transports: ['websocket'],
     forceNew: true,
@@ -182,7 +183,7 @@ export const createTotpSocket = (teamId: string): Socket => {
 };
 
 export const setupTotpSocketEvents = (
-  socket: Socket, 
+  socket: typeof Socket, 
   teamId: string,
   onTotpUpdate: (data: TotpData) => void,
   onConnect: () => void,
@@ -211,7 +212,7 @@ export const setupTotpSocketEvents = (
   });
 };
 
-export const disconnectTotpSocket = (socket: Socket | null, teamId: string): void => {
+export const disconnectTotpSocket = (socket: typeof Socket | null, teamId: string): void => {
   if (socket) {
     socket.emit('leave-team', teamId);
     socket.disconnect();
