@@ -116,9 +116,12 @@ export default function ClockPage() {
   const [mounted, setMounted] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [todaySchedule, setTodaySchedule] = useState<{time_in: string, time_out: string} | null>(null)
+  const [scheduleLoading, setScheduleLoading] = useState(true)
   const { currentTeam, user } = useTeam()
 
   const teamTimezone = currentTeam?.team.timezone || 'Europe/Paris'
+  const hasScheduleToday = todaySchedule !== null
+  const canInteract = currentTeam && hasScheduleToday
 
   // Rediriger les superadmin vers leur page
   useEffect(() => {
@@ -136,7 +139,7 @@ export default function ClockPage() {
   // Gestion du clavier PC
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (loading) return
+      if (loading || !canInteract) return
       
       // Chiffres 0-9
       if (e.key >= '0' && e.key <= '9') {
@@ -154,7 +157,7 @@ export default function ClockPage() {
         press('clear')
       }
       // Enter pour valider
-      else if (e.key === 'Enter' && pin.length === 6 && currentTeam) {
+      else if (e.key === 'Enter' && pin.length === 6 && canInteract) {
         e.preventDefault()
         handleSubmit()
       }
@@ -162,7 +165,7 @@ export default function ClockPage() {
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [loading, pin, currentTeam])
+  }, [loading, pin, canInteract])
 
   // Load clock history from API on component mount
   useEffect(() => {
@@ -213,8 +216,12 @@ export default function ClockPage() {
   // Load today's schedule
   useEffect(() => {
     const loadTodaySchedule = async () => {
-      if (!currentTeam?.id || !currentTeam?.team.id) return;
+      if (!currentTeam?.id || !currentTeam?.team.id) {
+        setScheduleLoading(false);
+        return;
+      }
       
+      setScheduleLoading(true);
       try {
         const result = await GetUserTeamPlanning(parseInt(currentTeam.id), currentTeam.team.id);
         if (result.success && result.data?.planning?.schedule) {
@@ -225,10 +232,17 @@ export default function ClockPage() {
               time_in: schedule.time_in.substring(0, 5),
               time_out: schedule.time_out.substring(0, 5)
             });
+          } else {
+            setTodaySchedule(null);
           }
+        } else {
+          setTodaySchedule(null);
         }
       } catch (error) {
         console.error('Error loading today schedule:', error);
+        setTodaySchedule(null);
+      } finally {
+        setScheduleLoading(false);
       }
     };
 
@@ -238,13 +252,18 @@ export default function ClockPage() {
   const handleSubmit = async () => {
     setMessage(null)
     
-    if (pin.length !== 6) {
-      setMessage("Le code TOTP doit contenir exactement 6 chiffres")
+    if (!currentTeam) {
+      setMessage("Aucune équipe sélectionnée")
+      return
+    }
+
+    if (!hasScheduleToday) {
+      setMessage("Aucun horaire programmé pour aujourd'hui")
       return
     }
     
-    if (!currentTeam) {
-      setMessage("Aucune équipe sélectionnée")
+    if (pin.length !== 6) {
+      setMessage("Le code TOTP doit contenir exactement 6 chiffres")
       return
     }
 
@@ -309,7 +328,7 @@ export default function ClockPage() {
         if (frenchWarnings.length > 0) {
           successMessage += ` (${frenchWarnings.join(', ')})`
         }
-        
+
         setMessage(successMessage)
         setPin("")
       } else {
@@ -344,7 +363,7 @@ export default function ClockPage() {
   }
 
   const press = (d: string) => {
-    if (loading) return
+    if (loading || !canInteract) return
     if (d === "clear") return setPin("")
     if (d === "back") return setPin((p) => p.slice(0, -1))
     setPin((p) => (p.length >= 6 ? p : p + d))
@@ -386,13 +405,25 @@ export default function ClockPage() {
             )}
             
             {/* Horaires du jour */}
-            {todaySchedule && (
+            {scheduleLoading ? (
+              <div className="mt-4 inline-block bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+                <p className="text-sm text-gray-600 font-medium">
+                  Chargement des horaires...
+                </p>
+              </div>
+            ) : currentTeam && hasScheduleToday ? (
               <div className="mt-4 inline-block bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
                 <p className="text-sm text-blue-800 font-medium">
                   Horaires du jour : {todaySchedule.time_in} - {todaySchedule.time_out}
                 </p>
               </div>
-            )}
+            ) : currentTeam && !hasScheduleToday ? (
+              <div className="mt-4 inline-block bg-orange-50 border border-orange-200 rounded-lg px-4 py-2">
+                <p className="text-sm text-orange-800 font-medium">
+                  Aucun horaire programmé pour aujourd'hui
+                </p>
+              </div>
+            ) : null}
           </div>
 
           {/* Card de pointage */}
@@ -435,7 +466,11 @@ export default function ClockPage() {
                 </div>
               </div>
               <p className="text-xs text-gray-400 text-center mt-2">
-                Utilisez le pavé numérique ou votre clavier • Entrée pour valider
+                {!currentTeam 
+                  ? 'Veuillez sélectionner une équipe'
+                  : !hasScheduleToday
+                  ? 'Aucun horaire programmé aujourd\'hui'
+                  : 'Utilisez le pavé numérique ou votre clavier • Entrée pour valider'}
               </p>
             </div>
 
@@ -445,30 +480,30 @@ export default function ClockPage() {
                 <button
                   key={n}
                   onClick={() => press(String(n))}
-                  disabled={loading}
-                  className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50"
+                  disabled={loading || !canInteract}
+                  className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-50 disabled:hover:to-gray-100 disabled:hover:border-gray-200"
                 >
                   <span className="group-hover:scale-110 transition-transform duration-200">{n}</span>
                 </button>
               ))}
               <button
                 onClick={() => press("clear")}
-                disabled={loading}
-                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-sm font-semibold hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50"
+                disabled={loading || !canInteract}
+                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-sm font-semibold hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-100 disabled:hover:to-gray-200"
               >
                 Clear
               </button>
               <button
                 onClick={() => press("0")}
-                disabled={loading}
-                className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50"
+                disabled={loading || !canInteract}
+                className="h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center text-xl font-bold hover:from-[rgba(236,77,54,0.08)] hover:to-[rgba(236,77,54,0.04)] transition-all duration-200 active:scale-95 border border-gray-200 hover:border-[var(--color-primary)] hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-50 disabled:hover:to-gray-100 disabled:hover:border-gray-200"
               >
                 <span className="group-hover:scale-110 transition-transform duration-200">0</span>
               </button>
               <button
                 onClick={() => press("back")}
-                disabled={loading}
-                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50"
+                disabled={loading || !canInteract}
+                className="h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl text-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 active:scale-95 border border-gray-300 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-gray-100 disabled:hover:to-gray-200"
               >
                 ←
               </button>
@@ -478,7 +513,7 @@ export default function ClockPage() {
             <div>
               <button
                 onClick={handleSubmit}
-                disabled={loading || !currentTeam || pin.length !== 6}
+                disabled={loading || !canInteract || pin.length !== 6}
                 className="w-full bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
               >
                 <span className="relative z-10">
@@ -540,6 +575,7 @@ export default function ClockPage() {
                   <p className="text-sm text-gray-400 font-medium">{"Aucun pointage aujourd'hui"}</p>
                 </div>
               )}
+              
               {history.slice(0, 10).map((h, idx) => (
                 <div 
                   key={h.id} 

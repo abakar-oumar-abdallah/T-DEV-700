@@ -159,8 +159,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
             </>
           ) : (
             <>
-              <div className="font-bold text-lg">Employé(e)</div>
-              <div className="text-sm text-white/80 mt-1">Bienvenue sur votre espace</div>
+              <div className="font-bold text-lg">Bienvenue sur votre espace</div>
             </>
           )}
         </div>
@@ -170,7 +169,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
         <nav className="flex-1 px-6">
           <ul className="space-y-2">
             {/* Lien Accueil - Caché pour superadmin */}
-            {user?.permission !== 'superadmin' && (
+            {user?.permission !== 'superadmin' && currentTeam && (
               <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '100ms' }}>
                 <Link
                   href="/dashboard"
@@ -219,7 +218,7 @@ export default function EmployeeSidebar({ mobileOpen, setMobileOpen }: SidebarPr
           )}
 
             {/* Lien Pointage - Caché pour superadmin */}
-            {user?.permission !== 'superadmin' && (
+            {user?.permission !== 'superadmin' && currentTeam && (
               <li className={`transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ transitionDelay: '300ms' }}>
                 <Link
                   href="/dashboard/clock"

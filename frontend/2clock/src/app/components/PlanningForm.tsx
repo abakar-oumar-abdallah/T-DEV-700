@@ -208,7 +208,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           setError(errorMsg);
           if (onError) onError(errorMsg);
         }
-      } else if (context === 'member' && userTeamId) {
+      } else if (context === 'member' && userTeamId && teamId) {
         result = await ModifyUserTeamPlanning(userTeamId, teamId, {
           schedules: enabledSchedules
         });
@@ -223,7 +223,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           setError(errorMsg);
           if (onError) onError(errorMsg);
         }
-      } else if (context === 'team') {
+      } else if (context === 'team' && teamId) {
         result = await ModifyTeamPlanning(teamId, {
           schedules: enabledSchedules
         });
@@ -239,7 +239,7 @@ const PlanningForm = forwardRef<{ getSchedulesData: () => any }, PlanningFormPro
           if (onError) onError(errorMsg);
         }
       
-      } else if (context === 'memberAfterCreation' && userTeamId) {
+      } else if (context === 'memberAfterCreation' && userTeamId && teamId) {
         result = await ModifyUserTeamPlanning(userTeamId, teamId, {
           schedules: enabledSchedules
         });

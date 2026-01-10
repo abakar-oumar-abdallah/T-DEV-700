@@ -72,7 +72,7 @@ export default function HomePage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
-                href="/login"
+                href="/dashboard"
                 className="group px-8 py-4 bg-[var(--color-primary)] text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center gap-2 hover:scale-105"
               >
                 Accéder à l'application
@@ -255,7 +255,7 @@ export default function HomePage() {
               />
             </div>
             <p className="text-center text-white/90 mt-4 text-lg font-medium">
-              Analysez la ponctualité, les heures travaillées et exportez vos données en CSV
+              Analysez la ponctualité, les heures travaillées, et gérer les absences de vos équipes efficacement
             </p>
           </div>
         </div>
@@ -279,7 +279,7 @@ export default function HomePage() {
               { text: "Installation rapide et configuration simple" },
               { text: "Support multi-équipes et multi-fuseaux horaires" },
               { text: "Sécurité maximale avec authentification TOTP" },
-              { text: "Statistiques en temps réel et exports CSV" },
+              { text: "Statistiques en temps réel et gestion des absences" },
               { text: "Interface responsive adaptée à tous les appareils" },
               { text: "Gestion des plannings personnalisés par équipe" }
             ].map((benefit, index) => (
