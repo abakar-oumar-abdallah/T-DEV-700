@@ -202,7 +202,7 @@ class UserController {
         });
       }
 
-      if (phone_number.length < 9) {
+      if (phone_number && phone_number.length < 9) {
         return res.status(400).json({
           success: false,
           message: 'Phone number must be at least 9 characters long'
@@ -246,7 +246,7 @@ class UserController {
             first_name: first_name.trim(),
             last_name: last_name.trim(),
             permission:permission.trim(),
-            phone_number: phone_number.trim()
+            phone_number: phone_number.trim().length > 0 ? phone_number.trim() : null
           }
         ])
         .select()
