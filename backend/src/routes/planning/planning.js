@@ -378,7 +378,7 @@ router.post('/plannings/user-teams/:userTeamId/modify',
  */
 router.get('/plannings/myTeam/:teamId', 
     AuthMiddleware,
-    TeamRoleMiddleware(['employee', 'manager'], true),
+    TeamRoleMiddleware(['employee', 'manager', 'owner'], true),
     PlanningController.getPlanningByUserTeam
 );
 
