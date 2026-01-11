@@ -15,18 +15,27 @@ services:
       - jenkins
     environment:
       - WATCHPACK_POLLING=true
+      - NODE_ENV=development
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev  # Utilise Dockerfile.dev pour le développement
     ports:
       - "3001:3001"
     env_file:
       - ./backend/.env
-    restart: unless-stopped
+    volumes:
+      # Ajout des volumes pour le hot reload avec nodemon
+      - ./backend:/app               # Monte le code source
+      - /app/node_modules            # Volume anonyme pour node_modules
     networks:
       - jenkins
+    environment:
+      # Ajout de NODE_ENV=development
+      - NODE_ENV=development
+    restart: unless-stopped
 
   postgres:
     image: postgres:15
