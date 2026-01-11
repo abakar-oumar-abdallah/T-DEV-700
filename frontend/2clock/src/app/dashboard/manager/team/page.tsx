@@ -245,40 +245,27 @@ export default function ManagerTeamPage() {
             </div>
             <div className="flex-1">
               <div className="flex flex-col gap-3 mb-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
-                    {currentTeam.team.name}
-                  </h1>
-                  <div className="flex gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
+                  {currentTeam.team.name}
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setShowEditTeamModal(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+                  >
+                    <PencilIcon className="w-5 h-5" />
+                    <span className="font-medium">Modifier</span>
+                  </button>
+                  {isOwner && (
                     <button
-                      onClick={() => setShowEditTeamModal(true)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+                      onClick={() => setShowDeleteTeamModal(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
                     >
-                      <PencilIcon className="w-5 h-5" />
-                      <span className="font-medium">Modifier</span>
+                      <TrashIcon className="w-5 h-5" />
+                      <span className="font-medium">Supprimer</span>
                     </button>
-                    {isOwner && (
-                      <button
-                        onClick={() => setShowDeleteTeamModal(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                        <span className="font-medium">Supprimer</span>
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
-              </div>
-              {currentTeam.team.description && (
-                <p className="text-gray-600 mb-3">{currentTeam.team.description}</p>
-              )}
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <UserGroupIcon className="w-4 h-4" />
-                  {teamMembers.length} membre{teamMembers.length > 1 ? 's' : ''}
-                </span>
-                <span>Limite retard: {currentTeam.team.lateness_limit} min</span>
-                <span>Fuseau horaire: {currentTeam.team.timezone}</span>
               </div>
             </div>
           </div>
@@ -347,41 +334,41 @@ export default function ManagerTeamPage() {
               {filteredMembers.map((member, index) => (
                 <div
                   key={member.user.id}
-                  className={`px-6 py-4 hover:bg-gray-50 transition-all duration-300 ${
+                  className={`px-4 sm:px-6 py-4 hover:bg-gray-50 transition-all duration-300 ${
                     mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
                   }`}
                   style={{ transitionDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     {/* Avatar */}
                     <div className="flex-shrink-0 relative w-11 h-11 rounded-full overflow-hidden bg-gray-100 group">
-                    <Image 
-                      src={`https://api.dicebear.com/5.x/initials/svg?seed=${member.user.first_name[0]}${member.user.last_name[0]}`} 
-                      alt='Image de profile' 
-                      width={44} 
-                      height={44} 
-                      className="object-cover group-hover:scale-110 transition-transform duration-300" 
-                    />
+                      <Image 
+                        src={`https://api.dicebear.com/5.x/initials/svg?seed=${member.user.first_name[0]}${member.user.last_name[0]}`} 
+                        alt='Image de profile' 
+                        width={44} 
+                        height={44} 
+                        className="object-cover group-hover:scale-110 transition-transform duration-300" 
+                      />
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 truncate">
+                      <div className="mb-2">
+                        <h3 className="font-semibold text-gray-900 mb-1">
                           {member.user.first_name} {member.user.last_name}
                         </h3>
-                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${getRoleColor(member.role)}`}>
+                        <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${getRoleColor(member.role)}`}>
                           {getRoleLabel(member.role)}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <EnvelopeIcon className="w-4 h-4" />
-                          {member.user.email}
+                      <div className="flex flex-col gap-1 text-sm text-gray-500">
+                        <span className="flex items-center gap-1 break-all">
+                          <EnvelopeIcon className="w-4 h-4 flex-shrink-0" />
+                          <span className="break-all">{member.user.email}</span>
                         </span>
                         {member.user.phone_number && (
                           <span className="flex items-center gap-1">
-                            <PhoneIcon className="w-4 h-4" />
+                            <PhoneIcon className="w-4 h-4 flex-shrink-0" />
                             {member.user.phone_number}
                           </span>
                         )}
@@ -389,7 +376,7 @@ export default function ManagerTeamPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-start sm:self-center">
                       {canViewKpi(member) && (
                         <button
                           onClick={() => router.push(`/dashboard/kpi?userId=${member.user.id}`)}
