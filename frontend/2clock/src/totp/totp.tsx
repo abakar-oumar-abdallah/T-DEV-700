@@ -174,13 +174,21 @@ export const resetTeamSecret = async (teamId: string): Promise<TotpResetResponse
 
 // Socket functions
 export const createTotpSocket = (teamId: string): typeof Socket => {
-  const socket = io(process.env.NEXT_PUBLIC_BACKENDURL || 'http://localhost:3001', {
-    transports: ['websocket'],
-    forceNew: true,
-  });
+  const backendUrl = process.env.NEXT_PUBLIC_BACKENDURL;
   
+  const cleanUrl = backendUrl.replace(/\/api$/, '');
+
+  console.log(cleanUrl)
+  const socket = io(cleanUrl, {
+    transports: ['websocket','polling'],
+    forceNew: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+  });
   return socket;
 };
+
 
 export const setupTotpSocketEvents = (
   socket: typeof Socket, 
