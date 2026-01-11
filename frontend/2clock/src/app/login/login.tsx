@@ -37,7 +37,6 @@ export default function LoginForm() {
       const result = await LoginUser({ email, password });
       
       if (result.success && result.data) {
-        console.log('Login successful:', result);
         localStorage.clear();
         localStorage.setItem('session', result.data.token);
         
