@@ -39,16 +39,15 @@ export default function EmployeePage() {
                 Bienvenue, {user?.first_name || 'Employé(e)'}
               </h1>
               <p className="text-gray-600 mt-1">Accédez à vos pointages et gérez votre temps de travail</p>
-              
               {currentTeam && (
                 <div className="mt-3 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="p-2 rounded-lg bg-blue-50">
                     <BuildingOffice2Icon className="w-5 h-5 text-blue-600" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900">{currentTeam.team.name}</h3>
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <h3 className="font-medium text-gray-900 truncate">{currentTeam.team.name}</h3>
+                      <span className={`self-start sm:self-auto px-2 py-1 text-xs rounded-full font-medium whitespace-nowrap ${
                         currentTeam.role === 'owner'
                         ? 'bg-purple-100 text-purple-800'
                         : currentTeam.role === 'manager' 
@@ -70,7 +69,7 @@ export default function EmployeePage() {
                         </span>
                         <span>Limite retard: {currentTeam.team.lateness_limit} min</span>
                         {currentTeam.team.description && (
-                          <span>{currentTeam.team.description}</span>
+                          <span className="truncate">{currentTeam.team.description}</span>
                         )}
                       </div>
                     </div>
