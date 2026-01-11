@@ -178,7 +178,6 @@ export const createTotpSocket = (teamId: string): typeof Socket => {
   
   const cleanUrl = backendUrl.replace(/\/api$/, '');
 
-  console.log(cleanUrl)
   const socket = io(cleanUrl, {
     transports: ['websocket','polling'],
     forceNew: true,
@@ -199,18 +198,15 @@ export const setupTotpSocketEvents = (
   onError: (error: string) => void
 ): void => {
   socket.on('connect', () => {
-    console.log('WebSocket connecté');
     socket.emit('join-team', teamId);
     onConnect();
   });
 
   socket.on('disconnect', () => {
-    console.log('WebSocket déconnecté');
     onDisconnect();
   });
 
   socket.on(`totp:${teamId}`, (data: TotpData) => {
-    console.log('Nouveau code TOTP reçu:', data);
     onTotpUpdate(data);
   });
 

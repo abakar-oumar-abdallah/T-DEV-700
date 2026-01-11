@@ -84,7 +84,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
       }
 
       const addedMember = result.data;
-      console.log('Added member response:', addedMember);
 
       // If custom planning is enabled and we have schedules, apply them
       if (hasCustomPlanning && planningSchedules && addedMember) {
@@ -100,14 +99,9 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
           }, 2000);
           return;
         }
-
-        console.log('Updating planning for userTeam ID:', userTeamId, 'with schedules:', planningSchedules);
-        
         const planningResult = await ModifyUserTeamPlanning(userTeamId, parseInt(teamId), {
           schedules: planningSchedules
         });
-
-        console.log('Planning result:', planningResult);
 
         if (!planningResult.success) {
           console.error('Planning update failed:', planningResult);
@@ -119,7 +113,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
           }, 2000);
           return;
         }
-        console.log('Planning updated successfully:', planningResult);
       }
 
       setSuccess(hasCustomPlanning 
@@ -157,7 +150,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
       }
 
       const schedulesData = planningFormRef.current.getSchedulesData();
-      console.log('Schedules data from PlanningForm:', schedulesData);
       
       if (!schedulesData || schedulesData.length === 0) {
         setError('Veuillez activer au moins un jour dans le planning personnalisé');
@@ -177,15 +169,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
     setSuccess(null);
 
     try {
-      // Create employee
-      console.log('Creating employee with data:', {
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone_number: formData.phone_number,
-        teamId
-      });
-
       const result = await createEmployeeInTeam(
         {
           email: formData.email,
@@ -196,8 +179,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
         },
         teamId
       );
-
-      console.log('Employee creation result:', result);
 
       if (!result.success) {
         const errorMessage = result.message?.toLowerCase() || '';
@@ -222,7 +203,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
       }
 
       const newMember = result.data;
-      console.log('Employee created, newMember data:', newMember);
 
       // If custom planning is enabled and we have schedules, apply them
       if (hasCustomPlanning && planningSchedules && newMember) {
@@ -239,13 +219,9 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
           return;
         }
 
-        console.log('Updating planning for userTeam ID:', userTeamId, 'with schedules:', planningSchedules);
-        
         const planningResult = await ModifyUserTeamPlanning(userTeamId, parseInt(teamId), {
           schedules: planningSchedules
         });
-
-        console.log('Planning result:', planningResult);
 
         if (!planningResult.success) {
           console.error('Planning update failed:', planningResult);
@@ -257,7 +233,6 @@ export default function AddMemberModal({ teamId, isOpen, onClose, onSuccess }: A
           }, 2000);
           return;
         }
-        console.log('Planning updated successfully:', planningResult);
       }
 
       setSuccess(hasCustomPlanning 
