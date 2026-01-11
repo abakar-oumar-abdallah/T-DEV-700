@@ -33,6 +33,8 @@ interface TeamContextType {
   setUser: (user: User | null) => void;
   teams: Team[];
   setCurrentTeam: (team: Team) => void;
+  updateTeamInContext: (teamId: number, updatedData: Partial<Team['team']>) => void;
+  deleteCurrentTeamRefresh: () => void;
   clearTeamContext: () => void;
   isLoading: boolean;
   authError: string | null;
@@ -60,6 +62,20 @@ export function TeamProvider({ children }: TeamProviderProps) {
     setTeams([]);
     setAuthError(null);
   };
+
+  const deleteCurrentTeamRefresh = () => {
+    setCurrentTeamState(null);
+    setTeams(prevTeams => prevTeams.filter(team => team.team.id !== currentTeam?.team.id));
+
+    localStorage.removeItem('currentTeam');
+    
+    const savedTeams = localStorage.getItem('userTeams');
+    if (savedTeams) {
+      const parsedTeams = JSON.parse(savedTeams);
+      const updatedTeams = parsedTeams.filter((team: Team) => team.team.id !== deletedTeamId);
+      localStorage.setItem('userTeams', JSON.stringify(updatedTeams));
+    }
+  }
 
   const refreshAuth = useCallback(async () => {
     setIsLoading(true);
@@ -133,12 +149,41 @@ export function TeamProvider({ children }: TeamProviderProps) {
     localStorage.setItem('currentTeam', JSON.stringify(team));
   };
 
+  const updateTeamInContext = (teamId: number, updatedData: Partial<Team['team']>) => {
+    setTeams(prevTeams => 
+      prevTeams.map(team => 
+        team.team.id === teamId 
+          ? { ...team, team: { ...team.team, ...updatedData } }
+          : team
+      )
+    );
+
+    if (currentTeam?.team.id === teamId) {
+      const updatedTeam = { ...currentTeam, team: { ...currentTeam.team, ...updatedData } };
+      setCurrentTeamState(updatedTeam);
+      localStorage.setItem('currentTeam', JSON.stringify(updatedTeam));
+    }
+
+    const savedTeams = localStorage.getItem('userTeams');
+    if (savedTeams) {
+      const parsedTeams = JSON.parse(savedTeams);
+      const updatedTeams = parsedTeams.map((team: Team) =>
+        team.team.id === teamId
+          ? { ...team, team: { ...team.team, ...updatedData } }
+          : team
+      );
+      localStorage.setItem('userTeams', JSON.stringify(updatedTeams));
+    }
+  };
+
   const value: TeamContextType = {
     currentTeam,
     user,
     setUser,
     teams,
     setCurrentTeam,
+    updateTeamInContext,
+    deleteCurrentTeamRefresh,
     clearTeamContext,
     isLoading,
     authError,
