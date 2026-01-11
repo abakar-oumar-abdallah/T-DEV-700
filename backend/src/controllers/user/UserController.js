@@ -147,11 +147,22 @@ class UserController {
       const { email, password, first_name, last_name, permission, phone_number} = req.body;
 
       // Validation des champs requis
-      if (!email || !password || !first_name || !last_name || !permission || !phone_number) {
+      if (!email || !password || !first_name || !last_name) {
         return res.status(400).json({
           success: false,
-          message: 'Email, password, first_name, last_name, permission and phone number are required'
+          message: 'Email, password, first_name, last_name are required'
         });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
+
+      if (!permission) {
+        permission = 'user';
       }
 
       // Check if current user is trying to create an admin or superadmin
@@ -191,7 +202,7 @@ class UserController {
         });
       }
 
-      if (phone_number.length < 9) {
+      if (phone_number && phone_number.length < 9) {
         return res.status(400).json({
           success: false,
           message: 'Phone number must be at least 9 characters long'
@@ -235,7 +246,7 @@ class UserController {
             first_name: first_name.trim(),
             last_name: last_name.trim(),
             permission:permission.trim(),
-            phone_number: phone_number.trim()
+            phone_number: phone_number.trim().length > 0 ? phone_number.trim() : null
           }
         ])
         .select()
