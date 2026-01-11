@@ -53,7 +53,8 @@ const ENGLISH_ERROR_PATTERNS: { [key: string]: string } = {
   'Invalid or expired TOTP code': 'Code de validation incorrect ou expiré',
   'The provided TOTP code is incorrect or expired': 'Le code de validation fourni est incorrect ou expiré',
   'TOTP code must be exactly 6 digits': 'Le code de validation doit contenir exactement 6 chiffres',
-  'TOTP code is required': 'Code de validation requis'
+  'TOTP code is required': 'Code de validation requis',
+  'No active TOTP session found for this team': 'Aucun code de validation généré pour l\'équipe. Veuillez demander un nouveau code à votre responsable.',
 };
 
 // Fonction pour nettoyer les warnings en supprimant les parties anglaises

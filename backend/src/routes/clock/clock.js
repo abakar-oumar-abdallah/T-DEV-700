@@ -278,7 +278,7 @@ router.delete('/clocks/:id',
  */
 router.post('/clocks/myTeam/:teamId/clockInOut',
     AuthMiddleware,
-    TeamRoleMiddleware(['employee', 'manager'], true),
+    TeamRoleMiddleware(['employee', 'manager', 'owner'], true),
     TotpMiddleware,
     ClockController.createClockInOut
 );
