@@ -245,27 +245,40 @@ export default function ManagerTeamPage() {
             </div>
             <div className="flex-1">
               <div className="flex flex-col gap-3 mb-2">
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
-                  {currentTeam.team.name}
-                </h1>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setShowEditTeamModal(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                    <span className="font-medium">Modifier</span>
-                  </button>
-                  {isOwner && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
+                    {currentTeam.team.name}
+                  </h1>
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => setShowDeleteTeamModal(true)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+                      onClick={() => setShowEditTeamModal(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
                     >
-                      <TrashIcon className="w-5 h-5" />
-                      <span className="font-medium">Supprimer</span>
+                      <PencilIcon className="w-5 h-5" />
+                      <span className="font-medium">Modifier</span>
                     </button>
-                  )}
+                    {isOwner && (
+                      <button
+                        onClick={() => setShowDeleteTeamModal(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                        <span className="font-medium">Supprimer</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
+              </div>
+              {currentTeam.team.description && (
+                <p className="text-gray-600 mb-3">{currentTeam.team.description}</p>
+              )}
+              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <UserGroupIcon className="w-4 h-4" />
+                  {teamMembers.length} membre{teamMembers.length > 1 ? 's' : ''}
+                </span>
+                <span>Limite retard: {currentTeam.team.lateness_limit} min</span>
+                <span>Fuseau horaire: {currentTeam.team.timezone}</span>
               </div>
             </div>
           </div>
