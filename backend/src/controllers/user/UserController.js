@@ -147,11 +147,22 @@ class UserController {
       const { email, password, first_name, last_name, permission, phone_number} = req.body;
 
       // Validation des champs requis
-      if (!email || !password || !first_name || !last_name || !permission || !phone_number) {
+      if (!email || !password || !first_name || !last_name) {
         return res.status(400).json({
           success: false,
-          message: 'Email, password, first_name, last_name, permission and phone number are required'
+          message: 'Email, password, first_name, last_name are required'
         });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
+
+      if (!permission) {
+        permission = 'user';
       }
 
       // Check if current user is trying to create an admin or superadmin
