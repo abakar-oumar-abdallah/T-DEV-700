@@ -173,7 +173,7 @@ export default function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTe
               title="Planning par défaut de l'équipe"
               teamData={formData}
               onSuccess={() => {
-                setCreateSuccess('Équipe créée avec succès !');
+                setCreateSuccess('Planning de l\'équipe créé avec succès !');
                 setTimeout(() => {
                   onSuccess();
                   handleClose();

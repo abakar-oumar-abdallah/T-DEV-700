@@ -19,6 +19,7 @@ import AddMemberModal from '@/app/components/management/AddMemberModal'
 import EditMemberModal from '@/app/components/management/EditMemberModal'
 import DeleteMemberModal from '@/app/components/management/DeleteMemberModal'
 import EditTeamModal from '@/app/components/team/EditTeamModal'
+import DeleteTeamModal from '@/app/components/team/DeleteTeamModal'
 import { getTeamMembers, type TeamMember } from '@/team/management'
 
 export default function ManagerTeamPage() {
@@ -35,7 +36,8 @@ export default function ManagerTeamPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showEditTeamModal, setShowEditTeamModal] = useState(false)  
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false)
+  const [showDeleteTeamModal, setShowDeleteTeamModal] = useState(false)
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null)
 
   const isSuperadmin = user?.permission === 'superadmin'
@@ -130,7 +132,9 @@ export default function ManagerTeamPage() {
     if (isSuperadmin) return true
     
     // Cannot view KPI of owners (unless superadmin)
-
+    if (member.role === 'owner' && !isSuperadmin) return false
+    
+    // Owner and manager can view employee/manager KPIs
     return ( member.role !== 'owner' && member.role!=='manager') || (currentTeam?.role === 'owner' && member.role !=='owner')
   }
 
@@ -159,6 +163,11 @@ export default function ManagerTeamPage() {
   const handleEditTeamSuccess = () => {
     setShowEditTeamModal(false)
     window.location.reload()
+  }
+
+  const handleDeleteTeamSuccess = () => {
+    setShowDeleteTeamModal(false)
+    // Le DeleteTeamModal gère la redirection
   }
 
   // Ouvrir les modals
@@ -194,29 +203,31 @@ export default function ManagerTeamPage() {
       case 'owner':
         return 'Propriétaire'
       case 'manager':
-        return 'Manager'
+        return 'Responsable'
       default:
         return 'Employé'
     }
   }
 
-  if (!currentTeam || !isManagerOrOwner) {
+  // Filtrer les membres selon la recherche
+  const filteredMembers = teamMembers.filter(member => {
+    const searchLower = search.toLowerCase()
+    return (
+      member.user.first_name.toLowerCase().includes(searchLower) ||
+      member.user.last_name.toLowerCase().includes(searchLower) ||
+      member.user.email.toLowerCase().includes(searchLower)
+    )
+  })
+
+  if (!currentTeam || !isManagerOrOwner || user?.permission === 'superadmin') {
     return null
   }
 
-  const filteredMembers = teamMembers.filter(member =>
-    member.user.first_name.toLowerCase().includes(search.toLowerCase()) ||
-    member.user.last_name.toLowerCase().includes(search.toLowerCase()) ||
-    member.user.email.toLowerCase().includes(search.toLowerCase())
-  )
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      {/* Header */}
-      <div className={`max-w-7xl mx-auto transition-all duration-700 ${
-        mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}>
-        <div className="flex items-center justify-between mb-8">
+    <main className="p-6 sm:p-10">
+      <div className="max-w-7xl mx-auto">
+        {/* Header avec retour */}
+        <div className={`mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <button
             onClick={() => router.push('/teams')}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors group"
@@ -238,77 +249,82 @@ export default function ManagerTeamPage() {
                   <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] bg-clip-text text-transparent">
                     {currentTeam.team.name}
                   </h1>
-                  <button
-                    onClick={() => setShowEditTeamModal(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap w-full sm:w-auto"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                    <span className="font-medium">Modifier l&apos;équipe</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowEditTeamModal(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/90 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+                    >
+                      <PencilIcon className="w-5 h-5" />
+                      <span className="font-medium">Modifier</span>
+                    </button>
+                    {isOwner && (
+                      <button
+                        onClick={() => setShowDeleteTeamModal(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                        <span className="font-medium">Supprimer</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               {currentTeam.team.description && (
-                <p className="text-gray-600">{currentTeam.team.description}</p>
+                <p className="text-gray-600 mb-3">{currentTeam.team.description}</p>
               )}
-              <div className="flex items-center gap-6 mt-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
                   <UserGroupIcon className="w-4 h-4" />
-                  <span>{teamMembers.length} membre{teamMembers.length > 1 ? 's' : ''}</span>
-                </div>
+                  {teamMembers.length} membre{teamMembers.length > 1 ? 's' : ''}
+                </span>
+                <span>Limite retard: {currentTeam.team.lateness_limit} min</span>
+                <span>Fuseau horaire: {currentTeam.team.timezone}</span>
               </div>
             </div>
           </div>
         </div>
 
-         {/* Members List */}
-        <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-700 ${
-          mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`} style={{ transitionDelay: '100ms' }}>
+        {/* Members List */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-100">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Membres de l&apos;équipe ({teamMembers.length})
-              </h2>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] hover:from-[#ff6b4a] hover:to-[var(--color-primary)] text-white rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 w-full sm:w-auto"
-              >
-                <PlusIcon className="w-5 h-5" />
-                <span className="font-medium">Ajouter un employé</span>
-              </button>
-            </div>
-
-            {/* Search */}
-            <div className="mt-4">
-              <input
-                type="text"
-                placeholder="Rechercher un membre..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-              />
+          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h2 className="text-xl font-bold text-gray-900">Membres de l&apos;équipe</h2>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                />
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[#ff6b4a] text-white rounded-lg hover:shadow-lg transition-all whitespace-nowrap"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">Ajouter</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)]"></div>
+          {/* Error Message */}
+          {error && (
+            <div className="px-6 py-4 bg-red-50 border-b border-red-100">
+              <p className="text-red-800">{error}</p>
             </div>
           )}
 
-          {/* Error State */}
-          {error && !loading && (
-            <div className="px-6 py-8 text-center">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 inline-block">
-                <p className="text-red-800">{error}</p>
-              </div>
+          {/* Loading */}
+          {loading && (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: 'var(--color-primary)' }}></div>
             </div>
           )}
 
           {/* Empty State */}
-          {teamMembers.length === 0 && !loading && (
+          {!loading && !error && filteredMembers.length === 0 && teamMembers.length === 0 && (
             <div className={`bg-white rounded-2xl shadow-lg p-12 text-center transition-all duration-700 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
@@ -344,49 +360,45 @@ export default function ManagerTeamPage() {
                       alt='Image de profile' 
                       width={44} 
                       height={44} 
-                      className="relative rounded-full border-2 border-white/20 transform transition-transform duration-300 group-hover:scale-110" 
+                      className="object-cover group-hover:scale-110 transition-transform duration-300" 
                     />
                     </div>
 
-                    {/* Info - flex-1 with min-width 0 for proper text truncation */}
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 truncate">
                           {member.user.first_name} {member.user.last_name}
                         </h3>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(member.role)}`}>
+                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${getRoleColor(member.role)}`}>
                           {getRoleLabel(member.role)}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1 min-w-0">
-                          <EnvelopeIcon className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">{member.user.email}</span>
-                        </div>
-                        {member.user.phonenumber && (
-                          <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <EnvelopeIcon className="w-4 h-4" />
+                          {member.user.email}
+                        </span>
+                        {member.user.phone_number && (
+                          <span className="flex items-center gap-1">
                             <PhoneIcon className="w-4 h-4" />
-                            <span>{member.user.phonenumber}</span>
-                          </div>
+                            {member.user.phone_number}
+                          </span>
                         )}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
                       {canViewKpi(member) && (
                         <button
-                          onClick={() => {
-                            router.push(`/dashboard/kpi?userId=${member.user.id}`)
-                          }}
+                          onClick={() => router.push(`/dashboard/kpi?userId=${member.user.id}`)}
                           className="p-2 rounded-lg hover:bg-purple-50 text-purple-600 transition-colors"
-                          title="Voir KPI"
+                          title="Voir les KPI"
                         >
-                                    
                           <ChartBarIcon className="w-5 h-5" />
                         </button>
-                       )}
+                      )}
                       {canEditMember(member) && (
                         <button
                           onClick={() => openEditModal(member)}
@@ -449,6 +461,13 @@ export default function ManagerTeamPage() {
         isOpen={showEditTeamModal}
         onClose={() => setShowEditTeamModal(false)}
         onSuccess={handleEditTeamSuccess}
+      />
+
+      <DeleteTeamModal
+        team={currentTeam}
+        isOpen={showDeleteTeamModal}
+        onClose={() => setShowDeleteTeamModal(false)}
+        onSuccess={handleDeleteTeamSuccess}
       />
     </main>
   )

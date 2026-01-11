@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { DeleteTeam } from '@/team/team';
+import { useTeam } from '@/contexts/TeamContext';
+import { useRouter } from 'next/navigation';
 import Modal from '../Modal';
 
 interface DeleteTeamModalProps {
@@ -12,6 +14,8 @@ interface DeleteTeamModalProps {
 export default function DeleteTeamModal({ team, isOpen, onClose, onSuccess }: DeleteTeamModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { currentTeam, deleteCurrentTeamRefresh } = useTeam();
+  const router = useRouter();
 
   const handleDelete = async () => {
     if (!team) return;
@@ -23,6 +27,12 @@ export default function DeleteTeamModal({ team, isOpen, onClose, onSuccess }: De
       const result = await DeleteTeam(team.team.id);
 
       if (result.success) {
+        // If deleted team is the current team, clear it from context and redirect to team selection
+        if (currentTeam?.team.id === team.team.id) {
+          deleteCurrentTeamRefresh();
+          router.push('/teams');
+        }
+        
         onSuccess();
         onClose();
       } else {

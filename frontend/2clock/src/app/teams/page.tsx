@@ -11,7 +11,7 @@ import DeleteTeamModal from '@/app/components/team/DeleteTeamModal';
 
 export default function TeamSelectionPage() {
   const router = useRouter();
-  const { user, teams, setCurrentTeam, clearTeamContext, isLoading, authError } = useTeam();
+  const { user, teams, setCurrentTeam, clearTeamContext, isLoading, authError, updateTeamInContext } = useTeam();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

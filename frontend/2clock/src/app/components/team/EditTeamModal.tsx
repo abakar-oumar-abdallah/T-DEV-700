@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UpdateTeam } from '@/team/team';
 import PlanningForm from '../PlanningForm';
+import { useTeam } from '@/contexts/TeamContext'; 
 import Modal from '../Modal';
 
 interface EditTeamModalProps {
@@ -26,6 +27,7 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { updateTeamInContext } = useTeam();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -86,6 +88,8 @@ export default function EditTeamModal({ team, isOpen, onClose, onSuccess }: Edit
       const result = await UpdateTeam(team.team.id, formData);
 
       if (result.success) {
+
+        updateTeamInContext(team.team.id, formData);
         setSuccess('Équipe modifiée avec succès');
         
         setTimeout(() => {
