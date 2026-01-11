@@ -1,0 +1,26 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Variables d'environnement pour le développement
+ENV NODE_ENV=development
+ENV PORT=3001
+
+# Installer nodemon globalement pour le hot reload
+RUN npm install -g nodemon
+
+# Copier les fichiers de dépendances
+COPY package.json package-lock.json ./
+
+# Installer TOUTES les dépendances (y compris dev)
+RUN npm install
+
+# Le code sera monté en volume, pas besoin de COPY . .
+# Cela permet le hot reload automatique
+
+# Exposer le port
+EXPOSE 3001
+
+# Commande de démarrage avec nodemon pour le hot reload
+# nodemon surveille les changements et redémarre automatiquement
+CMD ["nodemon", "--watch", "src", "--ext", "js,json", "src/server.js"]

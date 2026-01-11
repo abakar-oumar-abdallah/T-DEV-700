@@ -93,7 +93,10 @@ pipeline {
                             steps {
                                 script {
                                     dir('backend') {
-                                        dockerBackendImage = docker.build("${DOCKERHUB_ACCOUNT}/${BACK_REPOSITORY}:latest")
+                                        dockerBackendImage = docker.build(
+                                            "${DOCKERHUB_ACCOUNT}/${BACK_REPOSITORY}:latest",
+                                            "-f Dockerfile ."  // ← AJOUT DU FLAG -f Dockerfile
+                                        )
                                     }
                                 }
                             }
