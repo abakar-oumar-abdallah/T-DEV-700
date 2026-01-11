@@ -147,10 +147,10 @@ class UserController {
       const { email, password, first_name, last_name, permission, phone_number} = req.body;
 
       // Validation des champs requis
-      if (!email || !password || !first_name || !last_name || !permission || !phone_number) {
+      if (!email || !password || !first_name || !last_name || !permission) {
         return res.status(400).json({
           success: false,
-          message: 'Email, password, first_name, last_name, permission and phone number are required'
+          message: 'Email, password, first_name, last_name and permission are required'
         });
       }
 
@@ -191,7 +191,8 @@ class UserController {
         });
       }
 
-      if (phone_number.length < 9) {
+      // Validation du phone_number seulement s'il est fourni
+      if (phone_number && phone_number.length < 9) {
         return res.status(400).json({
           success: false,
           message: 'Phone number must be at least 9 characters long'
@@ -226,18 +227,22 @@ class UserController {
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       // Créer l'utilisateur
+      const userPayload = {
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        permission: permission.trim()
+      };
+
+      // Ajouter phone_number seulement s'il est fourni
+      if (phone_number) {
+        userPayload.phone_number = phone_number.trim();
+      }
+
       const { data, error } = await supabase
         .from('user')
-        .insert([
-          {
-            email: email.toLowerCase().trim(),
-            password: hashedPassword,
-            first_name: first_name.trim(),
-            last_name: last_name.trim(),
-            permission:permission.trim(),
-            phone_number: phone_number.trim()
-          }
-        ])
+        .insert([userPayload])
         .select()
         .single();
 
