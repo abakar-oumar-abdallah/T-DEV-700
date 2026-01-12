@@ -1,6 +1,10 @@
 pipeline {
     
     agent any
+    
+    triggers {
+       pollSCM('H */4 * * 1-5')
+    }
 
     environment {
         DOCKERHUB_ACCOUNT = 'abakar98'
