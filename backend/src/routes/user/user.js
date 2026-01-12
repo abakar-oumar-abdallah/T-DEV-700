@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../../controllers/user/UserController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
  * tags:
  *   name: Users
- *   description: User management 
+ *   description: User management
  */
 
 // get all users
@@ -20,9 +23,13 @@ const UserController = require('../../controllers/user/UserController');
  *       200:
  *         description: List of all users
  */
-router.get('/users', UserController.getAllUsers);
+router.get('/users', 
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
+    UserController.getAllUsers
+);
 
-// create a user with email, password, first_name, last_name and role
+// create a user with email, password, first_name and last_name 
 /**
  * @swagger
  * /users:
@@ -40,6 +47,7 @@ router.get('/users', UserController.getAllUsers);
  *               - password
  *               - first_name
  *               - last_name
+ *               - permission
  *             properties:
  *               email:
  *                 type: string
@@ -53,11 +61,9 @@ router.get('/users', UserController.getAllUsers);
  *               last_name:
  *                 type: string
  *                 example: Doe
- *               role:
- *                 type: string
- *                 enum: [manager , employee]
- *                 default: employee
- *                 example: employee
+ *               permission:
+ *                type: string
+ *                example: admin
  *     responses:
  *       201:
  *         description: User created
@@ -68,7 +74,11 @@ router.get('/users', UserController.getAllUsers);
  *       500:
  *         description: Server error
  */
-router.post('/users', UserController.createUser);
+router.post('/users', 
+    AuthMiddleware,
+    TeamRoleMiddleware(["manager","owner"]),
+    UserController.createUser
+);
 
 // get a user by id
 /**
@@ -81,7 +91,7 @@ router.post('/users', UserController.createUser);
  *       - in: path
  *         name: id
  *         required: true
- *         description: User UUID
+ *         description: User id
  *         schema:
  *           type: string
  *     responses:
@@ -94,7 +104,10 @@ router.post('/users', UserController.createUser);
  *       500:
  *         description: Server error
  */
-router.get('/users/:id', UserController.getUserById);
+router.get('/users/:id',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.getUserById);
 
 // get a user by email
 /**
@@ -120,7 +133,10 @@ router.get('/users/:id', UserController.getUserById);
  *       500:
  *         description: Server error
  */
-router.get('/users/email/:email', UserController.getUserByEmail);
+router.get('/users/email/:email',
+    AuthMiddleware,
+    PermissionMiddleware('admin'),
+    UserController.getUserByEmail);
 
 // update a user's information
 /**
@@ -155,10 +171,9 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *               last_name:
  *                 type: string
  *                 example: Doe
- *               role:
- *                 type: string
- *                 enum: [employee , manager]
- *                 example: employee
+ *               permission:
+ *                type: string
+ *                example: admin
  *     responses:
  *       200:
  *         description: User updated
@@ -171,7 +186,9 @@ router.get('/users/email/:email', UserController.getUserByEmail);
  *       500:
  *         description: Server error
  */
-router.patch('/users/:id', UserController.updateUser);
+router.patch('/users/:id',
+    AuthMiddleware,
+    UserController.updateUser);
 
 // delete a user
 /**
@@ -197,6 +214,9 @@ router.patch('/users/:id', UserController.updateUser);
  *       500:
  *         description: Server error
  */
-router.delete('/users/:id', UserController.deleteUser);
+router.delete('/users/:id',
+    AuthMiddleware,
+    PermissionMiddleware('superadmin'),
+    UserController.deleteUser);
 
 module.exports = router;

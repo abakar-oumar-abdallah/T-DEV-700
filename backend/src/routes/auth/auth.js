@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const AuthController = require('../../controllers/auth/AuthController');
+const AuthMiddleware = require('../../middlewares/AuthMiddleware');
+const { authLimiter } = require('../../middlewares/RateLimiters');
+const { getCsrfToken, csrfProtection } = require('../../middlewares/CsrfMiddleware');
+// const PermissionMiddleware = require('../../middlewares/PermissionMiddleware');
+// const TeamRoleMiddleware = require('../../middlewares/TeamRoleMiddleware');
 
 /**
  * @swagger
@@ -8,6 +13,28 @@ const AuthController = require('../../controllers/auth/AuthController');
  *   name: Users/Login
  *   description: User authentication
  */
+
+/**
+ * @swagger
+ * /csrf-token:
+ *   get:
+ *     summary: Get CSRF token for form submission
+ *     tags: [Users/Login]
+ *     description: Returns a CSRF token that must be included in subsequent POST/PUT/DELETE requests
+ *     responses:
+ *       200:
+ *         description: CSRF token generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 csrfToken:
+ *                   type: string
+ */
+router.get('/csrf-token', getCsrfToken);
 
 /**
  * @swagger
@@ -39,7 +66,7 @@ const AuthController = require('../../controllers/auth/AuthController');
  *       500:
  *         description: Server error
  */
-router.post('/login', AuthController.login);
+router.post('/login', authLimiter, csrfProtection, AuthController.login);
 
 /**
  * @swagger
@@ -57,6 +84,31 @@ router.post('/login', AuthController.login);
  *       500:
  *         description: Server error
  */
-router.post('/logout', AuthController.logout);
+router.post('/logout',
+    AuthMiddleware,
+    csrfProtection,
+    AuthController.logout
+);
+
+/**
+ * @swagger
+ * /checkAuth:
+ *   get:
+ *     summary: Check authentication and get user info
+ *     tags: [Users/Login]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Authentication valid
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/checkAuth',
+    AuthMiddleware,
+    AuthController.checkAuth
+);
 
 module.exports = router;

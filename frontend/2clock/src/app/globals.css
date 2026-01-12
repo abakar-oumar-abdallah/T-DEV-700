@@ -3,8 +3,8 @@
 @theme {
   --color-background: #F4F4F4;
   --foreground: #1f1f1f;
-  --color-primary: #EC4D36;
-  --color-primary-hover: #EE7260;
+  --color-primary: #FF331E;
+  --color-primary-hover: #FF6758;
   --color-secondary: #27314F;
 }
 
@@ -139,8 +139,8 @@
 :root {
   --background: #F4F4F4;
   --foreground: #1f1f1f;
-  --color-primary: #EC4D36;
-  --color-primary-hover: #EE7260;
+  --color-primary: #FF331E;
+  --color-primary-hover: #FF6758;
   --color-secondary: #27314F;
 }
 
@@ -148,8 +148,8 @@
   :root {
     --background: #F4F4F4;
     --foreground: #1f1f1f;
-    --color-primary: #EC4D36;
-    --color-primary-hover: #EE7260;
+    --color-primary: #FF331E;
+    --color-primary-hover: #FF6758;
     --color-secondary: #27314F;
   }
 }
@@ -158,8 +158,8 @@
   :root {
     --background: #F4F4F4;
     --foreground: #1f1f1f;
-    --color-primary: #EC4D36;
-    --color-primary-hover: #EE7260;
+    --color-primary: #FF331E;
+    --color-primary-hover: #FF6758;
     --color-secondary: #27314F;
   }
 }
@@ -168,4 +168,33 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+}
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
 }
