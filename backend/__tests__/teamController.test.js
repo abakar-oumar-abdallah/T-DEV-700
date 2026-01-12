@@ -15,13 +15,14 @@ describe('TeamController', () => {
   beforeEach(() => {
     // Reset des mocks avant chaque test
     jest.clearAllMocks();
-    
+
     // Mock de la requête et de la réponse
     req = {
       body: {},
-      params: {}
+      params: {},
+      query: {}
     };
-    
+
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis()
@@ -31,26 +32,43 @@ describe('TeamController', () => {
   describe('getAllTeams', () => {
     it('devrait retourner toutes les équipes avec succès', async () => {
       const mockTeams = [
-        { 
-          id: 1, 
-          name: 'Team Alpha', 
+        {
+          id: 1,
+          name: 'Team Alpha',
           description: 'First team',
           lateness_limit: 15,
-          timezone: 'UTC' 
+          timezone: 'UTC',
+          created_at: '2024-01-01',
+          user_team: [{ id: 1, role: 'manager' }]
         },
-        { 
-          id: 2, 
-          name: 'Team Beta', 
+        {
+          id: 2,
+          name: 'Team Beta',
           description: 'Second team',
           lateness_limit: 10,
-          timezone: 'UTC' 
+          timezone: 'UTC',
+          created_at: '2024-01-02',
+          user_team: [{ id: 2, role: 'manager' }]
         }
       ];
 
-      supabase.from.mockReturnValue({
+      // Mock count query
+      supabase.from.mockReturnValueOnce({
         select: jest.fn().mockResolvedValue({
-          data: mockTeams,
+          count: 2,
           error: null
+        })
+      });
+
+      // Mock data query
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          order: jest.fn().mockReturnValue({
+            range: jest.fn().mockResolvedValue({
+              data: mockTeams,
+              error: null
+            })
+          })
         })
       });
 
@@ -61,18 +79,41 @@ describe('TeamController', () => {
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         message: 'Teams retrieved successfully',
-        data: mockTeams,
-        count: 2
+        data: mockTeams.map(team => ({
+          ...team,
+          memberCount: 1
+        })),
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 2,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false
+        }
       });
     });
 
     it('devrait gérer les erreurs de base de données', async () => {
       const mockError = { message: 'Database error' };
 
-      supabase.from.mockReturnValue({
+      // Mock count query to succeed
+      supabase.from.mockReturnValueOnce({
         select: jest.fn().mockResolvedValue({
-          data: null,
-          error: mockError
+          count: 0,
+          error: null
+        })
+      });
+
+      // Mock data query to fail
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          order: jest.fn().mockReturnValue({
+            range: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError
+            })
+          })
         })
       });
 
