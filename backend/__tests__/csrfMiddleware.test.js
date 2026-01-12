@@ -69,7 +69,7 @@ describe('CsrfMiddleware', () => {
         expect.any(String),
         expect.objectContaining({
           secure: true,
-          sameSite: 'strict'
+          sameSite: 'lax'
         })
       );
 
@@ -273,7 +273,7 @@ describe('CsrfMiddleware', () => {
         expect.any(String),
         expect.objectContaining({
           secure: true,
-          sameSite: 'strict'
+          sameSite: 'lax'
         })
       );
 

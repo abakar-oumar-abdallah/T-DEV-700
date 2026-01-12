@@ -616,7 +616,7 @@ describe('Middleware Tests', () => {
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({
           success: false,
-          message: 'Forbidden - Requires one of the following team roles: admin, owner'
+          message: 'Forbidden - Requires one of the following team roles: admin, owner but found team role : member'
         });
         expect(next).not.toHaveBeenCalled();
       });

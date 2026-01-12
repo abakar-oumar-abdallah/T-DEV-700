@@ -21,6 +21,7 @@ describe('UserController', () => {
     req = {
       body: {},
       params: {},
+      query: {},
       user: {
         userId: 'test-user-id',
         permission: 'superadmin' // Par défaut superadmin pour éviter les restrictions
@@ -36,14 +37,27 @@ describe('UserController', () => {
   describe('getAllUsers', () => {
     it('devrait retourner tous les utilisateurs avec succès', async () => {
       const mockUsers = [
-        { id: 1, email: 'user1@test.com', first_name: 'John', last_name: 'Doe' },
-        { id: 2, email: 'user2@test.com', first_name: 'Jane', last_name: 'Smith' }
+        { id: 1, email: 'user1@test.com', first_name: 'John', last_name: 'Doe', created_at: '2024-01-01', user_team: [] },
+        { id: 2, email: 'user2@test.com', first_name: 'Jane', last_name: 'Smith', created_at: '2024-01-02', user_team: [] }
       ];
 
-      supabase.from.mockReturnValue({
+      // Mock count query
+      supabase.from.mockReturnValueOnce({
         select: jest.fn().mockResolvedValue({
-          data: mockUsers,
+          count: 2,
           error: null
+        })
+      });
+
+      // Mock data query
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          order: jest.fn().mockReturnValue({
+            range: jest.fn().mockResolvedValue({
+              data: mockUsers,
+              error: null
+            })
+          })
         })
       });
 
@@ -55,17 +69,37 @@ describe('UserController', () => {
         success: true,
         message: 'Users retrieved successfully',
         data: mockUsers,
-        count: 2
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 2,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false
+        }
       });
     });
 
     it('devrait gérer les erreurs de base de données', async () => {
       const mockError = { message: 'Database error' };
 
-      supabase.from.mockReturnValue({
+      // Mock count query to succeed
+      supabase.from.mockReturnValueOnce({
         select: jest.fn().mockResolvedValue({
-          data: null,
-          error: mockError
+          count: 0,
+          error: null
+        })
+      });
+
+      // Mock data query to fail
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          order: jest.fn().mockReturnValue({
+            range: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError
+            })
+          })
         })
       });
 
@@ -155,7 +189,7 @@ describe('UserController', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Email, password, first_name, last_name, permission and phone number are required'
+        message: 'Email, password, first_name, last_name are required'
       });
     });
 
